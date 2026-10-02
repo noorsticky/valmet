@@ -1,0 +1,921 @@
+/* =====================================================================
+   Motor: tidslinje, kamera, "hoppa in"-portal, scen-API, spola tillbaka.
+   Innehållet ligger i story.js.
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  const val = (v, s) => (typeof v === 'function' ? v(s) : v);
+
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = (ms) => (REDUCED ? Math.round(ms * 0.35) : ms);
+
+  const COL = 250;        // avstånd mellan noder (px i världen)
+  const SIDE_Y = 270;     // sidospårets höjd under huvudlinjen
+  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4' };
+  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', spegel: 'assets/img/sovrum.jpg' };
+  const KIND_LABEL = { pink: 'Vardagsval', blue: 'Beslut', film: 'Film', side: 'Vid sidan av', green: 'Sammanfattning' };
+
+  /* ------------------------------------------------------------ state */
+  const freshState = () => ({
+    choices: {}, snooze: 0, track: null, played: [], persona: null,
+    rewound: false, firstA: null, triedA: [], accident: false, phase: 'normal',
+  });
+  let state = freshState();
+  const nodes = STORY.nodes;
+  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+
+  const isVisible = (n) => !n.track || state.track === n.track;
+  const visibleNodes = () => nodes.filter(isVisible);
+  const isPlayed = (n) => state.played.includes(n.id);
+  const nextNode = () => visibleNodes().find((n) => !isPlayed(n));
+
+  /* ------------------------------------------------------------ DOM */
+  const el = {
+    intro: $('#intro'), timeline: $('#timeline'), scene: $('#scene'),
+    viewport: $('#tlViewport'), world: $('#tlWorld'), lines: $('#tlLines'), nodes: $('#tlNodes'), banner: $('#tlBanner'),
+    sceneWorld: $('#sceneWorld'), stage: $('#stage'), env: $('#env'), hotspots: $('#hotspots'),
+    hud: $('#hud'), hudClock: $('#hudClock'), hudProgress: $('#hudProgress'), hudName: $('#hudName'), hudRole: $('#hudRole'), hudAvatar: $('#hudAvatar'),
+    titlecard: $('#titlecard'), tcTime: $('#tcTime'), tcPlace: $('#tcPlace'),
+    captions: $('#captions'), memory: $('#memory'), choice: $('#choice'), panelHost: $('#panelHost'),
+    fxTint: $('#fxTint'), eyelids: $('#eyelids'), skip: $('#skipBtn'), rewind: $('#rewind'), rewindClock: $('#rewindClock'),
+  };
+
+  /* ===================================================================
+     MILJÖER (env) – samma byggare används för scen och för nodens portal
+     =================================================================== */
+  function person(x, y, s, cls = '') {
+    return `<div class="person ${cls}" style="left:${x}%;top:${y}%;--s:${s}"><i class="person__head"></i><i class="person__body"></i></div>`;
+  }
+
+  const ENV_HTML = {
+    bil: () => `
+      <div class="bil">
+        <div class="bil__sky"></div><div class="bil__sun"></div>
+        <div class="bil__hills"></div><div class="bil__trees"></div>
+        <div class="bil__road"></div>
+        <div class="bil__dashes"><i></i><i></i><i></i><i></i></div>
+        <div class="bil__posts"><i></i><i></i><i></i></div>
+        <div class="bil__cabin">
+          <div class="bil__pillar bil__pillar--l"></div><div class="bil__pillar bil__pillar--r"></div>
+          <div class="bil__roof"></div><div class="bil__mirror"></div>
+          <div class="bil__dash"></div><div class="bil__wheel"></div><div class="bil__radio">P4 · 103.3</div>
+        </div>
+      </div>`,
+    mote: (v) => `
+      <div class="mote ${v === 'dark' ? 'mote--dark' : ''}">
+        <div class="mote__wall"></div><div class="mote__window"></div>
+        ${v === 'dark'
+          ? `<div class="mote__screen"><b>Produktion Q4</b><span class="bars"><i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%" class="goal"></i></span><em>Mål: +8 %</em></div>`
+          : `<div class="mote__board"><p>Nästa stopp: v.44</p><p>– Skydd press L3 <b>!!</b></p><p>– Bulktransporter</p><p>– Bemanning fre</p></div>`}
+        ${person(30, 76, 1.0, 'p--a')}${person(46, 74, 0.95, 'p--b')}${person(63, 76, 1.0, 'p--c')}
+        <div class="mote__table"></div>
+        ${person(12, 112, 1.9, 'p--front')}${person(86, 114, 2.0, 'p--front')}
+        <div class="mote__light"></div>
+      </div>`,
+    korridor: (v) => `
+      <div class="korr ${v === 'warm' ? 'korr--warm' : ''}">
+        <div class="korr__end"></div>
+        <div class="korr__ceil"><i></i><i></i><i></i><i></i></div>
+        <div class="korr__wall korr__wall--l"><i></i><i></i></div>
+        <div class="korr__wall korr__wall--r"><i></i><i></i></div>
+        <div class="korr__floor"></div>
+        ${v === 'warm' ? person(57, 84, 1.5, 'p--bag') : person(58, 86, 1.6, 'p--lisa')}
+      </div>`,
+    fabrik: (v) => `
+      <div class="fab ${v === 'alarm' ? 'fab--alarm' : ''}">
+        <div class="fab__bg"></div>
+        <div class="fab__lamps"><i></i><i></i><i></i></div>
+        <div class="fab__floor"></div>
+        <div class="fab__machine">
+          <div class="fab__body"></div>
+          <div class="fab__roller"></div><div class="fab__roller fab__roller--2"></div>
+          <div class="fab__hazard"></div>
+          <div class="fab__guard"></div>
+          <div class="fab__gap"></div>
+          <div class="fab__panel"><i></i><i></i><i></i></div>
+        </div>
+        <div class="fab__steam"><i></i><i></i><i></i></div>
+        ${person(20, 90, 1.7, 'p--worker')}${person(82, 94, 1.8, 'p--worker p--old')}
+        <div class="fab__beacon"></div>
+      </div>`,
+    spegel: () => `
+      <div class="spegel">
+        <video class="env__video spegel__bg" src="${VIDEO_ENVS.sovrum}" muted playsinline loop autoplay preload="auto"></video>
+        <div class="spegel__frame"><div class="spegel__glass"></div></div>
+      </div>`,
+    summary: () => `<div class="summ"><i></i><i></i><i></i></div>`,
+  };
+
+  function buildEnv(host, name, variant, { thumb = false, live = false } = {}) {
+    host.innerHTML = '';
+    if (host.dataset.base == null) host.dataset.base = host.className.split(' ').filter((c) => c && !c.startsWith('env')).join(' ');
+    host.className = `${host.dataset.base} env env--${name} ${variant ? 'env--' + variant : ''}`;
+    if (VIDEO_ENVS[name]) {
+      if (thumb && !live) {
+        host.appendChild(Object.assign(h('img', 'env__video'), { src: POSTERS[name], alt: '' }));
+      } else {
+        const v = h('video', 'env__video');
+        Object.assign(v, { src: VIDEO_ENVS[name], muted: true, loop: true, autoplay: true, playsInline: true, preload: 'auto' });
+        v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+        if (POSTERS[name]) v.poster = POSTERS[name];
+        host.appendChild(v);
+        v.play().catch(() => {});
+      }
+      if (variant === 'dim') host.appendChild(h('div', 'env__dim'));
+    } else if (ENV_HTML[name]) {
+      host.innerHTML = ENV_HTML[name](variant);
+      if (thumb) $$('video', host).forEach((v) => v.remove());
+      $$('video', host).forEach((v) => { v.muted = true; v.play().catch(() => {}); });
+    }
+  }
+
+  /* ===================================================================
+     TIDSLINJE
+     =================================================================== */
+  const cam = { x: 0, y: 0, s: 1 };
+  let layout = {};
+
+  function computeLayout() {
+    layout = {};
+    visibleNodes().forEach((n, i) => {
+      layout[n.id] = { x: i * COL, y: n.lane === 'side' ? SIDE_Y : 0 };
+    });
+  }
+
+  function renderTimeline() {
+    computeLayout();
+    const next = nextNode();
+    const existing = Object.fromEntries($$('.node', el.nodes).map((e) => [e.dataset.id, e]));
+
+    nodes.forEach((n) => {
+      let e = existing[n.id];
+      const visible = isVisible(n);
+      if (!visible) { if (e && !e.classList.contains('is-dissolving')) e.remove(); return; }
+      const pos = layout[n.id];
+      const played = isPlayed(n);
+      const isNext = next && next.id === n.id;
+      const culprit = state.phase === 'rewind' && n.id === 'n0730';
+      const known = played || isNext || culprit || n.lane === 'side';
+      const badge = val(n.badge, state);
+      const sig = [val(n.title, state), badge, val(n.env, state), played, isNext, known, culprit].join('|');
+
+      if (!e) {
+        e = h('button', 'node is-new');
+        e.dataset.id = n.id;
+        e.type = 'button';
+        e.addEventListener('click', () => onNodeClick(n));
+        el.nodes.appendChild(e);
+        requestAnimationFrame(() => requestAnimationFrame(() => e.classList.remove('is-new')));
+      }
+      e.style.left = pos.x + 'px';
+      e.style.top = pos.y + 'px';
+      if (e.dataset.sig !== sig) {
+        e.dataset.sig = sig;
+        e.className = `node node--${n.kind} ${n.lane === 'side' ? 'node--side' : ''} ${e.classList.contains('is-new') ? 'is-new' : ''}`;
+        e.classList.toggle('is-played', played);
+        e.classList.toggle('is-next', !!isNext);
+        e.classList.toggle('is-future', !known);
+        e.classList.toggle('is-culprit', culprit);
+        e.innerHTML = `
+          <span class="node__ring"></span>
+          <span class="node__thumb"><span class="node__env"></span></span>
+          ${badge ? `<span class="node__badge">${badge}</span>` : ''}
+          <span class="node__time">${n.time}</span>
+          <span class="node__title">${known ? val(n.title, state) : '· · ·'}</span>
+          <span class="node__kind">${KIND_LABEL[n.kind] || ''}${played ? ' · ✓' : ''}</span>`;
+        buildEnv($('.node__env', e), val(n.env, state), val(n.envVariant, state), { thumb: true, live: isNext || culprit });
+        e.setAttribute('aria-label', `${n.time} ${known ? val(n.title, state) : 'okänd händelse'}`);
+        e.disabled = !(isNext || culprit);
+      }
+    });
+    drawLines();
+    renderProgress();
+  }
+
+  function drawLines() {
+    const main = visibleNodes().filter((n) => n.lane === 'main');
+    let segs = '';
+    for (let i = 0; i < main.length - 1; i++) {
+      const a = layout[main[i].id], b = layout[main[i + 1].id];
+      const done = isPlayed(main[i + 1]) ? 'done' : isPlayed(main[i]) ? 'half' : '';
+      segs += `<line class="seg ${done}" x1="${a.x}" y1="0" x2="${b.x}" y2="0"/>`;
+    }
+    if (!el.lines.firstChild) el.lines.innerHTML = '<g id="segs"></g><g id="branch"></g>';
+    $('#segs', el.lines).innerHTML = segs;
+
+    const side = visibleNodes().filter((n) => n.lane === 'side');
+    const g = $('#branch', el.lines);
+    if (!side.length) { g.innerHTML = ''; return; }
+    const s0 = layout.n0730, e0 = layout.n1614;
+    const f = layout[side[0].id], l = layout[side[side.length - 1].id];
+    const d = `M ${s0.x} 0 C ${s0.x + COL * 0.7} 0, ${f.x - COL * 0.9} ${SIDE_Y}, ${f.x - COL * 0.3} ${SIDE_Y} L ${l.x + COL * 0.3} ${SIDE_Y} C ${e0.x - COL * 0.9} ${SIDE_Y}, ${e0.x - COL * 0.7} 0, ${e0.x} 0`;
+    let bp = $('#branchPath', g);
+    if (bp && bp.getAttribute('d') === d) return;
+    g.innerHTML = `<path class="branch" id="branchPath" d="${d}"/>`;
+    bp = $('#branchPath', g);
+    const len = bp.getTotalLength();
+    bp.style.strokeDasharray = `${len}`;
+    if (!el.timeline.dataset.branchShown) {
+      // sidospåret växer fram från 07:30
+      bp.style.strokeDashoffset = len;
+      el.timeline.dataset.branchShown = '1';
+      setTimeout(() => { bp.style.transition = `stroke-dashoffset ${T(1800)}ms ease`; bp.style.strokeDashoffset = 0; }, T(900));
+    }
+  }
+
+  function renderProgress() {
+    el.hudProgress.innerHTML = visibleNodes().map((n) =>
+      `<i class="pdot pdot--${n.kind} ${isPlayed(n) ? 'is-done' : ''} ${current && current.id === n.id ? 'is-now' : ''}" title="${n.time}"></i>`).join('');
+  }
+
+  /* ------------------------------------------------------------ kamera */
+  function focusPoint() { return { cx: window.innerWidth / 2, cy: window.innerHeight * 0.42 }; }
+
+  function setCam(x, y, s, ms = 900, ease = 'cubic-bezier(.65,0,.25,1)') {
+    Object.assign(cam, { x, y, s });
+    const { cx, cy } = focusPoint();
+    el.world.style.transition = ms ? `transform ${T(ms)}ms ${ease}` : 'none';
+    el.world.style.transform = `translate(${cx - x * s}px, ${cy - y * s}px) scale(${s})`;
+    if (!ms) void el.world.offsetWidth;
+    return sleep(ms ? T(ms) : 0);
+  }
+  const camTo = (id, s = 1, ms, ease, yOverride) => {
+    const p = layout[id];
+    const hasSide = visibleNodes().some((n) => n.lane === 'side');
+    const y = yOverride != null ? yOverride : (hasSide ? SIDE_Y * 0.35 : 40);
+    return setCam(p.x, y, s, ms, ease);
+  };
+
+  // dra för att panorera
+  (function enableDrag() {
+    let drag = null;
+    el.viewport.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.node')) return;
+      drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false };
+      el.viewport.setPointerCapture(e.pointerId);
+    });
+    el.viewport.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = (e.clientX - drag.x) / cam.s, dy = (e.clientY - drag.y) / cam.s;
+      if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+      setCam(drag.cx - dx, drag.cy - dy, cam.s, 0);
+    });
+    el.viewport.addEventListener('pointerup', () => { drag = null; });
+    el.viewport.addEventListener('wheel', (e) => {
+      if (busy) return;
+      e.preventDefault();
+      setCam(cam.x + (e.deltaX || e.deltaY) / cam.s, cam.y, cam.s, 0);
+    }, { passive: false });
+  })();
+
+  function banner(html, cls = '') {
+    el.banner.className = `tl-banner ${cls}`;
+    el.banner.innerHTML = html || '';
+    el.banner.classList.toggle('is-on', !!html);
+  }
+
+  /* ===================================================================
+     PORTAL – "hoppa in" i en punkt / "kliva ut" ur den
+     =================================================================== */
+  let busy = false;
+  let current = null;
+
+  function show(layer, on) { layer.classList.toggle('is-active', on); }
+
+  async function enterNode(n, { rewind = false } = {}) {
+    if (busy) return;
+    busy = true;
+    current = n;
+    banner('');
+    SFX.unlock();
+
+    // 1. Kameran söker sig mot punkten
+    await camTo(n.id, 1.35, 650, 'cubic-bezier(.5,0,.3,1)', layout[n.id].y);
+    const thumb = $(`.node[data-id="${n.id}"] .node__thumb`);
+    const r = thumb.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rad = r.width / 2;
+    const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
+
+    // 2. Bygg scenen bakom portalen
+    prepareScene(n);
+    show(el.scene, true);
+    el.scene.style.clipPath = `circle(${rad}px at ${cx}px ${cy}px)`;
+
+    // 3. Fall in
+    SFX.play('whooshIn');
+    const ms = T(1150);
+    const portal = $('#portal');
+    portal.style.left = cx + 'px'; portal.style.top = cy + 'px'; portal.style.width = portal.style.height = rad * 2 + 'px';
+    portal.classList.add('is-on');
+    const scaleTo = (R / rad) * 1.02;
+    const anims = [
+      el.scene.animate([{ clipPath: `circle(${rad}px at ${cx}px ${cy}px)` }, { clipPath: `circle(${R}px at ${cx}px ${cy}px)` }],
+        { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
+      el.sceneWorld.animate([{ transform: 'scale(1.9)', filter: 'blur(10px) brightness(1.4) saturate(1.3)' }, { transform: 'scale(1.06)', filter: 'blur(0) brightness(1) saturate(1)', offset: 0.85 }, { transform: 'scale(1)', filter: 'none' }],
+        { duration: ms * 1.25, easing: 'cubic-bezier(.3,.6,.2,1)' }),
+      portal.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${scaleTo})`, opacity: 0.0 }],
+        { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
+      el.viewport.animate([{ filter: 'blur(0)' }, { filter: 'blur(6px)' }], { duration: ms, fill: 'forwards' }),
+    ];
+    setCam(cam.x, cam.y, 4, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.8,0,.2,1)');
+    if (rewind) el.rewind.classList.remove('is-on');
+    await anims[0].finished;
+    el.scene.style.clipPath = 'none';
+    anims.forEach((a) => a.cancel());
+    portal.classList.remove('is-on');
+    show(el.timeline, false);
+    busy = false;
+
+    await runScene(n);
+  }
+
+  async function exitScene(n) {
+    busy = true;
+    SFX.stopAll();
+    SFX.play('whooshOut');
+    show(el.timeline, true);
+    renderTimeline();
+    const p = layout[n.id];
+    await setCam(p.x, p.y, 4, 0);
+    const { cx, cy } = focusPoint();
+    const rad = 48;
+    const R = Math.hypot(innerWidth, innerHeight);
+    const ms = T(1000);
+    const anims = [
+      el.scene.animate([{ clipPath: `circle(${R}px at ${cx}px ${cy}px)` }, { clipPath: `circle(${rad}px at ${cx}px ${cy}px)`, offset: 0.92 }, { clipPath: `circle(0px at ${cx}px ${cy}px)` }],
+        { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
+      el.sceneWorld.animate([{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.5)', filter: 'blur(6px) brightness(1.3)' }],
+        { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
+      el.viewport.animate([{ filter: 'blur(6px)' }, { filter: 'blur(0)' }], { duration: ms }),
+    ];
+    setCam(p.x, p.y, 1, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.7,0,.3,1)');
+    await anims[0].finished;
+    show(el.scene, false);
+    anims.forEach((a) => a.cancel());
+    el.scene.style.clipPath = '';
+    cleanupScene();
+    current = null;
+    busy = false;
+  }
+
+  /* ===================================================================
+     SCEN
+     =================================================================== */
+  let fast = false;
+  let advance = null; // nuvarande "klicka för att gå vidare"
+  const choiceKeys = {};
+
+  function prepareScene(n) {
+    cleanupScene();
+    const env = val(n.env, state);
+    buildEnv(el.env, env, val(n.envVariant, state));
+    el.scene.dataset.env = env;
+    el.scene.classList.toggle('is-cinematic', !!val(n.cinematic, state));
+    el.scene.classList.toggle('is-summary', env === 'summary');
+    el.skip.classList.toggle('is-on', !!val(n.cinematic, state));
+    renderProgress();
+  }
+
+  function cleanupScene() {
+    fast = false;
+    el.hotspots.innerHTML = '';
+    el.captions.innerHTML = '';
+    el.choice.innerHTML = ''; el.choice.classList.remove('is-on');
+    el.panelHost.innerHTML = '';
+    el.memory.innerHTML = '';
+    el.titlecard.classList.remove('is-on');
+    el.fxTint.className = 'fx fx--tint';
+    el.eyelids.classList.remove('is-closed');
+    $$('.ov-clock', el.stage).forEach((o) => o.remove());
+    el.scene.classList.remove('is-cinematic', 'is-shake');
+    $$('video', el.env).forEach((v) => v.pause());
+  }
+
+  async function runScene(n) {
+    try {
+      await n.play(api);
+    } catch (err) {
+      console.error(err);
+    }
+    if (!state.played.includes(n.id)) state.played.push(n.id);
+    await sleep(T(300));
+    await afterScene(n);
+  }
+
+  /* ------------------------------------------------------------ API till story.js */
+  const api = {
+    get state() { return state; },
+    lastTimedOut: false,
+    wait: (ms) => sleep(fast ? 0 : T(ms)),
+    sfx: (n) => SFX.play(n),
+    loop: (n) => SFX.loop(n),
+    stopLoop: (n) => SFX.stop(n),
+
+    clock(t) {
+      if (el.hudClock.textContent === t) return;
+      el.hudClock.classList.remove('flip'); void el.hudClock.offsetWidth;
+      el.hudClock.textContent = t;
+      el.hudClock.classList.add('flip');
+    },
+
+    setPersona(p) {
+      el.hudName.textContent = p.name;
+      el.hudRole.textContent = `${p.role}, ${p.age} år`;
+      el.hudAvatar.textContent = p.name[0];
+    },
+
+    cinematic(on) {
+      el.scene.classList.toggle('is-cinematic', on);
+      el.skip.classList.toggle('is-on', on);
+      if (!on) fast = false;
+      return sleep(T(500));
+    },
+
+    tint(kind) { el.fxTint.className = 'fx fx--tint' + (kind ? ' is-' + kind : ''); el.scene.classList.toggle('is-shake', kind === 'alarm'); },
+
+    async title(time, place) {
+      el.tcTime.textContent = time;
+      el.tcPlace.textContent = place;
+      el.titlecard.classList.add('is-on');
+      await sleep(fast ? 80 : T(2300));
+      el.titlecard.classList.remove('is-on');
+      await sleep(fast ? 0 : T(350));
+    },
+
+    say(text, o = {}) {
+      return new Promise((resolve) => {
+        const c = h('div', `cap ${o.narrator ? 'cap--narr' : ''} ${o.inner ? 'cap--inner' : ''} ${o.small ? 'cap--small' : ''} ${o.big ? 'cap--big' : ''}`);
+        c.innerHTML = `${o.who ? `<span class="cap__who">${o.who}${o.inner ? ' <em>tänker</em>' : ''}</span>` : ''}<span class="cap__text"></span>`;
+        el.captions.innerHTML = '';
+        el.captions.appendChild(c);
+        const t = $('.cap__text', c);
+        let i = 0, typing = true, timer;
+        const finish = () => {
+          clearTimeout(timer);
+          advance = null;
+          c.classList.add('is-out');
+          setTimeout(() => { c.remove(); resolve(); }, fast ? 0 : T(260));
+        };
+        const type = () => {
+          if (fast) { t.textContent = text; typing = false; return setTimeout(finish, 60); }
+          i += 2;
+          t.textContent = text.slice(0, i);
+          if (i < text.length) timer = setTimeout(type, 22);
+          else { typing = false; timer = setTimeout(finish, T(Math.max(1700, 900 + text.length * 42))); }
+        };
+        advance = () => {
+          if (typing) { clearTimeout(timer); typing = false; t.textContent = text; timer = setTimeout(finish, T(1100)); }
+          else finish();
+        };
+        requestAnimationFrame(() => c.classList.add('is-in'));
+        type();
+      });
+    },
+
+    choose(o) {
+      return new Promise((resolve) => {
+        api.lastTimedOut = false;
+        const kind = o.kind || 'pink';
+        el.choice.className = `choice choice--${kind}`;
+        el.choice.innerHTML = `
+          <div class="choice__head">
+            ${o.badge ? `<span class="choice__badge">${o.badge}</span>` : `<span class="choice__chip">${kind === 'pink' ? 'Vardagsval' : 'Beslut'}</span>`}
+            <h2 class="choice__prompt">${o.prompt}</h2>
+          </div>
+          ${o.timer ? `<div class="choice__timer"><span>${o.timerLabel || ''}</span><i><b></b></i></div>` : ''}
+          <div class="choice__opts">${o.options.map((op, i) => `
+            <button class="opt" data-id="${op.id}" ${op.disabled ? 'disabled' : ''}>
+              <kbd>${i + 1}</kbd>
+              <span class="opt__label">${op.label}${op.sub ? `<small>${op.sub}</small>` : ''}</span>
+              ${op.tag ? `<span class="opt__tag">${op.tag}</span>` : ''}
+            </button>`).join('')}
+          </div>`;
+        let done = false;
+        let tick;
+        const pick = (id, timedOut = false) => {
+          if (done) return;
+          done = true;
+          clearInterval(tick);
+          api.lastTimedOut = timedOut;
+          SFX.play('select');
+          const b = $(`.opt[data-id="${id}"]`, el.choice);
+          b && b.classList.add('is-picked');
+          el.choice.classList.add('is-picked');
+          el.hotspots.innerHTML = '';
+          for (const k in choiceKeys) delete choiceKeys[k];
+          setTimeout(() => { el.choice.classList.remove('is-on'); setTimeout(() => resolve(id), T(380)); }, T(520));
+        };
+        $$('.opt', el.choice).forEach((b, i) => {
+          b.addEventListener('click', () => pick(b.dataset.id));
+          b.addEventListener('mouseenter', () => SFX.play('hover'));
+          if (!b.disabled) choiceKeys[String(i + 1)] = () => pick(b.dataset.id);
+        });
+        if (o.hotspot) api._hotspot(o.hotspot).then(() => pick(o.hotspot.id));
+        if (o.timer) {
+          const bar = $('.choice__timer b', el.choice);
+          const total = T(o.timer * 1000);
+          const start = performance.now();
+          el.choice.classList.add('has-timer');
+          tick = setInterval(() => {
+            const left = 1 - (performance.now() - start) / total;
+            bar.style.transform = `scaleX(${Math.max(0, left)})`;
+            el.choice.classList.toggle('is-urgent', left < 0.35);
+            if (left < 0.35 && Math.random() < 0.18) SFX.play('tick');
+            if (left <= 0) pick(o.timeoutId, true);
+          }, 50);
+        }
+        requestAnimationFrame(() => el.choice.classList.add('is-on'));
+      });
+    },
+
+    _hotspot({ x, y, w, h: hh, label }) {
+      return new Promise((resolve) => {
+        const b = h('button', 'hotspot');
+        Object.assign(b.style, { left: x + '%', top: y + '%', width: w + '%', height: hh + '%' });
+        b.innerHTML = `<span class="hotspot__pulse"></span>${label ? `<span class="hotspot__label">${label}</span>` : ''}`;
+        b.setAttribute('aria-label', label || 'Interagera');
+        b.addEventListener('click', (e) => { e.stopPropagation(); b.remove(); resolve(); });
+        el.hotspots.appendChild(b);
+      });
+    },
+    hotspot(o) { return api._hotspot(o); },
+
+    overlay(kind, value) {
+      if (kind === 'alarmclock') {
+        let o = $('.ov-clock', el.stage);
+        if (!o) { o = h('div', 'ov-clock'); el.stage.appendChild(o); }
+        o.textContent = value;
+      }
+    },
+
+    eyes(close) {
+      el.eyelids.classList.toggle('is-closed', close);
+      return sleep(T(900));
+    },
+
+    async memory(text, badge) {
+      SFX.play('memory');
+      el.memory.innerHTML = `<div class="mem"><span class="mem__badge">${badge || '!'}</span><span>${text}</span></div>`;
+      await sleep(fast ? 300 : T(2600));
+      const m = $('.mem', el.memory);
+      m && m.classList.add('is-out');
+      await sleep(T(400));
+      el.memory.innerHTML = '';
+    },
+
+    panel(cls, html) {
+      const p = h('div', `panel ${cls}`, html);
+      el.panelHost.innerHTML = '';
+      el.panelHost.appendChild(p);
+      requestAnimationFrame(() => requestAnimationFrame(() => p.classList.add('is-on')));
+      return p;
+    },
+    async closePanel(p) { p.classList.remove('is-on'); await sleep(T(450)); p.remove(); },
+
+    personaPick(personas, prompt) {
+      return new Promise((resolve) => {
+        const p = api.panel('panel--mirror', `
+          <h2 class="mirror__prompt">${prompt}</h2>
+          <div class="mirror__cards">${personas.map((x) => `
+            <button class="pcard ${x.locked ? 'is-locked' : ''}" data-id="${x.id}" ${x.locked ? 'aria-disabled="true"' : ''}>
+              <span class="pcard__face"><span>${x.name[0]}</span></span>
+              <strong>${x.name}, ${x.age} år</strong><span>${x.role}</span>
+              ${x.locked ? '<em>🔒 Kommer snart</em>' : '<em class="go">Välj</em>'}
+            </button>`).join('')}</div>`);
+        $$('.pcard', p).forEach((b) => b.addEventListener('click', async () => {
+          if (b.classList.contains('is-locked')) { SFX.play('warn'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
+          SFX.play('select');
+          b.classList.add('is-picked');
+          await sleep(T(700));
+          await api.closePanel(p);
+          resolve(b.dataset.id);
+        }));
+      });
+    },
+
+    agenda(items) {
+      return new Promise((resolve) => {
+        const p = api.panel('panel--agenda', `
+          <div class="phone">
+            <div class="phone__top"><b>I dag</b><span>tor 2 okt</span></div>
+            <ul>${items.map(([t, txt, clash], i) => `<li style="--i:${i}" class="${clash ? 'clash' : ''}"><time>${t}</time><span>${txt}</span>${clash ? '<em>Krock!</em>' : ''}</li>`).join('')}</ul>
+            <button class="btn btn--primary">Okej. Kör.</button>
+          </div>`);
+        $('button', p).addEventListener('click', async () => { SFX.play('click'); await api.closePanel(p); resolve(); });
+      });
+    },
+
+    mailSort(mails) {
+      return new Promise((resolve) => {
+        const order = [];
+        const p = api.panel('panel--mail', `
+          <div class="mailwin">
+            <div class="mailwin__bar"><i></i><i></i><i></i><span>Inkorg – 3 olästa</span></div>
+            <p class="mailwin__help">Klicka på mailen i den ordning Ola ska ta hand om dem.</p>
+            <ul class="mailwin__list">${mails.map((m) => `
+              <li><button class="mail" data-id="${m.id}">
+                <span class="mail__rank"></span>
+                <span class="mail__body"><b>${m.from}</b><strong>${m.subject}</strong><small>${m.preview}</small></span>
+              </button></li>`).join('')}</ul>
+            <div class="mailwin__foot"><button class="btn btn--ghost js-reset">Börja om</button><button class="btn btn--primary js-done" disabled>Klar</button></div>
+          </div>`);
+        const sync = () => {
+          $$('.mail', p).forEach((b) => {
+            const i = order.indexOf(b.dataset.id);
+            b.classList.toggle('is-ranked', i >= 0);
+            $('.mail__rank', b).textContent = i >= 0 ? i + 1 : '';
+          });
+          $('.js-done', p).disabled = order.length !== mails.length;
+        };
+        $$('.mail', p).forEach((b) => b.addEventListener('click', () => {
+          const id = b.dataset.id;
+          const i = order.indexOf(id);
+          if (i >= 0) order.splice(i, 1); else order.push(id);
+          SFX.play('click');
+          sync();
+        }));
+        $('.js-reset', p).addEventListener('click', () => { order.length = 0; sync(); });
+        $('.js-done', p).addEventListener('click', async () => { SFX.play('select'); await api.closePanel(p); resolve(order.slice()); });
+      });
+    },
+
+    async calendarMove(keepLisa) {
+      const p = api.panel('panel--cal', `
+        <div class="cal">
+          <div class="cal__head">Kalender · torsdag</div>
+          <div class="cal__grid">
+            <span class="cal__h">14:00</span><span class="cal__h">15:00</span><span class="cal__h">16:00</span>
+            <div class="ev ev--a">14:30 Budgetgenomgång</div>
+            <div class="ev ev--b">14:30 Avstämning underhåll</div>
+            ${keepLisa ? '<div class="ev ev--lisa">15:30 Lisa – ledighet</div>' : ''}
+          </div>
+        </div>`);
+      await sleep(fast ? 200 : T(1600));
+      SFX.play('warn');
+      p.classList.add('is-clash');
+      await sleep(fast ? 200 : T(1400));
+      p.classList.add(keepLisa ? 'move-a' : 'move-b');
+      SFX.play('whooshOut');
+      await sleep(fast ? 200 : T(1600));
+      await api.closePanel(p);
+    },
+
+    bigQuestion(text) {
+      return new Promise((resolve) => {
+        const p = api.panel('panel--question', `<h2>${text}</h2><button class="btn btn--primary btn--lg">Tillbaka till tidslinjen</button>`);
+        el.captions.innerHTML = '';
+        $('button', p).addEventListener('click', async () => { SFX.play('click'); resolve(); });
+      });
+    },
+
+    summary(data) {
+      return new Promise((resolve) => {
+        el.scene.classList.add('is-summary');
+        const p = api.panel('panel--summary', `
+          <div class="summary">
+            <p class="eyebrow">Dagens slut · 17:00</p>
+            <h1>Vad tar du med dig?</h1>
+            <section>
+              <h3>Kunskaper från dagen</h3>
+              <ul class="know">${data.knowledge.map((k) => `<li>${k}</li>`).join('')}</ul>
+            </section>
+            <section>
+              <h3>Dina dilemman</h3>
+              <div class="insights">${data.insights.map((x) => `
+                <article class="insight">${x.badge ? `<span class="insight__badge">${x.badge}</span>` : ''}<h4>${x.title}</h4><p>${x.text}</p></article>`).join('')}</div>
+            </section>
+            <section>
+              <h3>Min commitlista</h3>
+              <div class="commits">${data.commits.map((c, i) => `
+                <label class="commit"><input type="checkbox" ${i === 0 ? '' : ''}><span class="commit__box"></span><span>${c}</span></label>`).join('')}</div>
+            </section>
+            <div class="summary__foot">
+              <button class="btn btn--ghost js-again">Spela igen</button>
+              <button class="btn btn--primary btn--lg js-done" disabled>Jag committar</button>
+            </div>
+          </div>`);
+        const boxes = $$('input', p);
+        boxes.forEach((b) => b.addEventListener('change', () => {
+          SFX.play(b.checked ? 'select' : 'click');
+          $('.js-done', p).disabled = !boxes[0].checked;
+        }));
+        $('.js-again', p).addEventListener('click', () => restart());
+        $('.js-done', p).addEventListener('click', () => {
+          SFX.play('success');
+          state.committed = boxes.map((b) => b.checked);
+          p.classList.add('is-done');
+          $('.summary__foot', p).innerHTML = '<p class="done-msg">Tack! Kursen är genomförd. ✓</p><button class="btn btn--ghost js-tl">Se din tidslinje</button><button class="btn btn--ghost js-again">Spela igen</button>';
+          $('.js-again', p).addEventListener('click', () => restart());
+          $('.js-tl', p).addEventListener('click', async () => {
+            await exitScene(byId.nend);
+            await setCam(layout.n0730.x, 40, 0.5, 1200);
+            banner('<strong>Din dag – rak och olycksfri.</strong><small>Tack för att du spelade.</small>', 'tl-banner--good');
+          });
+          resolve();
+        });
+      });
+    },
+  };
+
+  // klick / mellanslag = gå vidare i repliker; siffror = val
+  el.scene.addEventListener('click', (e) => {
+    if (e.target.closest('button, .panel, label, input')) return;
+    advance && advance();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!el.scene.classList.contains('is-active')) return;
+    if (choiceKeys[e.key]) { choiceKeys[e.key](); return; }
+    if ((e.key === ' ' || e.key === 'Enter') && advance && !e.target.closest('button')) { e.preventDefault(); advance(); }
+  });
+  el.skip.addEventListener('click', (e) => { e.stopPropagation(); fast = true; advance && advance(); });
+
+  /* ===================================================================
+     FLÖDE
+     =================================================================== */
+  async function afterScene(n) {
+    // Spår avgörs av det kritiska valet kl 07:30
+    if (n.id === 'n0730') {
+      const wasRewind = state.phase === 'rewind';
+      // vid omspelning byts spåret först när sidohändelserna lösts upp (straighten)
+      if (!wasRewind) state.track = BAD_A.includes(state.choices.A) ? 'A' : 'A2';
+      if (wasRewind) {
+        await exitScene(n);
+        await straighten();
+        return;
+      }
+    }
+
+    if (n.id !== 'nend') await exitScene(n);
+
+    if (n.id === 'nend') return; // sammanfattningen blir kvar
+
+    if (n.id === 'n1614' && state.accident && state.phase === 'normal') {
+      await chainBack();
+      return;
+    }
+    await goNext();
+  }
+
+  async function goNext() {
+    renderTimeline();
+    const nx = nextNode();
+    if (!nx) return;
+    await camTo(nx.id, 1, 1100);
+    const auto = val(nx.cinematic, state) || nx.kind === 'film' || nx.kind === 'side';
+    if (auto) {
+      banner(`<span class="tl-banner__time">${nx.time}</span> ${val(nx.title, state)}<small>Filmen startar…</small>`);
+      await sleep(T(1500));
+      if (!busy && nextNode() === nx) enterNode(nx);
+    } else {
+      banner(`<span class="tl-banner__time">${nx.time}</span> ${val(nx.title, state)}<small>Klicka på punkten för att hoppa in</small>`);
+    }
+  }
+
+  function onNodeClick(n) {
+    if (busy) return;
+    if (state.phase === 'rewind' && n.id === 'n0730') { doRewind(n); return; }
+    const nx = nextNode();
+    if (nx && nx.id === n.id) { SFX.play('click'); enterNode(n); }
+  }
+
+  /* Efter olyckan: följ kedjan bakåt, låt 07:30 lysa */
+  async function chainBack() {
+    busy = true;
+    el.timeline.classList.add('is-alarm');
+    banner('<strong>Något gick fel.</strong><small>Följ kedjan tillbaka…</small>', 'tl-banner--alarm');
+    const chain = ['n1614', 'n1402', 'n1223', 'n1115', 'n0730'];
+    for (const id of chain) {
+      await camTo(id, 1.1, 800, undefined, layout[id].y * 0.6);
+      const e = $(`.node[data-id="${id}"]`);
+      e.classList.add('is-chain');
+      SFX.play('pulse');
+      await sleep(T(450));
+    }
+    state.phase = 'rewind';
+    renderTimeline();
+    await camTo('n0730', 1.15, 700);
+    banner('<strong>Hur hade detta kunnat förhindras?</strong><small>Valet kl 07:30 lyser. Hoppa tillbaka och ändra det.</small>', 'tl-banner--alarm');
+    busy = false;
+  }
+
+  async function doRewind(n) {
+    busy = true;
+    banner('');
+    SFX.play('rewind');
+    el.rewind.classList.add('is-on');
+    // klockan spolas bakåt 16:14 -> 07:30
+    const from = 16 * 60 + 14, to = 7 * 60 + 30;
+    const steps = 40;
+    for (let i = 0; i <= steps; i++) {
+      const m = Math.round(from - (from - to) * (i / steps) ** 0.7);
+      el.rewindClock.textContent = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+      await sleep(T(38));
+    }
+    $$('.node.is-chain').forEach((e) => e.classList.remove('is-chain'));
+    state.rewound = true;
+    busy = false;
+    await enterNode(n, { rewind: true });
+  }
+
+  /* Rätt val: sidohändelserna försvinner och tidslinjen blir rak */
+  async function straighten() {
+    busy = true;
+    el.timeline.classList.remove('is-alarm');
+    banner('<strong>Ett annat val. En annan dag.</strong>', 'tl-banner--good');
+    await camTo('n1115', 0.62, 1000, undefined, SIDE_Y * 0.4);
+    SFX.play('dissolve');
+    $$('.node--side').forEach((e, i) => setTimeout(() => e.classList.add('is-dissolving'), i * T(220)));
+    const bp = $('#branchPath');
+    if (bp) { bp.style.transition = `stroke-dashoffset ${T(1300)}ms ease-in`; bp.style.strokeDashoffset = bp.getTotalLength(); }
+    await sleep(T(1500));
+    $$('.node--side').forEach((e) => e.remove());
+    state.track = 'A2';
+    // 16:14 spelas om i ny version
+    state.played = state.played.filter((id) => id !== 'n1614' && !byId[id].track);
+    state.phase = 'fixed';
+    delete el.timeline.dataset.branchShown;
+    renderTimeline();
+    await sleep(T(700));
+    // ljuspuls längs den raka linjen
+    await lightPulse('n0730', 'n1614');
+    SFX.play('success');
+    banner('<strong>Tidslinjen är rak igen.</strong><small>Olyckan inträffade aldrig.</small>', 'tl-banner--good');
+    await sleep(T(1400));
+    busy = false;
+    await goNext();
+  }
+
+  async function lightPulse(fromId, toId) {
+    const a = layout[fromId], b = layout[toId];
+    const dot = h('div', 'tl-pulse');
+    el.world.appendChild(dot);
+    dot.style.left = a.x + 'px';
+    setCam(a.x, 40, 0.75, 0);
+    const ms = T(2200);
+    dot.animate([{ left: a.x + 'px' }, { left: b.x + 'px' }], { duration: ms, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' });
+    setCam(b.x, 40, 0.75, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.5,0,.5,1)');
+    el.timeline.classList.add('is-healed');
+    await sleep(ms + 200);
+    dot.remove();
+  }
+
+  function restart() {
+    SFX.stopAll();
+    state = freshState();
+    location.href = location.pathname;
+  }
+
+  /* ------------------------------------------------------------ start */
+  async function start() {
+    SFX.unlock();
+    SFX.play('whooshIn');
+    show(el.intro, false);
+    show(el.timeline, true);
+    renderTimeline();
+    // etableringsbild: svep över hela dagen, landa på 06:00
+    const last = visibleNodes().length - 1;
+    await setCam(last * COL * 0.5, 40, 0.42, 0);
+    banner('<strong>En dag i produktionen.</strong><small>Varje punkt är ett ögonblick du kan hoppa in i.</small>');
+    await sleep(T(1700));
+    await goNext();
+  }
+
+  $('#startBtn').addEventListener('click', start);
+  $('#resetBtn').addEventListener('click', () => { if (confirm('Börja om från början?')) restart(); });
+  const muteIcon = () => $$('.js-mute').forEach((b) => { b.textContent = SFX.isMuted() ? '🔇' : '🔊'; });
+  $$('.js-mute').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); SFX.toggleMute(); muteIcon(); }));
+  muteIcon();
+  window.addEventListener('resize', () => { if (!busy) setCam(cam.x, cam.y, cam.s, 0); });
+
+  /* ------------------------------------------------------------ utvecklarläge
+     ?at=n1324           hoppa till en punkt (tidigare punkter markeras som spelade)
+     ?at=n1614&a=lugnt   välj vad som svarades kl 07:30 */
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('at') && byId[qs.get('at')]) {
+    const target = qs.get('at');
+    const idx = nodes.findIndex((n) => n.id === target);
+    if (idx > nodes.findIndex((n) => n.id === 'n0730')) {
+      state.choices.A = qs.get('a') || 'lugnt';
+      state.firstA = state.choices.A;
+      state.triedA = [state.choices.A];
+      state.track = BAD_A.includes(state.choices.A) ? 'A' : 'A2';
+    }
+    if (idx > nodes.findIndex((n) => n.id === 'n0803')) state.choices.B = qs.get('b') || 'motet';
+    if (idx > nodes.findIndex((n) => n.id === 'n1324')) state.choices.C = ['rapport', 'kim', 'aw'];
+    state.played = nodes.slice(0, idx).filter(isVisible).map((n) => n.id);
+    if (target === 'n1614' && state.track === 'A') state.accident = false;
+    api.setPersona(STORY.personas[1]);
+    el.timeline.dataset.branchShown = '1';
+    $('#startBtn').textContent = `Fortsätt vid ${byId[target].time}`;
+  }
+
+  // fokus på element utanför bild får aldrig scrolla upplevelsen
+  $$('#app, .layer, #tlViewport, #sceneWorld').forEach((x) => x.addEventListener('scroll', () => { x.scrollTop = 0; x.scrollLeft = 0; }));
+
+  window.__pp = { state: () => state, busy: () => busy, enterNode, nodes };
+})();

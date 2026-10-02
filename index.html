@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Produktion och press</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== Startskärm ===== -->
+    <section id="intro" class="layer intro is-active" aria-label="Start">
+      <div class="intro__bg"></div>
+      <div class="intro__content">
+        <p class="eyebrow">Valmet · Arbetsmiljö &amp; ledarskap</p>
+        <h1 class="intro__title">Produktion<br>och press</h1>
+        <p class="intro__lead">En vanlig dag. Hundra små beslut. Några av dem spelar större roll än du tror.</p>
+        <button class="btn btn--primary btn--lg" id="startBtn">Starta dagen</button>
+        <p class="intro__hint">Ljud rekommenderas 🎧</p>
+      </div>
+    </section>
+
+    <!-- ===== Tidslinjen ===== -->
+    <section id="timeline" class="layer timeline" aria-label="Tidslinje">
+      <header class="tl-header">
+        <div class="tl-header__title">
+          <span class="eyebrow">Olas dag</span>
+          <strong>Produktion och press</strong>
+        </div>
+        <ul class="legend" aria-label="Teckenförklaring">
+          <li><i class="dot dot--pink"></i>Vardagsval</li>
+          <li><i class="dot dot--blue"></i>Beslut</li>
+          <li><i class="dot dot--grey"></i>Film</li>
+          <li><i class="dot dot--white"></i>Vid sidan av</li>
+        </ul>
+        <div class="tl-header__actions">
+          <button class="icon-btn js-mute" aria-label="Ljud av/på" title="Ljud av/på"></button>
+          <button class="icon-btn" id="resetBtn" aria-label="Börja om" title="Börja om">↺</button>
+        </div>
+      </header>
+
+      <div class="tl-viewport" id="tlViewport">
+        <div class="tl-world" id="tlWorld">
+          <svg class="tl-lines" id="tlLines" aria-hidden="true"></svg>
+          <div class="tl-nodes" id="tlNodes"></div>
+        </div>
+      </div>
+
+      <div class="tl-banner" id="tlBanner" aria-live="polite"></div>
+    </section>
+
+    <!-- ===== Scenen ===== -->
+    <section id="scene" class="layer scene" aria-label="Scen">
+      <div class="scene__world" id="sceneWorld">
+        <div class="stage" id="stage">
+          <div class="env" id="env"></div>
+          <div class="hotspots" id="hotspots"></div>
+        </div>
+        <div class="fx fx--vignette"></div>
+        <div class="fx fx--grain"></div>
+        <div class="fx fx--tint" id="fxTint"></div>
+        <div class="eyelids" id="eyelids"><i></i><i></i></div>
+      </div>
+
+      <!-- HUD (gameplay) -->
+      <div class="hud" id="hud">
+        <div class="hud__who">
+          <div class="avatar" id="hudAvatar">?</div>
+          <div>
+            <strong id="hudName">Du</strong>
+            <span id="hudRole">Vem är du i dag?</span>
+          </div>
+        </div>
+        <div class="hud__clock" id="hudClock">06:00</div>
+        <div class="hud__right">
+          <div class="hud__progress" id="hudProgress"></div>
+          <button class="icon-btn js-mute" aria-label="Ljud av/på" title="Ljud av/på"></button>
+        </div>
+      </div>
+
+      <!-- Filmiska svarta fält -->
+      <div class="letterbox" aria-hidden="true"><i></i><i></i></div>
+
+      <!-- Titelkort -->
+      <div class="titlecard" id="titlecard" aria-live="polite">
+        <span class="titlecard__time" id="tcTime"></span>
+        <span class="titlecard__place" id="tcPlace"></span>
+      </div>
+
+      <!-- Repliker / undertexter -->
+      <div class="captions" id="captions" aria-live="polite"></div>
+
+      <!-- "Detta kommer att påverka..." -->
+      <div class="memory" id="memory" aria-live="polite"></div>
+
+      <!-- Valpanel -->
+      <div class="choice" id="choice"></div>
+
+      <!-- Generiska paneler (mail, kalender, sammanfattning) -->
+      <div class="panel-host" id="panelHost"></div>
+
+      <button class="skip" id="skipBtn" aria-label="Hoppa över">Hoppa över ›</button>
+    </section>
+
+    <!-- Portal som används vid "hoppa in"-övergången -->
+    <div class="portal" id="portal" aria-hidden="true"></div>
+    <!-- Spola tillbaka-effekt -->
+    <div class="rewind" id="rewind" aria-hidden="true">
+      <div class="rewind__lines"></div>
+      <div class="rewind__clock" id="rewindClock">16:14</div>
+      <div class="rewind__label">◀◀ Spolar tillbaka</div>
+    </div>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/story.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
