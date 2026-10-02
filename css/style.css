@@ -23,6 +23,7 @@
 }
 
 * { box-sizing: border-box; }
+html { color-scheme: dark; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font); overflow: hidden; -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; }
 #app { position: fixed; inset: 0; overflow: hidden; overflow: clip; }
@@ -44,6 +45,7 @@ button { font: inherit; color: inherit; }
 .btn--ghost:hover { background: rgba(255,255,255,.14); }
 .btn--lg { padding: 16px 30px; font-size: 18px; }
 .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); cursor: pointer; font-size: 17px; display: grid; place-items: center; }
+.icon-btn.is-armed { width: auto; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--alarm); }
 .icon-btn:hover { background: rgba(255,255,255,.16); }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 

@@ -867,7 +867,7 @@
   function restart() {
     SFX.stopAll();
     state = freshState();
-    location.href = location.pathname;
+    if (location.search) location.href = location.pathname; else location.reload();
   }
 
   /* ------------------------------------------------------------ start */
@@ -886,7 +886,14 @@
   }
 
   $('#startBtn').addEventListener('click', start);
-  $('#resetBtn').addEventListener('click', () => { if (confirm('Börja om från början?')) restart(); });
+  // två klick i stället för confirm() (som inte fungerar i alla inbäddade visare)
+  let resetArmed = null;
+  $('#resetBtn').addEventListener('click', () => {
+    const b = $('#resetBtn');
+    if (resetArmed) { restart(); return; }
+    b.classList.add('is-armed'); b.textContent = 'Börja om?';
+    resetArmed = setTimeout(() => { resetArmed = null; b.classList.remove('is-armed'); b.textContent = '↺'; }, 3000);
+  });
   const muteIcon = () => $$('.js-mute').forEach((b) => { b.textContent = SFX.isMuted() ? '🔇' : '🔊'; });
   $$('.js-mute').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); SFX.toggleMute(); muteIcon(); }));
   muteIcon();
