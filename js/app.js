@@ -20,7 +20,6 @@
   const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
   const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4' };
   const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', spegel: 'assets/img/sovrum.jpg' };
-  const KIND_LABEL = { pink: 'Vardagsval', blue: 'Beslut', film: 'Film', side: 'Vid sidan av', green: 'Sammanfattning' };
 
   /* ------------------------------------------------------------ state */
   const freshState = () => ({
@@ -521,7 +520,7 @@
         el.choice.className = `choice choice--${kind}`;
         el.choice.innerHTML = `
           <div class="choice__head">
-            ${o.badge ? `<span class="choice__badge">${o.badge}</span>` : `<span class="choice__chip">${kind === 'pink' ? 'Vardagsval' : 'Beslut'}</span>`}
+            ${o.badge ? `<span class="choice__badge">${o.badge}</span>` : ''}
             <h2 class="choice__prompt">${o.prompt}</h2>
           </div>
           ${o.timer ? `<div class="choice__timer"><span>${o.timerLabel || ''}</span><i><b></b></i></div>` : ''}
