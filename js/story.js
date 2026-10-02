@@ -34,7 +34,7 @@ const STORY = {
   nodes: [
     /* ------------------------------------------------------------ 06:00 */
     {
-      id: 'n0600', time: '06:00', title: 'Snooze or lose', kind: 'pink', lane: 'main',
+      id: 'n0600', prop: 'klocka', time: '06:00', title: 'Snooze or lose', kind: 'pink', lane: 'main',
       env: 'sovrum', place: 'Sovrummet',
       async play(api) {
         api.clock('06:00');
@@ -72,7 +72,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 06:20 */
     {
-      id: 'n0620', time: '06:20', title: 'Väljer person', kind: 'blue', badge: 'X', lane: 'main',
+      id: 'n0620', prop: 'person', time: '06:20', title: 'Väljer person', kind: 'blue', badge: 'X', lane: 'main',
       env: 'spegel', place: 'Badrummet',
       async play(api) {
         api.clock('06:20');
@@ -94,7 +94,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 06:50 */
     {
-      id: 'n0650', time: '06:50', title: 'Bilfärd till jobbet', kind: 'film', lane: 'main',
+      id: 'n0650', prop: 'bil', time: '06:50', title: 'Bilfärd till jobbet', kind: 'film', lane: 'main',
       env: 'bil', place: 'På väg till jobbet', cinematic: true,
       async play(api) {
         api.clock('06:50');
@@ -110,7 +110,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 07:15 */
     {
-      id: 'n0715', time: '07:15', title: 'Svart kaffe eller havrebös', kind: 'pink', lane: 'main',
+      id: 'n0715', prop: 'kopp', time: '07:15', title: 'Svart kaffe eller havrebös', kind: 'pink', lane: 'main',
       env: 'fika', place: 'Personalrummet',
       async play(api) {
         api.clock('07:15');
@@ -130,7 +130,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 07:30 */
     {
-      id: 'n0730', time: '07:30', title: 'Dagligt möte', kind: 'blue', badge: 'A', lane: 'main', critical: true,
+      id: 'n0730', prop: 'tavla', time: '07:30', title: 'Dagligt möte', kind: 'blue', badge: 'A', lane: 'main', critical: true,
       env: 'mote', place: 'Mötesrummet, linje 3',
       async play(api) {
         const replay = !!api.state.rewound;
@@ -187,7 +187,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 08:03 */
     {
-      id: 'n0803', time: '08:03', title: 'Korridoren', kind: 'blue', badge: 'B', lane: 'main',
+      id: 'n0803', prop: 'prat', time: '08:03', title: 'Korridoren', kind: 'blue', badge: 'B', lane: 'main',
       env: 'korridor', place: 'Korridoren',
       async play(api) {
         api.clock('08:03');
@@ -217,7 +217,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 10:15 */
     {
-      id: 'n1015', time: '10:15', title: 'Produktionsmöte chefer', kind: 'film', lane: 'main',
+      id: 'n1015', prop: 'skarm', time: '10:15', title: 'Produktionsmöte chefer', kind: 'film', lane: 'main',
       env: 'mote', envVariant: 'dark', place: 'Ledningsrummet', cinematic: true,
       async play(api) {
         api.clock('10:15');
@@ -230,7 +230,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 11:15 (A) */
     {
-      id: 'n1115', time: '11:15', title: 'Vid maskinen', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+      id: 'n1115', prop: 'maskin', time: '11:15', title: 'Vid maskinen', kind: 'side', badge: 'A', lane: 'side', track: 'A',
       env: 'fabrik', place: 'Pressen, linje 3', cinematic: true,
       async play(api) {
         api.clock('11:15');
@@ -244,7 +244,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 12:00 */
     {
-      id: 'n1200', time: '12:00', title: 'Vad är det för lunch i lådan?', kind: 'pink', lane: 'main',
+      id: 'n1200', prop: 'lada', time: '12:00', title: 'Vad är det för lunch i lådan?', kind: 'pink', lane: 'main',
       env: 'fika', place: 'Lunchrummet',
       async play(api) {
         api.clock('12:00');
@@ -267,7 +267,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 12:23 (A) */
     {
-      id: 'n1223', time: '12:23', title: 'Gnäll om skyddet', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+      id: 'n1223', prop: 'gnall', time: '12:23', title: 'Gnäll om skyddet', kind: 'side', badge: 'A', lane: 'side', track: 'A',
       env: 'fika', envVariant: 'dim', place: 'Lunchrummet', cinematic: true,
       async play(api) {
         api.clock('12:23');
@@ -284,7 +284,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 13:24 */
     {
-      id: 'n1324', time: '13:24', title: 'Vid datorn', kind: 'blue', badge: 'C', lane: 'main',
+      id: 'n1324', prop: 'laptop', time: '13:24', title: 'Vid datorn', kind: 'blue', badge: 'C', lane: 'main',
       env: 'kontor', place: 'Olas kontor',
       async play(api) {
         api.clock('13:24');
@@ -303,7 +303,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 14:02 (A) */
     {
-      id: 'n1402', time: '14:02', title: 'Vid fikat', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+      id: 'n1402', prop: 'handske', time: '14:02', title: 'Vid fikat', kind: 'side', badge: 'A', lane: 'side', track: 'A',
       env: 'fika', place: 'Fikarummet', cinematic: true,
       async play(api) {
         api.clock('14:02');
@@ -318,7 +318,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 14:30 */
     {
-      id: 'n1430', time: '14:30', title: 'Dubbelbokad', kind: 'film', lane: 'main',
+      id: 'n1430', prop: 'kalender', time: '14:30', title: 'Dubbelbokad', kind: 'film', lane: 'main',
       env: 'kontor', place: 'Olas kontor', cinematic: true,
       async play(api) {
         api.clock('14:30');
@@ -333,7 +333,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 15:30 */
     {
-      id: 'n1530', time: '15:30', title: 'Femton minuter över', kind: 'pink', lane: 'main',
+      id: 'n1530', prop: 'mobil', time: '15:30', title: 'Femton minuter över', kind: 'pink', lane: 'main',
       env: 'kontor', place: 'Olas kontor',
       async play(api) {
         api.clock('15:30');
@@ -359,7 +359,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 16:14 */
     {
-      id: 'n1614', time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
+      id: 'n1614', prop: (s) => (s.track === 'A' ? 'larm' : 'ryggsack'), time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
       title: (s) => (s.track === 'A' ? 'Larmet går' : 'Mötet i korridoren'),
       env: (s) => (s.track === 'A' ? 'fabrik' : 'korridor'),
       envVariant: (s) => (s.track === 'A' ? 'alarm' : 'warm'),
@@ -396,7 +396,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ Summering */
     {
-      id: 'nend', time: 'Dagens slut', title: 'Sammanfattning', kind: 'green', lane: 'main',
+      id: 'nend', prop: 'checklista', time: 'Dagens slut', title: 'Sammanfattning', kind: 'green', lane: 'main',
       env: 'summary', place: '',
       async play(api) {
         api.clock('17:00');

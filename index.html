@@ -17,7 +17,8 @@
     <section id="intro" class="layer intro is-active" aria-label="Start">
       <div class="intro__bg"></div>
       <div class="intro__content">
-        <p class="eyebrow">Valmet · Arbetsmiljö &amp; ledarskap</p>
+        <img class="intro__logo" src="assets/img/logo.png" alt="Valmet" onerror="this.remove()">
+        <p class="eyebrow">Arbetsmiljö &amp; ledarskap</p>
         <h1 class="intro__title">Produktion<br>och press</h1>
         <p class="intro__lead">En vanlig dag. Hundra små beslut. Några av dem spelar större roll än du tror.</p>
         <button class="btn btn--primary btn--lg" id="startBtn">Starta dagen</button>
@@ -28,16 +29,8 @@
     <!-- ===== Tidslinjen ===== -->
     <section id="timeline" class="layer timeline" aria-label="Tidslinje">
       <header class="tl-header">
-        <div class="tl-header__title">
-          <span class="eyebrow">Olas dag</span>
-          <strong>Produktion och press</strong>
-        </div>
-        <ul class="legend" aria-label="Teckenförklaring">
-          <li><i class="dot dot--pink"></i>Vardagsval</li>
-          <li><i class="dot dot--blue"></i>Beslut</li>
-          <li><i class="dot dot--grey"></i>Film</li>
-          <li><i class="dot dot--white"></i>Vid sidan av</li>
-        </ul>
+        <div class="tl-header__side"></div>
+        <img class="tl-logo" src="assets/img/logo.png" alt="Valmet" onerror="this.style.visibility='hidden'">
         <div class="tl-header__actions">
           <button class="icon-btn js-mute" aria-label="Ljud av/på" title="Ljud av/på"></button>
           <button class="icon-btn" id="resetBtn" aria-label="Börja om" title="Börja om">↺</button>
@@ -118,6 +111,7 @@
   </div>
 
   <script src="js/audio.js"></script>
+  <script src="js/props.js"></script>
   <script src="js/story.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -14,8 +14,9 @@
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const T = (ms) => (REDUCED ? Math.round(ms * 0.35) : ms);
 
-  const COL = 250;        // avstånd mellan noder (px i världen)
-  const SIDE_Y = 270;     // sidospårets höjd under huvudlinjen
+  const ROW = 290;        // lodrätt avstånd mellan punkterna (px i världen)
+  const PLAT_X = 270;     // plattformens avstånd från linjen
+  const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
   const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4' };
   const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', spegel: 'assets/img/sovrum.jpg' };
   const KIND_LABEL = { pink: 'Vardagsval', blue: 'Beslut', film: 'Film', side: 'Vid sidan av', green: 'Sammanfattning' };
@@ -142,10 +143,16 @@
 
   function computeLayout() {
     layout = {};
+    let m = 0;
     visibleNodes().forEach((n, i) => {
-      layout[n.id] = { x: i * COL, y: n.lane === 'side' ? SIDE_Y : 0 };
+      const side = n.lane === 'side';
+      const dir = side ? 1 : (m++ % 2 === 0 ? 1 : -1);   // huvudlinjen växlar höger/vänster
+      const x = side ? SIDE_X : 0;
+      const y = i * ROW;
+      layout[n.id] = { x, y, dir, px: x + dir * PLAT_X, py: y };
     });
   }
+  const hasSide = () => visibleNodes().some((n) => n.lane === 'side');
 
   function renderTimeline() {
     computeLayout();
@@ -162,7 +169,7 @@
       const culprit = state.phase === 'rewind' && n.id === 'n0730';
       const known = played || isNext || culprit || n.lane === 'side';
       const badge = val(n.badge, state);
-      const sig = [val(n.title, state), badge, val(n.env, state), played, isNext, known, culprit].join('|');
+      const sig = [val(n.title, state), badge, val(n.prop, state), played, isNext, known, culprit, pos.dir].join('|');
 
       if (!e) {
         e = h('button', 'node is-new');
@@ -176,20 +183,25 @@
       e.style.top = pos.y + 'px';
       if (e.dataset.sig !== sig) {
         e.dataset.sig = sig;
-        e.className = `node node--${n.kind} ${n.lane === 'side' ? 'node--side' : ''} ${e.classList.contains('is-new') ? 'is-new' : ''}`;
+        e.className = `node node--${n.kind} ${pos.dir < 0 ? 'node--left' : 'node--right'} ${n.lane === 'side' ? 'node--side' : ''} ${e.classList.contains('is-new') ? 'is-new' : ''}`;
         e.classList.toggle('is-played', played);
         e.classList.toggle('is-next', !!isNext);
         e.classList.toggle('is-future', !known);
         e.classList.toggle('is-culprit', culprit);
         e.innerHTML = `
-          <span class="node__ring"></span>
-          <span class="node__thumb"><span class="node__env"></span></span>
-          ${badge ? `<span class="node__badge">${badge}</span>` : ''}
-          <span class="node__time">${n.time}</span>
-          <span class="node__title">${known ? val(n.title, state) : '· · ·'}</span>
-          <span class="node__kind">${KIND_LABEL[n.kind] || ''}${played ? ' · ✓' : ''}</span>`;
-        buildEnv($('.node__env', e), val(n.env, state), val(n.envVariant, state), { thumb: true, live: isNext || culprit });
-        e.setAttribute('aria-label', `${n.time} ${known ? val(n.title, state) : 'okänd händelse'}`);
+          <span class="node__arm"></span>
+          <span class="node__dot"></span>
+          <span class="node__label">
+            <span class="node__pill">kl ${n.time.replace('Dagens slut', '17:00')}</span>
+            <span class="node__title">${known ? val(n.title, state) : ''}</span>
+            ${isNext || culprit ? `<span class="node__cta">${culprit ? 'Hoppa tillbaka' : 'Hoppa in'}</span>` : ''}
+          </span>
+          <span class="node__plat">
+            <span class="node__disc"></span>
+            <span class="node__prop">${PROPS.html(val(n.prop, state))}</span>
+            ${badge ? `<span class="node__badge">${badge}</span>` : ''}
+          </span>`;
+        e.setAttribute('aria-label', `kl ${n.time} ${known ? val(n.title, state) : 'okänd händelse'}`);
         e.disabled = !(isNext || culprit);
       }
     });
@@ -199,12 +211,11 @@
 
   function drawLines() {
     const main = visibleNodes().filter((n) => n.lane === 'main');
-    let segs = '';
-    for (let i = 0; i < main.length - 1; i++) {
-      const a = layout[main[i].id], b = layout[main[i + 1].id];
-      const done = isPlayed(main[i + 1]) ? 'done' : isPlayed(main[i]) ? 'half' : '';
-      segs += `<line class="seg ${done}" x1="${a.x}" y1="0" x2="${b.x}" y2="0"/>`;
-    }
+    const first = layout[main[0].id], last = layout[main[main.length - 1].id];
+    let segs = `<line class="track" x1="0" y1="${first.y - ROW * 0.8}" x2="0" y2="${last.y + ROW * 0.6}"/>`;
+    // spelad del av linjen: från 06:00 fram till den senast spelade punkten
+    const lastPlayed = [...main].reverse().find(isPlayed);
+    if (lastPlayed) segs += `<line class="seg done" x1="0" y1="${first.y}" x2="0" y2="${layout[lastPlayed.id].y}"/>`;
     if (!el.lines.firstChild) el.lines.innerHTML = '<g id="segs"></g><g id="branch"></g>';
     $('#segs', el.lines).innerHTML = segs;
 
@@ -213,7 +224,8 @@
     if (!side.length) { g.innerHTML = ''; return; }
     const s0 = layout.n0730, e0 = layout.n1614;
     const f = layout[side[0].id], l = layout[side[side.length - 1].id];
-    const d = `M ${s0.x} 0 C ${s0.x + COL * 0.7} 0, ${f.x - COL * 0.9} ${SIDE_Y}, ${f.x - COL * 0.3} ${SIDE_Y} L ${l.x + COL * 0.3} ${SIDE_Y} C ${e0.x - COL * 0.9} ${SIDE_Y}, ${e0.x - COL * 0.7} 0, ${e0.x} 0`;
+    const X = SIDE_X;
+    const d = `M 0 ${s0.y} C 0 ${s0.y + ROW * 0.7}, ${X} ${f.y - ROW * 1.1}, ${X} ${f.y - ROW * 0.35} L ${X} ${l.y + ROW * 0.35} C ${X} ${l.y + ROW * 1.1}, 0 ${e0.y - ROW * 0.7}, 0 ${e0.y}`;
     let bp = $('#branchPath', g);
     if (bp && bp.getAttribute('d') === d) return;
     g.innerHTML = `<path class="branch" id="branchPath" d="${d}"/>`;
@@ -234,22 +246,29 @@
   }
 
   /* ------------------------------------------------------------ kamera */
-  function focusPoint() { return { cx: window.innerWidth / 2, cy: window.innerHeight * 0.42 }; }
+  function focusPoint() { return { cx: window.innerWidth / 2, cy: window.innerHeight * 0.5 }; }
+  // grundskala så att hela bredden (linje + plattformar) får plats även på mobil
+  function baseScale() {
+    const need = hasSide() ? (SIDE_X + PLAT_X + 200) * 2 : (PLAT_X + 200) * 2;
+    return Math.max(0.36, Math.min(1.1, (innerWidth - 32) / need, innerHeight / 820));
+  }
 
   function setCam(x, y, s, ms = 900, ease = 'cubic-bezier(.65,0,.25,1)') {
     Object.assign(cam, { x, y, s });
     const { cx, cy } = focusPoint();
+    const k = s * baseScale();
     el.world.style.transition = ms ? `transform ${T(ms)}ms ${ease}` : 'none';
-    el.world.style.transform = `translate(${cx - x * s}px, ${cy - y * s}px) scale(${s})`;
+    el.world.style.transform = `translate(${cx - x * k}px, ${cy - y * k}px) scale(${k})`;
     if (!ms) void el.world.offsetWidth;
     return sleep(ms ? T(ms) : 0);
   }
-  const camTo = (id, s = 1, ms, ease, yOverride) => {
+  // kameran: följ punkten lodrätt, håll linjen (och ev. sidospår) i bild
+  const camTo = (id, s = 1, ms, ease) => {
     const p = layout[id];
-    const hasSide = visibleNodes().some((n) => n.lane === 'side');
-    const y = yOverride != null ? yOverride : (hasSide ? SIDE_Y * 0.35 : 40);
-    return setCam(p.x, y, s, ms, ease);
+    return setCam(hasSide() ? SIDE_X * 0.5 : 0, p.y + 30, s, ms, ease);
   };
+  // kameran centrerad på en plattform (används vid hopp in/ut)
+  const camPlat = (id, s, ms, ease) => { const p = layout[id]; return setCam(p.px, p.py - 40, s, ms, ease); };
 
   // dra för att panorera
   (function enableDrag() {
@@ -261,7 +280,8 @@
     });
     el.viewport.addEventListener('pointermove', (e) => {
       if (!drag) return;
-      const dx = (e.clientX - drag.x) / cam.s, dy = (e.clientY - drag.y) / cam.s;
+      const k = cam.s * baseScale();
+      const dx = (e.clientX - drag.x) / k, dy = (e.clientY - drag.y) / k;
       if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
       setCam(drag.cx - dx, drag.cy - dy, cam.s, 0);
     });
@@ -269,7 +289,8 @@
     el.viewport.addEventListener('wheel', (e) => {
       if (busy) return;
       e.preventDefault();
-      setCam(cam.x + (e.deltaX || e.deltaY) / cam.s, cam.y, cam.s, 0);
+      const k = cam.s * baseScale();
+      setCam(cam.x + e.deltaX / k, cam.y + e.deltaY / k, cam.s, 0);
     }, { passive: false });
   })();
 
@@ -295,30 +316,32 @@
     SFX.unlock();
 
     // 1. Kameran söker sig mot punkten
-    await camTo(n.id, 1.35, 650, 'cubic-bezier(.5,0,.3,1)', layout[n.id].y);
-    const thumb = $(`.node[data-id="${n.id}"] .node__thumb`);
-    const r = thumb.getBoundingClientRect();
-    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rad = r.width / 2;
+    await camPlat(n.id, 1.35, 700, 'cubic-bezier(.5,0,.3,1)');
+    const disc = $(`.node[data-id="${n.id}"] .node__disc`);
+    const r = disc.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
     const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
+    const rad = rx;
 
     // 2. Bygg scenen bakom portalen
     prepareScene(n);
     show(el.scene, true);
-    el.scene.style.clipPath = `circle(${rad}px at ${cx}px ${cy}px)`;
+    el.scene.style.clipPath = `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`;
+    $(`.node[data-id="${n.id}"]`).classList.add('is-diving');
 
     // 3. Fall in
     SFX.play('whooshIn');
     const ms = T(1150);
     const portal = $('#portal');
-    portal.style.left = cx + 'px'; portal.style.top = cy + 'px'; portal.style.width = portal.style.height = rad * 2 + 'px';
+    portal.style.left = cx + 'px'; portal.style.top = cy + 'px'; portal.style.width = rx * 2 + 'px'; portal.style.height = ry * 2 + 'px';
     portal.classList.add('is-on');
     const scaleTo = (R / rad) * 1.02;
     const anims = [
-      el.scene.animate([{ clipPath: `circle(${rad}px at ${cx}px ${cy}px)` }, { clipPath: `circle(${R}px at ${cx}px ${cy}px)` }],
+      el.scene.animate([{ clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }],
         { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
       el.sceneWorld.animate([{ transform: 'scale(1.9)', filter: 'blur(10px) brightness(1.4) saturate(1.3)' }, { transform: 'scale(1.06)', filter: 'blur(0) brightness(1) saturate(1)', offset: 0.85 }, { transform: 'scale(1)', filter: 'none' }],
         { duration: ms * 1.25, easing: 'cubic-bezier(.3,.6,.2,1)' }),
-      portal.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${scaleTo})`, opacity: 0.0 }],
+      portal.animate([{ transform: 'translate(-50%,-50%) scale(1, 1)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${scaleTo}, ${scaleTo * rx / ry})`, opacity: 0.0 }],
         { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
       el.viewport.animate([{ filter: 'blur(0)' }, { filter: 'blur(6px)' }], { duration: ms, fill: 'forwards' }),
     ];
@@ -328,6 +351,7 @@
     el.scene.style.clipPath = 'none';
     anims.forEach((a) => a.cancel());
     portal.classList.remove('is-on');
+    $$('.node.is-diving').forEach((x) => x.classList.remove('is-diving'));
     show(el.timeline, false);
     busy = false;
 
@@ -340,20 +364,21 @@
     SFX.play('whooshOut');
     show(el.timeline, true);
     renderTimeline();
-    const p = layout[n.id];
-    await setCam(p.x, p.y, 4, 0);
-    const { cx, cy } = focusPoint();
-    const rad = 48;
+    // räkna ut var plattformen hamnar när kameran landat, och krymp scenen dit
+    await camPlat(n.id, 1, 0);
+    const r = $(`.node[data-id="${n.id}"] .node__disc`).getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
+    await camPlat(n.id, 4, 0);
     const R = Math.hypot(innerWidth, innerHeight);
     const ms = T(1000);
     const anims = [
-      el.scene.animate([{ clipPath: `circle(${R}px at ${cx}px ${cy}px)` }, { clipPath: `circle(${rad}px at ${cx}px ${cy}px)`, offset: 0.92 }, { clipPath: `circle(0px at ${cx}px ${cy}px)` }],
+      el.scene.animate([{ clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.92 }, { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` }],
         { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
       el.sceneWorld.animate([{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.5)', filter: 'blur(6px) brightness(1.3)' }],
         { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
       el.viewport.animate([{ filter: 'blur(6px)' }, { filter: 'blur(0)' }], { duration: ms }),
     ];
-    setCam(p.x, p.y, 1, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.7,0,.3,1)');
+    camPlat(n.id, 1, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.7,0,.3,1)');
     await anims[0].finished;
     show(el.scene, false);
     anims.forEach((a) => a.cancel());
@@ -713,7 +738,7 @@
           $('.js-again', p).addEventListener('click', () => restart());
           $('.js-tl', p).addEventListener('click', async () => {
             await exitScene(byId.nend);
-            await setCam(layout.n0730.x, 40, 0.5, 1200);
+            await setCam(0, layout.n1324.y, 0.32, 1400);
             banner('<strong>Din dag – rak och olycksfri.</strong><small>Tack för att du spelade.</small>', 'tl-banner--good');
           });
           resolve();
@@ -772,7 +797,7 @@
       await sleep(T(1500));
       if (!busy && nextNode() === nx) enterNode(nx);
     } else {
-      banner(`<span class="tl-banner__time">${nx.time}</span> ${val(nx.title, state)}<small>Klicka på punkten för att hoppa in</small>`);
+      banner('');
     }
   }
 
@@ -790,7 +815,7 @@
     banner('<strong>Något gick fel.</strong><small>Följ kedjan tillbaka…</small>', 'tl-banner--alarm');
     const chain = ['n1614', 'n1402', 'n1223', 'n1115', 'n0730'];
     for (const id of chain) {
-      await camTo(id, 1.1, 800, undefined, layout[id].y * 0.6);
+      await camTo(id, 1, 800);
       const e = $(`.node[data-id="${id}"]`);
       e.classList.add('is-chain');
       SFX.play('pulse');
@@ -798,7 +823,7 @@
     }
     state.phase = 'rewind';
     renderTimeline();
-    await camTo('n0730', 1.15, 700);
+    await camTo('n0730', 1.05, 700);
     banner('<strong>Hur hade detta kunnat förhindras?</strong><small>Valet kl 07:30 lyser. Hoppa tillbaka och ändra det.</small>', 'tl-banner--alarm');
     busy = false;
   }
@@ -827,7 +852,7 @@
     busy = true;
     el.timeline.classList.remove('is-alarm');
     banner('<strong>Ett annat val. En annan dag.</strong>', 'tl-banner--good');
-    await camTo('n1115', 0.62, 1000, undefined, SIDE_Y * 0.4);
+    await setCam(SIDE_X * 0.5, layout.n1223.y, 0.6, 1000);
     SFX.play('dissolve');
     $$('.node--side').forEach((e, i) => setTimeout(() => e.classList.add('is-dissolving'), i * T(220)));
     const bp = $('#branchPath');
@@ -854,11 +879,11 @@
     const a = layout[fromId], b = layout[toId];
     const dot = h('div', 'tl-pulse');
     el.world.appendChild(dot);
-    dot.style.left = a.x + 'px';
-    setCam(a.x, 40, 0.75, 0);
-    const ms = T(2200);
-    dot.animate([{ left: a.x + 'px' }, { left: b.x + 'px' }], { duration: ms, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' });
-    setCam(b.x, 40, 0.75, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.5,0,.5,1)');
+    dot.style.top = a.y + 'px';
+    setCam(0, a.y, 0.8, 0);
+    const ms = T(2400);
+    dot.animate([{ top: a.y + 'px' }, { top: b.y + 'px' }], { duration: ms, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' });
+    setCam(0, b.y, 0.8, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.5,0,.5,1)');
     el.timeline.classList.add('is-healed');
     await sleep(ms + 200);
     dot.remove();
@@ -879,7 +904,7 @@
     renderTimeline();
     // etableringsbild: svep över hela dagen, landa på 06:00
     const last = visibleNodes().length - 1;
-    await setCam(last * COL * 0.5, 40, 0.42, 0);
+    await setCam(0, last * ROW * 0.5, 0.3, 0);
     banner('<strong>En dag i produktionen.</strong><small>Varje punkt är ett ögonblick du kan hoppa in i.</small>');
     await sleep(T(1700));
     await goNext();

@@ -55,9 +55,10 @@ index.html        Skal + UI-lager (HUD, filmfält, repliker, val, paneler)
 css/style.css     All stil, inklusive de ritade miljöerna
 js/story.js       ALLT INNEHÅLL: noder, repliker, val, sammanfattningslogik
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
+js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
 assets/video/     sovrum.mp4, kontor.mp4, fika.mp4 (omkodade, utan ljudspår)
-assets/img/       Stillbilder ur videorna (används i tidslinjens portaler)
+assets/img/       Stillbilder ur videorna + logo.png (tillfällig logga, utklippt ur kontorsfilmen)
 ```
 
 ### Redigera innehåll
@@ -76,6 +77,19 @@ await api.hotspot({ x: 38, y: 68, w: 5, h: 6, label: 'Öppna inkorgen' }); // kl
 
 Hotspots och klockdisplayen på väckarklockan ligger i videons koordinatsystem
 (procent av 1920×1080). De följer alltså bilden oavsett skärmstorlek.
+
+### Tidslinjen
+
+Tidslinjen är lodrät på mörkgrön botten. Varje punkt har en tidsetikett ("kl 06:00") och ett
+föremål på en plattform, och de växlar mellan vänster och höger sida. Den aktiva punkten
+lyser grönt. Spelade punkter tonas ner, och kommande punkter syns bara som skuggor.
+När scenen öppnas växer den ut ur plattformen.
+
+- **Föremål:** varje nod har `prop: '<namn>'` i `story.js`. Namnen finns i `js/props.js`.
+  Vill ni använda egna 3D-renderingar, sätt `prop: 'assets/props/kopp.png'`
+  (en PNG med transparent bakgrund, ungefär kvadratisk, där föremålet står längst ner).
+- **Logga:** `assets/img/logo.png` är en tillfällig vit logga som är utklippt ur kontorsfilmen.
+  Byt den mot den officiella filen, gärna den vita med grön pil.
 
 ### Byta en ritad miljö mot en riktig animation
 
