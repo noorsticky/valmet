@@ -251,22 +251,32 @@ const STORY = {
     /* ------------------------------------------------------------ 12:00 */
     {
       id: 'n1200', prop: 'lada', time: '12:00', title: 'Vad är det för lunch i lådan?', kind: 'pink', lane: 'main',
-      env: 'fika', place: 'Lunchrummet',
+      env: 'lunch', place: 'Lunchrummet',
       async play(api) {
         api.clock('12:00');
         api.loop('room');
-        await api.title('12:00', 'Lunch');
+        api.sfx('hum');
+        await api.title('12:00', 'Lunchrummet');
+        await api.say('Mikron surrar. Det doftar… något.', { narrator: true });
+        // mikrovågsugnen i videon (procent av 1920×1080)
         const pick = await api.choose({
           prompt: 'Vad är det för lunch i lådan?',
           options: [
             { id: 'kott', label: 'Gårdagens köttbullar' },
             { id: 'lins', label: 'Linsgryta' },
-            { id: 'inget', label: 'Ingen låda… glömde den' },
+            { id: 'fisk', label: 'Fiskgratäng', sub: 'Förlåt, kollegor' },
           ],
           kind: 'pink',
+          hotspot: { x: 16.5, y: 42.5, w: 29, h: 27, id: 'kott', label: 'Kika i mikron' },
         });
         api.state.lunch = pick;
-        await api.say({ kott: 'Köttbullar. Alltid godare dagen efter.', lins: 'Linsgryta. Nyttigt och mättande.', inget: 'Det blir en macka från automaten.' }[pick], { who: 'Ola', inner: true });
+        api.sfx('ding');
+        await api.wait(500);
+        await api.say({
+          kott: 'Köttbullar. Alltid godare dagen efter.',
+          lins: 'Linsgryta. Nyttigt och mättande.',
+          fisk: 'Fiskgratäng i mikron. Någon i rummet suckar högt.',
+        }[pick], { who: 'Ola', inner: true });
         api.stopLoop('room');
       },
     },
@@ -274,7 +284,7 @@ const STORY = {
     /* ------------------------------------------------------------ 12:23 (A) */
     {
       id: 'n1223', prop: 'gnall', time: '12:23', title: 'Gnäll om skyddet', kind: 'side', badge: 'A', lane: 'side', track: 'A',
-      env: 'fika', envVariant: 'dim', place: 'Lunchrummet', cinematic: true,
+      env: 'lunch', envVariant: 'dim', place: 'Lunchrummet', cinematic: true,
       async play(api) {
         api.clock('12:23');
         api.loop('room');

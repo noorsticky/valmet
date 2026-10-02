@@ -60,6 +60,8 @@
   }
 
   const sounds = {
+    ding: () => { tone({ freq: 2093, dur: 1.4, vol: 0.18, attack: 0.005 }); tone({ freq: 4186, dur: 0.9, vol: 0.05, attack: 0.005 }); },
+    hum: () => tone({ freq: 110, type: 'sawtooth', dur: 2.2, vol: 0.03, attack: 0.3 }),
     click: () => tone({ freq: 880, type: 'triangle', dur: 0.07, vol: 0.12 }),
     hover: () => tone({ freq: 1400, type: 'sine', dur: 0.04, vol: 0.04 }),
     select: () => { tone({ freq: 660, type: 'triangle', dur: 0.12, vol: 0.15 }); tone({ freq: 990, type: 'triangle', dur: 0.18, vol: 0.12, when: 0.07 }); },

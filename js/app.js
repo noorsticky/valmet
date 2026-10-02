@@ -18,8 +18,8 @@
   const ROW = 290;        // lodrätt avstånd mellan punkterna (px i världen)
   const PLAT_X = 270;     // plattformens avstånd från linjen
   const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
-  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4' };
-  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', spegel: 'assets/img/sovrum.jpg' };
+  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4' };
+  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', spegel: 'assets/img/sovrum.jpg' };
   const KIND_LABEL = { pink: 'Vardagsval', blue: 'Beslut', film: 'Film', side: 'Vid sidan av', green: 'Sammanfattning' };
 
   /* ------------------------------------------------------------ state */

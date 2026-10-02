@@ -57,7 +57,7 @@ js/story.js       ALLT INNEHÅLL: noder, repliker, val, sammanfattningslogik
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
-assets/video/     sovrum.mp4, kontor.mp4, fika.mp4 (omkodade, utan ljudspår)
+assets/video/     sovrum.mp4, kontor.mp4, fika.mp4, lunch.mp4 (omkodade, utan ljudspår)
 assets/img/       Stillbilder ur videorna + logo.png (tillfällig logga, utklippt ur kontorsfilmen)
 ```
 
