@@ -10,6 +10,7 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const val = (v, s) => (typeof v === 'function' ? v(s) : v);
+  const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const T = (ms) => (REDUCED ? Math.round(ms * 0.35) : ms);
@@ -393,10 +394,12 @@
      =================================================================== */
   let fast = false;
   let advance = null; // nuvarande "klicka för att gå vidare"
+  let speakers = {};  // vem står var i den aktuella scenen
   const choiceKeys = {};
 
   function prepareScene(n) {
     cleanupScene();
+    speakers = {};
     const env = val(n.env, state);
     buildEnv(el.env, env, val(n.envVariant, state));
     el.scene.dataset.env = env;
@@ -474,8 +477,16 @@
 
     say(text, o = {}) {
       return new Promise((resolve) => {
-        const c = h('div', `cap ${o.narrator ? 'cap--narr' : ''} ${o.inner ? 'cap--inner' : ''} ${o.small ? 'cap--small' : ''} ${o.big ? 'cap--big' : ''}`);
-        c.innerHTML = `${o.who ? `<span class="cap__who">${o.who}${o.inner ? ' <em>tänker</em>' : ''}</span>` : ''}<span class="cap__text"></span>`;
+        // talare placeras vänster/höger i turordning per scen; Ola (spelaren), tankar och berättare i mitten
+        let pos = 'center';
+        const spoken = o.who && !o.inner && !o.narrator && o.who !== 'Ola';
+        if (spoken) {
+          if (!speakers[o.who]) speakers[o.who] = Object.keys(speakers).length % 2 === 0 ? 'left' : 'right';
+          pos = speakers[o.who];
+        }
+        const c = h('div', `cap cap--${pos} ${o.narrator ? 'cap--narr' : ''} ${o.inner ? 'cap--inner' : ''} ${o.small ? 'cap--small' : ''} ${o.big ? 'cap--big' : ''}`);
+        const name = o.who ? `${o.who}${o.inner ? ' (tänker)' : ''}: ` : '';
+        c.innerHTML = `<span class="cap__line"><span class="cap__who">${name}</span><span class="cap__text"></span></span>${spoken ? '<i class="cap__tail"></i>' : ''}`;
         el.captions.innerHTML = '';
         el.captions.appendChild(c);
         const t = $('.cap__text', c);
@@ -489,7 +500,8 @@
         const type = () => {
           if (fast) { t.textContent = text; typing = false; return setTimeout(finish, 60); }
           i += 2;
-          t.textContent = text.slice(0, i);
+          // osynlig resttext håller rutans storlek fast medan texten skrivs ut
+          t.innerHTML = esc(text.slice(0, i)) + `<span class="cap__ghost">${esc(text.slice(i))}</span>`;
           if (i < text.length) timer = setTimeout(type, 22);
           else { typing = false; timer = setTimeout(finish, T(Math.max(1700, 900 + text.length * 42))); }
         };
