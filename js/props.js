@@ -74,7 +74,7 @@
     prat: `
       <polygon points="28,48 112,40 120,104 70,110 52,130 54,110 34,112" fill="${W}"/>
       <polygon points="112,40 120,104 70,110 90,74" fill="${L}"/>
-      <text x="74" y="92" font-family="Inter,Arial" font-weight="800" font-size="40" fill="${D}" text-anchor="middle">?</text>
+      <text x="74" y="92" font-family="Maven Pro,Arial" font-weight="800" font-size="40" fill="${D}" text-anchor="middle">?</text>
       <polygon points="96,98 172,92 176,150 158,152 160,172 140,154 100,156" fill="${M}"/>
       <polygon points="172,92 176,150 140,154 150,120" fill="${S}"/>
       <circle cx="118" cy="126" r="5" fill="${W}"/><circle cx="136" cy="125" r="5" fill="${W}"/><circle cx="154" cy="124" r="5" fill="${W}"/>`,
@@ -110,16 +110,16 @@
     gnall: `
       <polygon points="30,50 150,40 162,120 96,128 70,156 72,130 38,132" fill="${W}"/>
       <polygon points="150,40 162,120 96,128 120,84" fill="${L}"/>
-      <text x="94" y="104" font-family="Inter,Arial" font-weight="800" font-size="44" fill="#d24a3a" text-anchor="middle">#!?</text>
+      <text x="94" y="104" font-family="Maven Pro,Arial" font-weight="800" font-size="44" fill="#d24a3a" text-anchor="middle">#!?</text>
       <polygon points="132,120 176,116 178,150 166,152 168,166 154,152 136,154" fill="${M}"/>
-      <text x="156" y="144" font-family="Inter,Arial" font-weight="800" font-size="22" fill="${D}" text-anchor="middle">…</text>`,
+      <text x="156" y="144" font-family="Maven Pro,Arial" font-weight="800" font-size="22" fill="${D}" text-anchor="middle">…</text>`,
 
     /* laptop med kuvert */
     laptop: `
       <polygon points="40,52 156,46 160,136 42,140" fill="${K}"/><polygon points="48,60 150,54 152,128 50,132" fill="${W}"/>
       <polygon points="100,57 150,54 152,128 100,130" fill="#eef1ec"/>
       <polygon points="84,80 124,78 126,108 86,110" fill="${M}"/><polyline points="84,80 105,96 124,78" fill="none" stroke="${D}" stroke-width="3"/>
-      <circle cx="128" cy="78" r="9" fill="#d33"/><text x="128" y="82" font-family="Inter,Arial" font-weight="800" font-size="11" fill="#fff" text-anchor="middle">3</text>
+      <circle cx="128" cy="78" r="9" fill="#d33"/><text x="128" y="82" font-family="Maven Pro,Arial" font-weight="800" font-size="11" fill="#fff" text-anchor="middle">3</text>
       <polygon points="42,140 160,136 184,162 20,168" fill="${M}"/><polygon points="100,138 160,136 184,162 100,165" fill="${S}"/>
       <polygon points="80,150 120,148 124,156 78,158" fill="${L}"/>`,
 

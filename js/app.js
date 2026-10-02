@@ -525,7 +525,7 @@
             <h2 class="choice__prompt">${o.prompt}</h2>
           </div>
           ${o.timer ? `<div class="choice__timer"><span>${o.timerLabel || ''}</span><i><b></b></i></div>` : ''}
-          <div class="choice__opts">${o.options.map((op, i) => `
+          <div class="choice__opts ${o.options.length === 4 ? 'choice__opts--grid' : ''}">${o.options.map((op, i) => `
             <button class="opt" data-id="${op.id}" ${op.disabled ? 'disabled' : ''}>
               <kbd>${i + 1}</kbd>
               <span class="opt__label">${op.label}${op.sub ? `<small>${op.sub}</small>` : ''}</span>
