@@ -526,10 +526,10 @@
           </div>
           ${o.timer ? `<div class="choice__timer"><span>${o.timerLabel || ''}</span><i><b></b></i></div>` : ''}
           <div class="choice__opts ${o.options.length === 4 ? 'choice__opts--grid' : ''}">${o.options.map((op, i) => `
-            <button class="opt" data-id="${op.id}" ${op.disabled ? 'disabled' : ''}>
+            <button class="opt ${op.fresh ? 'is-fresh' : ''}" data-id="${op.id}" ${op.disabled ? 'disabled' : ''}>
               <kbd>${i + 1}</kbd>
               <span class="opt__label">${op.label}${op.sub ? `<small>${op.sub}</small>` : ''}</span>
-              ${op.tag ? `<span class="opt__tag">${op.tag}</span>` : ''}
+              ${op.tag ? `<span class="opt__tag ${op.fresh ? 'opt__tag--new' : ''}">${op.tag}</span>` : ''}
             </button>`).join('')}
           </div>`;
         let done = false;

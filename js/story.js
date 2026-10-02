@@ -148,7 +148,8 @@ const STORY = {
         if (!replay) {
           pick = await api.choose({
             prompt: 'Vad säger Ola?',
-            options: MEETING_OPTIONS, kind: 'key', badge: 'A',
+            // första gången finns bara de "fel" svaren – de rätta dyker upp först efter tillbakaspolningen
+            options: MEETING_OPTIONS.filter((o) => BAD_A.includes(o.id)), kind: 'key', badge: 'A',
             timer: 14, timeoutId: 'lugnt',
             timerLabel: 'Mötet drar ut på tiden…',
           });
@@ -159,7 +160,12 @@ const STORY = {
           while (true) {
             pick = await api.choose({
               prompt: 'Hur hade detta kunnat förhindras? Vad säger Ola nu?',
-              options: MEETING_OPTIONS.map((o) => ({ ...o, tag: tried.has(o.id) ? 'Förra gången' : '', disabled: tried.has(o.id) && BAD_A.includes(o.id) })),
+              options: MEETING_OPTIONS.map((o) => ({
+                ...o,
+                tag: tried.has(o.id) ? 'Förra gången' : GOOD_A.includes(o.id) ? 'Nytt' : '',
+                fresh: GOOD_A.includes(o.id),
+                disabled: tried.has(o.id) && BAD_A.includes(o.id),
+              })),
               kind: 'key', badge: 'A',
             });
             if (GOOD_A.includes(pick)) break;

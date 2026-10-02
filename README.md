@@ -31,15 +31,15 @@ används systemtypsnitt.
    cirkel ("portalen") till fullskärm. Ut ur scenen går det på samma sätt, fast baklänges.
 2. Filmscener startar automatiskt efter en kort paus på tidslinjen. Spelscener
    kräver ett klick.
-3. **07:30 Dagligt möte (A)** är det kritiska valet och har en tidsgräns.
-   - "Ta det lugnt men håll tempot uppe…" eller "Vi avvaktar…" (eller att tiden
-     tar slut) ger **spår A**: ett sidospår växer fram med 11:15, 12:23 och 14:02.
-     Kl 16:14 går larmet.
-   - "Jag skriver en rapport direkt" eller "Sätt upp en tydlig varningsskylt"
-     ger **spår A2**: ingen olycka. Kl 16:14 är det mötet i korridoren.
+3. **07:30 Dagligt möte (A)** är det kritiska valet och har en tidsgräns. Första gången
+   finns bara de felaktiga svaren: "Ta det lugnt men håll tempot uppe…" och "Vi avvaktar…".
+   Om tiden tar slut väljs det första. Alla vägar leder därför till **spår A**: ett sidospår
+   växer fram med 11:15, 12:23 och 14:02, och kl 16:14 går larmet.
 4. Efter olyckan förs användaren tillbaka till tidslinjen. Kameran följer den
    röda kedjan bakåt och 07:30 blinkar. Ett klick spolar tillbaka (klockan räknas
-   ner från 16:14 till 07:30) och användaren får välja om. Fel val stryks över.
+   ner från 16:14 till 07:30) och användaren får välja om. Nu dyker de rätta svaren upp,
+   markerade "Nytt": "Jag skriver en rapport direkt" och "Sätt upp en tydlig varningsskylt".
+   Det svar man valde förra gången är överstruket.
 5. När valet blir rätt löses sidohändelserna upp och tidslinjen blir rak. En grön
    ljuspuls går längs linjen och 16:14 blir **A2**.
 6. Sammanfattningen bygger insikterna utifrån användarens faktiska val (A, B, C
