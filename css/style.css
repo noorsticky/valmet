@@ -100,17 +100,17 @@ button { font: inherit; color: inherit; }
 .node--left { --dir: -1; }
 .node.is-new { opacity: 0; }
 
-.node__dot { position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; background: #8f9a8c; box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px rgba(255,255,255,.35); transition: .4s; }
+.node__dot { position: absolute; z-index: 2; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50%; background: #8f9a8c; box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px rgba(255,255,255,.35); transition: .4s; }
 .node.is-played .node__dot { background: #c9cec6; }
 .node.is-next .node__dot, .node.is-culprit .node__dot { background: #f2f4f0; box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px #fff, 0 0 20px 4px rgba(255,255,255,.5); }
 
 /* tunn arm från linjen till plattformen */
-.node__arm { position: absolute; top: -1px; height: 2px; width: 140px; background: rgba(200,210,195,.35); }
-.node--right .node__arm { left: 18px; }
-.node--left .node__arm { right: 18px; }
+.node__arm { position: absolute; z-index: 0; top: -1px; height: 2px; width: 145px; background: rgba(200,210,195,.35); }
+.node--right .node__arm { left: 0; }
+.node--left .node__arm { right: 0; }
 
 /* plattform med föremål */
-.node__plat { position: absolute; top: 0; width: 250px; height: 0; }
+.node__plat { position: absolute; z-index: 1; top: 0; width: 250px; height: 0; }
 .node--right .node__plat { left: 145px; }
 .node--left .node__plat { right: 145px; }
 .node__disc { position: absolute; left: 0; top: -58px; width: 250px; height: 116px; border-radius: 50%; background: var(--disc); transition: box-shadow .5s, background .5s; }
