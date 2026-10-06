@@ -23,7 +23,7 @@ används systemtypsnitt.
 | Blå | Beslut | Påverkar senare i kursen och sammanfattningen |
 | Grå | Film | Cutscene. Svarta filmfält, ingen HUD, användaren tittar |
 | Vit | Vid sidan av | Händer bara på spår **A** (om valet kl 07:30 blev fel) |
-| Grön | Sammanfattning | Kunskaper, dynamiska dilemmainsikter och commitlista |
+| Grön | Reflektion | Hemfärden i skymningen: reflektion steg för steg och eget åtagande |
 
 **Flödet**
 
@@ -42,8 +42,19 @@ används systemtypsnitt.
    Det svar man valde förra gången är överstruket.
 5. När valet blir rätt löses sidohändelserna upp och tidslinjen blir rak. En grön
    ljuspuls går längs linjen och 16:14 blir **A2**.
-6. Sammanfattningen bygger insikterna utifrån användarens faktiska val (A, B, C
-   och snooze).
+6. **Reflektionen (hemfärden kl 17:05)** speglar morgonens bilfärd. Efter några tankar från Ola
+   går användaren igenom ett kort i taget:
+   1. **Din dag:** dagens val i ordning. Kl 07:30 visas både det första och det ändrade svaret.
+   2. **Vad låg bakom?** Varför sa man först "håll tempot uppe"? Inget svar är rätt, och
+      användaren får en reflekterande återkoppling på det hen väljer.
+   3. **Känner du igen det?** En skala från 1 till 5 över hur ofta liknande val dyker upp i vardagen.
+   4. **Vem väntar på dig?** En fråga som utgår från vad som hände med Lisa, med valfri fritext.
+   5. **Tre saker från dagen.**
+   6. **Mitt åtagande:** välj bland färdiga åtaganden och/eller skriv ett eget.
+   7. **Avslut:** användarens åtaganden visas som citat.
+
+   Innehållet finns i `buildReflection()` i `story.js`. Svaren sparas bara i webbläsarens minne
+   under sessionen (`state.reflection`) och skickas ingenstans.
 
 B och C påverkar också resten av dagen. Om Ola stannar för Lisa kl 08:03 bokas
 ett möte kl 15:30, som dyker upp både i kalendern kl 14:30 och som ett val kl 15:30.
@@ -53,7 +64,7 @@ ett möte kl 15:30, som dyker upp både i kalendern kl 14:30 och som ett val kl 
 ```
 index.html        Skal + UI-lager (HUD, filmfält, repliker, val, paneler)
 css/style.css     All stil, inklusive de ritade miljöerna
-js/story.js       ALLT INNEHÅLL: noder, repliker, val, sammanfattningslogik
+js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler

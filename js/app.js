@@ -54,8 +54,8 @@
   }
 
   const ENV_HTML = {
-    bil: () => `
-      <div class="bil">
+    bil: (v) => `
+      <div class="bil ${v === 'dusk' ? 'bil--dusk' : ''}">
         <div class="bil__sky"></div><div class="bil__sun"></div>
         <div class="bil__hills"></div><div class="bil__trees"></div>
         <div class="bil__road"></div>
@@ -418,7 +418,7 @@
     el.fxTint.className = 'fx fx--tint';
     el.eyelids.classList.remove('is-closed');
     $$('.ov-clock', el.stage).forEach((o) => o.remove());
-    el.scene.classList.remove('is-cinematic', 'is-shake');
+    el.scene.classList.remove('is-cinematic', 'is-shake', 'is-reflect');
     $$('video', el.env).forEach((v) => v.pause());
   }
 
@@ -707,51 +707,125 @@
       });
     },
 
-    summary(data) {
+    /* Reflektion: ett steg i taget, svar ger återkoppling, resolvar med alla svar */
+    reflect(steps) {
       return new Promise((resolve) => {
-        el.scene.classList.add('is-summary');
-        const p = api.panel('panel--summary', `
-          <div class="summary">
-            <p class="eyebrow">Dagens slut · 17:00</p>
-            <h1>Vad tar du med dig?</h1>
-            <section>
-              <h3>Kunskaper från dagen</h3>
-              <ul class="know">${data.knowledge.map((k) => `<li>${k}</li>`).join('')}</ul>
-            </section>
-            <section>
-              <h3>Dina dilemman</h3>
-              <div class="insights">${data.insights.map((x) => `
-                <article class="insight"><h4>${x.title}</h4><p>${x.text}</p></article>`).join('')}</div>
-            </section>
-            <section>
-              <h3>Min commitlista</h3>
-              <div class="commits">${data.commits.map((c, i) => `
-                <label class="commit"><input type="checkbox" ${i === 0 ? '' : ''}><span class="commit__box"></span><span>${c}</span></label>`).join('')}</div>
-            </section>
-            <div class="summary__foot">
-              <button class="btn btn--ghost js-again">Spela igen</button>
-              <button class="btn btn--primary btn--lg js-done" disabled>Jag committar</button>
-            </div>
+        el.scene.classList.add('is-reflect');
+        const answers = {};
+        const p = api.panel('panel--reflect', `
+          <div class="refl">
+            <div class="refl__dots">${steps.map(() => '<i></i>').join('')}</div>
+            <div class="refl__body"></div>
           </div>`);
-        const boxes = $$('input', p);
-        boxes.forEach((b) => b.addEventListener('change', () => {
-          SFX.play(b.checked ? 'select' : 'click');
-          $('.js-done', p).disabled = !boxes[0].checked;
-        }));
-        $('.js-again', p).addEventListener('click', () => restart());
-        $('.js-done', p).addEventListener('click', () => {
-          SFX.play('success');
-          state.committed = boxes.map((b) => b.checked);
-          p.classList.add('is-done');
-          $('.summary__foot', p).innerHTML = '<p class="done-msg">Tack! Kursen är genomförd. ✓</p><button class="btn btn--ghost js-tl">Se din tidslinje</button><button class="btn btn--ghost js-again">Spela igen</button>';
-          $('.js-again', p).addEventListener('click', () => restart());
-          $('.js-tl', p).addEventListener('click', async () => {
-            await exitScene(byId.nend);
-            await setCam(0, layout.n1324.y, 0.32, 1400);
-            banner('<strong>Din dag – rak och olycksfri.</strong><small>Tack för att du spelade.</small>', 'tl-banner--good');
-          });
-          resolve();
-        });
+        const body = $('.refl__body', p);
+        const dots = $$('.refl__dots i', p);
+        let idx = -1;
+
+        const foot = (label = 'Fortsätt', disabled = false) =>
+          `<div class="refl__foot"><button class="btn btn--primary js-next" ${disabled ? 'disabled' : ''}>${label}</button></div>`;
+        const reply = (text) => `<p class="refl__reply">${text}</p>`;
+
+        async function go(n) {
+          idx = n;
+          dots.forEach((d, k) => { d.classList.toggle('is-done', k < n); d.classList.toggle('is-now', k === n); });
+          body.classList.add('is-out');
+          await sleep(T(320));
+          render(steps[n]);
+          body.scrollTop = 0;
+          body.classList.remove('is-out');
+        }
+        const next = () => { SFX.play('click'); if (idx < steps.length - 1) go(idx + 1); };
+
+        function render(st) {
+          const head = `<p class="refl__eyebrow">${st.eyebrow || ''}</p>`;
+          if (st.type === 'recap') {
+            body.innerHTML = `${head}<h2 class="refl__q">${st.title}</h2>
+              <ol class="recap">${st.items.map((it, k) => `
+                <li class="${it.key ? 'is-key' : ''}" style="--i:${k}"><time>${it.time}</time>
+                  <span>${it.was ? `<s>${it.was}</s>` : ''}${it.text}</span></li>`).join('')}</ol>${foot()}`;
+          } else if (st.type === 'choice') {
+            body.innerHTML = `${head}<h2 class="refl__q">${st.question}</h2>${st.hint ? `<p class="refl__hint">${st.hint}</p>` : ''}
+              <div class="refl__opts">${st.options.map((o) => `<button class="opt" data-id="${o.id}">${o.label}</button>`).join('')}</div>
+              <div class="refl__after"></div>`;
+            $$('.opt', body).forEach((b) => b.addEventListener('click', () => {
+              SFX.play('select');
+              answers[st.id] = b.dataset.id;
+              $$('.opt', body).forEach((x) => { x.classList.toggle('is-picked', x === b); x.classList.toggle('is-dim', x !== b); });
+              $('.refl__after', body).innerHTML = reply(st.respond(b.dataset.id)) + foot();
+              $('.js-next', body).addEventListener('click', next);
+            }));
+            return;
+          } else if (st.type === 'scale') {
+            body.innerHTML = `${head}<h2 class="refl__q">${st.question}</h2>
+              <div class="scale" role="radiogroup">${[1, 2, 3, 4, 5].map((v) => `<button class="scale__pt" role="radio" aria-checked="false" data-v="${v}" aria-label="${v} av 5"><i></i></button>`).join('')}</div>
+              <div class="scale__labels"><span>${st.labels[0]}</span><span>${st.labels[1]}</span></div>
+              <div class="refl__after"></div>`;
+            $$('.scale__pt', body).forEach((b) => b.addEventListener('click', () => {
+              SFX.play('select');
+              const v = +b.dataset.v;
+              answers[st.id] = v;
+              $$('.scale__pt', body).forEach((x) => { const on = +x.dataset.v <= v; x.classList.toggle('is-on', on); x.setAttribute('aria-checked', String(+x.dataset.v === v)); });
+              $('.refl__after', body).innerHTML = reply(st.respond(v)) + foot();
+              $('.js-next', body).addEventListener('click', next);
+            }));
+            return;
+          } else if (st.type === 'text') {
+            body.innerHTML = `${head}<h2 class="refl__q">${st.question}</h2>
+              <textarea class="refl__text" id="refl-${st.id}" rows="3" placeholder="${st.placeholder || ''}"></textarea>
+              ${st.hint ? `<p class="refl__hint">${st.hint}</p>` : ''}
+              <div class="refl__after"><div class="refl__foot"><button class="btn btn--ghost js-skip">Hoppa över</button><button class="btn btn--primary js-save">Spara tanken</button></div></div>`;
+            const ta = $('textarea', body);
+            const done = (txt) => {
+              answers[st.id] = txt;
+              SFX.play('select');
+              ta.readOnly = true;
+              $('.refl__after', body).innerHTML = reply(st.respond(txt)) + foot();
+              $('.js-next', body).addEventListener('click', next);
+            };
+            $('.js-save', body).addEventListener('click', () => done(ta.value.trim()));
+            $('.js-skip', body).addEventListener('click', () => done(''));
+            setTimeout(() => ta.focus({ preventScroll: true }), T(400));
+            return;
+          } else if (st.type === 'takeaways') {
+            body.innerHTML = `${head}<h2 class="refl__q">${st.title}</h2>
+              <ul class="takeaways">${st.items.map((t, k) => `<li style="--i:${k}"><strong>${t.lead}</strong> ${t.text}</li>`).join('')}</ul>${foot()}`;
+          } else if (st.type === 'commit') {
+            body.innerHTML = `${head}<h2 class="refl__q">${st.question}</h2>${st.hint ? `<p class="refl__hint">${st.hint}</p>` : ''}
+              <div class="commits">${st.options.map((c, k) => `
+                <label class="commit"><input type="checkbox" id="commit-${k}" value="${k}"><span class="commit__box"></span><span>${c}</span></label>`).join('')}
+                <textarea class="refl__text" id="commit-own" rows="2" placeholder="${st.ownPlaceholder || ''}"></textarea>
+              </div>${foot('Jag committar', true)}`;
+            const btn = $('.js-next', body);
+            const own = $('#commit-own', body);
+            const sync = () => { btn.disabled = !$$('input:checked', body).length && !own.value.trim(); };
+            $$('input', body).forEach((b) => b.addEventListener('change', () => { SFX.play(b.checked ? 'select' : 'click'); sync(); }));
+            own.addEventListener('input', sync);
+            btn.addEventListener('click', () => {
+              answers[st.id] = [...$$('input:checked', body).map((b) => st.options[+b.value]), own.value.trim()].filter(Boolean);
+              SFX.play('success');
+              next();
+            });
+            return;
+          } else if (st.type === 'closing') {
+            const mine = answers.atagande || [];
+            body.innerHTML = `${head}<h2 class="refl__q refl__q--big">${st.title}</h2><p class="refl__lead">${st.text}</p>
+              ${mine.length ? `<div class="pledge"><p class="refl__eyebrow">Mitt åtagande</p>${mine.map((m) => `<blockquote>${m}</blockquote>`).join('')}</div>` : ''}
+              <p class="done-msg">Kursen är genomförd ✓</p>
+              <div class="refl__foot"><button class="btn btn--ghost js-again">Spela igen</button><button class="btn btn--primary js-tl">Se din tidslinje</button></div>`;
+            $('.js-again', body).addEventListener('click', () => restart());
+            $('.js-tl', body).addEventListener('click', async () => {
+              await exitScene(byId.nend);
+              await setCam(0, layout.n1324.y, 0.32, 1400);
+              banner('<strong>Din dag – rak och olycksfri.</strong><small>Tack för att du spelade.</small>', 'tl-banner--good');
+            });
+            dots.forEach((d) => d.classList.add('is-done'));
+            resolve(answers);
+            return;
+          }
+          const nb = $('.js-next', body);
+          nb && nb.addEventListener('click', next);
+        }
+        go(0);
       });
     },
   };

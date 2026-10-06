@@ -412,60 +412,142 @@ const STORY = {
 
     /* ------------------------------------------------------------ Summering */
     {
-      id: 'nend', prop: 'checklista', time: 'Dagens slut', title: 'Sammanfattning', kind: 'green', lane: 'main',
-      env: 'summary', place: '',
+      id: 'nend', prop: 'checklista', time: 'Dagens slut', title: 'På väg hem', kind: 'green', lane: 'main',
+      env: 'bil', envVariant: 'dusk', place: 'På väg hem',
       async play(api) {
-        api.clock('17:00');
-        await api.summary(buildSummary(api.state));
+        const s = api.state;
+        api.clock('17:05');
+        api.loop('car');
+        api.cinematic(true);
+        await api.title('17:05', 'På väg hem');
+        await api.say('Vilken dag.', { who: 'Ola', inner: true });
+        if (s.accident) {
+          await api.say('Allt hängde på en mening i morse. ”Håll tempot uppe.”', { who: 'Ola', inner: true });
+          await api.say('Jag sa det för att vi hade bråttom. Inte för att någon skulle skadas.', { who: 'Ola', inner: true });
+        } else {
+          await api.say('En skylt. Det var allt som behövdes.', { who: 'Ola', inner: true });
+        }
+        await api.say('Ta en stund och tänk tillbaka på din dag.', { narrator: true });
+        api.cinematic(false);
+        s.reflection = await api.reflect(buildReflection(s));
+        api.stopLoop('car');
       },
     },
   ],
 };
 
-/* Dynamiska dilemmainsikter utifrån användarens val */
-function buildSummary(s) {
-  const insights = [];
-  const A = s.firstA;
-  if (BAD_A.includes(A)) {
-    insights.push({
-      badge: 'A', title: 'Ett ”håll tempot uppe” blev en signal',
-      text: `Kl 07:30 sa du ${A === 'lugnt' ? '”Ta det lugnt men håll tempot uppe”' : '”Vi avvaktar tills nån har tittat på det”'}. Under press tolkades det som att produktionen gick före säkerheten – och det spreds: vid maskinen, vid lunchen, vid fikat. Du gick tillbaka och valde ${s.choices.A === 'skylt' ? 'att sätta upp en varningsskylt' : 'att skriva en rapport direkt'} – och olyckan inträffade aldrig.`,
-    });
-  } else {
-    insights.push({
-      badge: 'A', title: 'Du agerade direkt på säkerhetsbristen',
-      text: `Kl 07:30 valde du ${A === 'skylt' ? 'att sätta upp en tydlig varningsskylt' : 'att skriva en rapport direkt'}. Det låter litet – men det stoppade en kedja av ”så har det alltid varit” innan den hann börja. Hade du sagt ”håll tempot uppe” hade dagen slutat med ett larm kl 16:14.`,
+/* =====================================================================
+   REFLEKTION – kursens avslutning, ett steg i taget.
+   Stegtyper: recap, choice, scale, text, takeaways, commit, closing.
+   `respond` ger en återkoppling direkt efter svaret (ingen rätt eller fel).
+   ===================================================================== */
+const SAID = {
+  lugnt: '”Ta det lugnt men håll tempot uppe…”',
+  avvakta: '”Vi avvaktar tills nån har tittat på det…”',
+  rapport: '”Jag skriver en rapport direkt.”',
+  skylt: '”Sätt upp en tydlig varningsskylt.”',
+};
+
+function buildReflection(s) {
+  const steps = [];
+  const rewound = BAD_A.includes(s.firstA);
+  const mailFirst = { kim: 'Kims sjukanmälan', rapport: 'månadsrapporten', aw: 'AW-mailet' }[(s.choices.C || [])[0]];
+  const breakTxt = { lisa: 'pratade med Lisa', nyheter: 'läste nyheter', tiktok: 'scrollade TikTok', social: 'tog en pratstund vid kaffet' }[s.break];
+
+  /* 1. Din dag */
+  steps.push({
+    type: 'recap', eyebrow: 'Din dag', title: 'Så här blev dagen',
+    items: [
+      { time: '06:00', text: s.snooze ? `Du snoozade ${s.snooze} ${s.snooze === 1 ? 'gång' : 'gånger'}.` : 'Du gick upp direkt.' },
+      rewound
+        ? { time: '07:30', was: SAID[s.firstA], text: `Du ändrade dig: ${SAID[s.choices.A]}`, key: true }
+        : { time: '07:30', text: `Du sa: ${SAID[s.choices.A]}`, key: true },
+      { time: '08:03', text: s.choices.B === 'lisa' ? 'Du stannade och bokade en tid med Lisa.' : '”Det tar vi senare…” Lisa fick vänta.' },
+      mailFirst && { time: '13:24', text: `I inkorgen började du med ${mailFirst}.` },
+      breakTxt && { time: '15:30', text: `Med femton minuter över ${breakTxt}.` },
+      rewound
+        ? { time: '16:14', was: 'Larmet gick vid pressen.', text: 'Den nyanställde gick hem till förskolan.', key: true }
+        : { time: '16:14', text: 'Den nyanställde gick hem till förskolan.', key: true },
+    ].filter(Boolean),
+  });
+
+  /* 2. Vad låg bakom? */
+  if (rewound) {
+    steps.push({
+      type: 'choice', id: 'orsak', eyebrow: 'Kl 07:30',
+      question: `Första gången sa du ${SAID[s.firstA]} Vad tror du låg bakom?`,
+      hint: 'Det finns inget rätt svar. Välj det som ligger närmast.',
+      options: [
+        { id: 'tid', label: 'Tidspressen – nästa stopp närmade sig' },
+        { id: 'allvar', label: 'Det kändes inte så allvarligt' },
+        { id: 'vana', label: 'Så brukar vi göra' },
+        { id: 'oro', label: 'Jag ville inte skapa oro' },
+      ],
+      respond: (id) => ({
+        tid: 'Tidspress är en av de vanligaste orsakerna till att risker skjuts upp. Men pressen försvinner inte när vi väntar – den flyttas bara, ofta till den som står närmast maskinen.',
+        allvar: 'Ett skydd som ”bara hakar upp sig” är lätt att vänja sig vid. Just därför är tillbud så värdefulla: de är varningen innan olyckan.',
+        vana: 'Det en chef säger blir snabbt ”så gör vi här”. Samma tanke upprepades vid maskinen, vid lunchen och vid fikat – samma dag.',
+        oro: 'Viljan att hålla lugnet är mänsklig. Men en tydlig skylt skapar oftast mer trygghet än oro – den visar att någon har koll.',
+      }[id]),
     });
   }
-  insights.push(s.choices.B === 'lisa'
-    ? { badge: 'B', title: 'Du gav Lisa en tid', text: 'Du var sen, men tog tio sekunder att boka in Lisa. Att bli sedd i stunden är en stor del av den psykosociala arbetsmiljön.' }
-    : { badge: 'B', title: '”Det tar vi senare…”', text: 'Mötet kändes mest akut. Men Lisa gick därifrån utan svar. Hur ofta blir ”senare” aldrig – och vad gör det med viljan att säga till nästa gång?' });
 
-  const C = s.choices.C || [];
-  const cText = {
-    kim: 'Du började med Kims sjukanmälan. Bemanning och omtanke först – rapporten kan vänta en timme.',
-    rapport: 'Du började med månadsrapporten. Deadlines styr – men Kims sjukanmälan påverkar bemanningen redan i morgon.',
-    aw: 'Du började med AW-mailet. Gemenskap är viktigt, men vad hände med Kims sjukanmälan och bemanningen?',
-  }[C[0]];
-  if (cText) insights.push({ badge: 'C', title: 'Prioriteringar i inkorgen', text: cText });
+  /* 3. Känner du igen det? */
+  steps.push({
+    type: 'scale', id: 'igenkanning', eyebrow: 'I din vardag',
+    question: 'Hur ofta ställs du inför liknande val – där tempot står mot säkerheten?',
+    labels: ['Nästan aldrig', 'Varje dag'],
+    respond: (v) => (v <= 2
+      ? 'Skönt. Fundera ändå på om det är för att det inte händer – eller för att det inte syns.'
+      : v === 3
+        ? 'Då vet du hur det känns. En enkel fråga att bära med sig: ”Vad skulle jag önska att jag sagt, om det här gick fel i eftermiddag?”'
+        : 'Då är du inte ensam. När valet kommer ofta behövs en gemensam spelregel i teamet, så att ingen behöver avgöra det själv under press.'),
+  });
 
-  if (s.snooze) insights.push({ badge: '', title: `Du snoozade ${s.snooze} ${s.snooze === 1 ? 'gång' : 'gånger'}`, text: 'Små val på morgonen sätter tonen för dagens tempo. Pressen börjar ofta långt innan första mötet.' });
+  /* 4. Vem väntar på dig? */
+  steps.push({
+    type: 'text', id: 'vantar', eyebrow: 'Kl 08:03',
+    question: s.choices.B === 'lisa'
+      ? 'Du stannade för Lisa, fast du var sen. Vem på din arbetsplats skulle behöva samma minut från dig den här veckan?'
+      : '”Det tar vi senare…” Lisa fick vänta. Finns det någon som väntar på ett svar från dig just nu?',
+    placeholder: 'Ett namn, eller en tanke …',
+    hint: 'Det du skriver stannar här, på din skärm.',
+    respond: (t) => (t ? 'Bra. Boka in det innan du stänger kursen – senare blir lätt aldrig.' : 'Helt okej. Frågan får följa med dig ändå.'),
+  });
 
-  return {
-    knowledge: [
-      'Beslut under produktionspress sprider sig – ett ord på ett morgonmöte blir en norm på golvet.',
-      'En känd säkerhetsbrist ska hanteras direkt: spärra av, skylta, rapportera.',
-      '”Så har det alltid varit” är en riskfaktor, inte en förklaring.',
-      'Tillgänglighet och att lyssna är också säkerhetsarbete.',
+  /* 5. Det här tar vi med oss */
+  steps.push({
+    type: 'takeaways', eyebrow: 'Att ta med sig', title: 'Tre saker från dagen',
+    items: [
+      { lead: 'Ord blir normer.', text: 'Ett ”håll tempot uppe” på morgonmötet blev ”så har det alltid varit” vid maskinen.' },
+      { lead: 'Agera på det kända.', text: 'En känd säkerhetsbrist hanteras direkt: spärra av, skylta, rapportera.' },
+      { lead: 'Lyssna i korridoren.', text: 'Den som vågar fråga i dag är den som säger till nästa gång.' },
     ],
-    insights,
-    commits: [
+  });
+
+  /* 6. Mitt åtagande */
+  steps.push({
+    type: 'commit', id: 'atagande', eyebrow: 'Mitt åtagande',
+    question: 'Vad tar du med dig till i morgon?',
+    hint: 'Välj ett eller flera – eller skriv med egna ord.',
+    options: [
       'Jag förstår att beslut jag tar påverkar andras arbetsdag och arbetsmiljö.',
       'Jag agerar direkt när jag ser en säkerhetsbrist – skylt, rapport, åtgärd.',
       'Jag tar mig tid att lyssna när en medarbetare vill prata.',
       'Jag ifrågasätter ”så har det alltid varit”.',
     ],
-  };
+    ownPlaceholder: 'Mitt eget åtagande …',
+  });
+
+  /* 7. Avslut */
+  steps.push({
+    type: 'closing', eyebrow: '17:42',
+    title: 'Den nyanställde hann till förskolan i dag.',
+    text: rewound
+      ? 'I spelet kunde du spola tillbaka till 07:30. I verkligheten finns bara nästa morgonmöte.'
+      : 'Det berodde på ett beslut kl 07:30. I morgon är det du som sitter på morgonmötet.',
+  });
+  return steps;
 }
 
 window.STORY = STORY;
