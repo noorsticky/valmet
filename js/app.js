@@ -981,6 +981,7 @@
   /* ------------------------------------------------------------ start */
   async function start() {
     SFX.unlock();
+    $$('video', el.intro).forEach((v) => setTimeout(() => v.pause(), 700));
     SFX.play('whooshIn');
     show(el.intro, false);
     show(el.timeline, true);
@@ -995,19 +996,6 @@
 
   $('#startBtn').addEventListener('click', start);
 
-  // startsidans förhandstitt: dagens första punkter, 06:00 lyser
-  (function introDay() {
-    const host = $('#introDay');
-    if (!host) return;
-    const pick = ['n0600', 'n0620', 'n0650', 'n0715', 'n0730', 'n0803'];
-    host.innerHTML = pick.map((id, i) => {
-      const n = byId[id];
-      return `<div class="iday iday--${i % 2 ? 'l' : 'r'} ${i === 0 ? 'is-now' : ''}" style="top:${26 + i * 16}%; animation-delay:${0.25 + i * 0.1}s">
-        <span class="iday__dot"></span><span class="iday__pill">kl ${n.time}</span>
-        <span class="iday__plat"><span class="iday__disc"></span><span class="iday__prop">${PROPS.html(val(n.prop, state))}</span></span>
-      </div>`;
-    }).join('');
-  })();
   // två klick i stället för confirm() (som inte fungerar i alla inbäddade visare)
   let resetArmed = null;
   $('#resetBtn').addEventListener('click', () => {
