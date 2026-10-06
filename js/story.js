@@ -34,12 +34,15 @@ const STORY = {
   nodes: [
     /* ------------------------------------------------------------ 06:00 */
     {
-      id: 'n0600', prop: 'klocka', time: '06:00', title: 'Snooze or lose', kind: 'pink', lane: 'main',
+      id: 'n0600', prop: 'klocka', time: '06:00', title: 'Snooze or lose', kind: 'pink', lane: 'main', eyesClosed: true,
       env: 'sovrum', place: 'Sovrummet',
       async play(api) {
         api.clock('06:00');
         api.overlay('alarmclock', '06:00');
+        // scenen börjar med slutna ögon (eyesClosed) – larmet väcker en
         api.loop('alarm');
+        await api.wait(900);
+        await api.eyes(false);
         await api.title('06:00', 'Sovrummet');
         let t = 0;
         while (true) {
@@ -55,7 +58,7 @@ const STORY = {
           t++;
           api.state.snooze = t;
           await api.eyes(true);
-          await api.wait(900);
+          await api.wait(1200);
           const time = t === 1 ? '06:10' : '06:20';
           api.overlay('alarmclock', time);
           api.clock(time);

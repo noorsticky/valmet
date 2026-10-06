@@ -404,6 +404,7 @@
     el.scene.classList.toggle('is-cinematic', !!val(n.cinematic, state));
     el.scene.classList.toggle('is-summary', env === 'summary');
     el.skip.classList.toggle('is-on', !!val(n.cinematic, state));
+    if (n.eyesClosed) { el.scene.classList.add('is-dozing'); el.eyelids.style.setProperty('--open', 0); el.stage.style.filter = 'blur(12px) brightness(.55) saturate(.5)'; }
     renderProgress();
   }
 
@@ -416,9 +417,10 @@
     el.memory.innerHTML = '';
     el.titlecard.classList.remove('is-on');
     el.fxTint.className = 'fx fx--tint';
-    el.eyelids.classList.remove('is-closed');
+    el.eyelids.style.setProperty('--open', 1);
+    el.stage.style.filter = '';
     $$('.ov-clock', el.stage).forEach((o) => o.remove());
-    el.scene.classList.remove('is-cinematic', 'is-shake', 'is-reflect');
+    el.scene.classList.remove('is-cinematic', 'is-shake', 'is-reflect', 'is-dozing');
     $$('video', el.env).forEach((v) => v.pause());
   }
 
@@ -587,9 +589,27 @@
       }
     },
 
-    eyes(close) {
-      el.eyelids.classList.toggle('is-closed', close);
-      return sleep(T(900));
+    /* Ögonen: tunga lock som sluts i omgångar (somnar) eller fladdrar upp (vaknar),
+       med suddig, dov bild medan man är halvvaken. */
+    async eyes(close, { instant = false } = {}) {
+      const lids = el.eyelids;
+      el.scene.classList.toggle('is-dozing', close);
+      if (instant) { lids.style.setProperty('--open', close ? 0 : 1); return; }
+      const kf = close
+        ? [[1, 0], [0.45, 0.3], [0.62, 0.46], [0.12, 0.78], [0, 1]]       // tungt… kämpar emot… sluts
+        : [[0, 0], [0.35, 0.26], [0.06, 0.4], [0.55, 0.62], [0.4, 0.72], [1, 1]]; // glipa… blink… upp
+      const ms = T(close ? 1900 : 2300);
+      const a = lids.animate(kf.map(([o, offset]) => ({ '--open': o, offset })), { duration: ms, easing: 'ease-in-out', fill: 'forwards' });
+      const b = el.stage.animate(close
+        ? [{ filter: 'none' }, { filter: 'blur(3px) brightness(.85)', offset: 0.5 }, { filter: 'blur(9px) brightness(.6) saturate(.6)' }]
+        : [{ filter: 'blur(12px) brightness(.55) saturate(.5)' }, { filter: 'blur(7px) brightness(.7) saturate(.7)', offset: 0.45 }, { filter: 'blur(2px) brightness(.92)', offset: 0.8 }, { filter: 'none' }],
+      { duration: ms * (close ? 1 : 1.25), easing: 'ease-out', fill: 'forwards' });
+      await a.finished;
+      lids.style.setProperty('--open', close ? 0 : 1);
+      a.cancel();
+      if (!close) { await b.finished; b.cancel(); }
+      else b.cancel(), (el.stage.style.filter = 'blur(9px) brightness(.6) saturate(.6)');
+      if (!close) el.stage.style.filter = '';
     },
 
     async memory(text, badge) {
