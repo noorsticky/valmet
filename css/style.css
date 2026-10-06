@@ -270,7 +270,7 @@ button { font: inherit; color: inherit; }
 
 /* ------------------------------------------------------------ minne ("detta påverkar…") */
 .memory { position: absolute; z-index: 9; top: 90px; left: 24px; pointer-events: none; }
-.mem { display: flex; align-items: center; gap: 12px; background: rgba(10,14,20,.85); border: 1px solid rgba(90,169,245,.5); border-radius: 999px; padding: 8px 18px 8px 8px; font-weight: 600; box-shadow: 0 0 30px rgba(90,169,245,.35); animation: memIn .6s var(--ease) both; }
+.mem { display: flex; align-items: center; gap: 12px; background: rgba(10,14,20,.85); border: 1px solid rgba(90,169,245,.5); border-radius: 999px; padding: 10px 20px; font-weight: 600; box-shadow: 0 0 30px rgba(90,169,245,.35); animation: memIn .6s var(--ease) both; }
 .mem.is-out { animation: memOut .4s ease both; }
 .mem__badge { width: 34px; height: 34px; border-radius: 50%; background: var(--blue-badge); display: grid; place-items: center; font-weight: 800; }
 @keyframes memIn { from { opacity: 0; transform: translateX(-40px); } }
@@ -407,7 +407,7 @@ button { font: inherit; color: inherit; }
 .know li::before { content: '✓'; position: absolute; left: 16px; color: var(--accent-2); font-weight: 800; }
 .insights { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
 .insight { position: relative; background: #fff; border-radius: 16px; padding: 18px 18px 18px; box-shadow: 0 6px 20px rgba(16,48,26,.1); }
-.insight h4 { margin: 0 0 6px; font-size: 16px; padding-right: 40px; }
+.insight h4 { margin: 0 0 6px; font-size: 16px; }
 .insight p { margin: 0; font-size: 14px; line-height: 1.5; color: #35503d; }
 .insight__badge { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: var(--blue-badge); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 13px; }
 .commits { display: grid; gap: 8px; }

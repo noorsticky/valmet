@@ -20,7 +20,7 @@ används systemtypsnitt.
 | Färg | Typ | Betydelse |
 |---|---|---|
 | Rosa | Vardagsval | Påverkar inget. Finns för engagemang (snooze, kaffe, lunch, 15 min över) |
-| Blå (A/B/C/X) | Beslut | Påverkar senare i kursen och sammanfattningen |
+| Blå | Beslut | Påverkar senare i kursen och sammanfattningen |
 | Grå | Film | Cutscene. Svarta filmfält, ingen HUD, användaren tittar |
 | Vit | Vid sidan av | Händer bara på spår **A** (om valet kl 07:30 blev fel) |
 | Grön | Sammanfattning | Kunskaper, dynamiska dilemmainsikter och commitlista |

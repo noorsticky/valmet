@@ -199,7 +199,6 @@
           <span class="node__plat">
             <span class="node__disc"></span>
             <span class="node__prop">${PROPS.html(val(n.prop, state))}</span>
-            ${badge ? `<span class="node__badge">${badge}</span>` : ''}
           </span>`;
         e.setAttribute('aria-label', `kl ${n.time} ${known ? val(n.title, state) : 'okänd händelse'}`);
         e.disabled = !(isNext || culprit);
@@ -520,7 +519,6 @@
         el.choice.className = `choice choice--${kind}`;
         el.choice.innerHTML = `
           <div class="choice__head">
-            ${o.badge ? `<span class="choice__badge">${o.badge}</span>` : ''}
             <h2 class="choice__prompt">${o.prompt}</h2>
           </div>
           ${o.timer ? `<div class="choice__timer"><span>${o.timerLabel || ''}</span><i><b></b></i></div>` : ''}
@@ -596,7 +594,7 @@
 
     async memory(text, badge) {
       SFX.play('memory');
-      el.memory.innerHTML = `<div class="mem"><span class="mem__badge">${badge || '!'}</span><span>${text}</span></div>`;
+      el.memory.innerHTML = `<div class="mem"><span>${text}</span></div>`;
       await sleep(fast ? 300 : T(2600));
       const m = $('.mem', el.memory);
       m && m.classList.add('is-out');
@@ -723,7 +721,7 @@
             <section>
               <h3>Dina dilemman</h3>
               <div class="insights">${data.insights.map((x) => `
-                <article class="insight">${x.badge ? `<span class="insight__badge">${x.badge}</span>` : ''}<h4>${x.title}</h4><p>${x.text}</p></article>`).join('')}</div>
+                <article class="insight"><h4>${x.title}</h4><p>${x.text}</p></article>`).join('')}</div>
             </section>
             <section>
               <h3>Min commitlista</h3>
