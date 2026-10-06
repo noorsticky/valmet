@@ -18,8 +18,8 @@
   const ROW = 290;        // lodrätt avstånd mellan punkterna (px i världen)
   const PLAT_X = 270;     // plattformens avstånd från linjen
   const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
-  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4' };
-  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', spegel: 'assets/img/sovrum.jpg' };
+  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4' };
+  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', spegel: 'assets/img/sovrum.jpg' };
 
   /* ------------------------------------------------------------ state */
   const freshState = () => ({
@@ -67,26 +67,6 @@
           <div class="bil__dash"></div><div class="bil__wheel"></div><div class="bil__radio">P4 · 103.3</div>
         </div>
       </div>`,
-    mote: (v) => `
-      <div class="mote ${v === 'dark' ? 'mote--dark' : ''}">
-        <div class="mote__wall"></div><div class="mote__window"></div>
-        ${v === 'dark'
-          ? `<div class="mote__screen"><b>Produktion Q4</b><span class="bars"><i style="height:40%"></i><i style="height:55%"></i><i style="height:48%"></i><i style="height:70%" class="goal"></i></span><em>Mål: +8 %</em></div>`
-          : `<div class="mote__board"><p>Nästa stopp: v.44</p><p>– Skydd press L3 <b>!!</b></p><p>– Bulktransporter</p><p>– Bemanning fre</p></div>`}
-        ${person(30, 76, 1.0, 'p--a')}${person(46, 74, 0.95, 'p--b')}${person(63, 76, 1.0, 'p--c')}
-        <div class="mote__table"></div>
-        ${person(12, 112, 1.9, 'p--front')}${person(86, 114, 2.0, 'p--front')}
-        <div class="mote__light"></div>
-      </div>`,
-    korridor: (v) => `
-      <div class="korr ${v === 'warm' ? 'korr--warm' : ''}">
-        <div class="korr__end"></div>
-        <div class="korr__ceil"><i></i><i></i><i></i><i></i></div>
-        <div class="korr__wall korr__wall--l"><i></i><i></i></div>
-        <div class="korr__wall korr__wall--r"><i></i><i></i></div>
-        <div class="korr__floor"></div>
-        ${v === 'warm' ? person(57, 84, 1.5, 'p--bag') : person(58, 86, 1.6, 'p--lisa')}
-      </div>`,
     fabrik: (v) => `
       <div class="fab ${v === 'alarm' ? 'fab--alarm' : ''}">
         <div class="fab__bg"></div>
@@ -127,7 +107,8 @@
         host.appendChild(v);
         v.play().catch(() => {});
       }
-      if (variant === 'dim') host.appendChild(h('div', 'env__dim'));
+      // ljussättning ovanpå filmen: dim (dovare), dark (kvällsmöte), warm (eftermiddagsljus)
+      if (variant) host.appendChild(h('div', `env__tone env__tone--${variant}`));
     } else if (ENV_HTML[name]) {
       host.innerHTML = ENV_HTML[name](variant);
       if (thumb) $$('video', host).forEach((v) => v.remove());

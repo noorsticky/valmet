@@ -9,7 +9,7 @@
            'green'  = sammanfattning
    lane:   'main' | 'side'
    track:  'A' = noden finns bara när det kritiska valet blev fel
-   env:    miljö – videofil (sovrum, kontor, fika) eller ritad (bil, mote, korridor, fabrik, spegel)
+   env:    miljö – videofil (sovrum, kontor, fika, lunch, mote, korridor, larm) eller ritad (bil, fabrik, spegel)
    ===================================================================== */
 
 const BAD_A = ['lugnt', 'avvakta'];   // valen kl 07:30 som leder till olyckan
@@ -380,8 +380,8 @@ const STORY = {
     {
       id: 'n1614', prop: (s) => (s.track === 'A' ? 'larm' : 'ryggsack'), time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
       title: (s) => (s.track === 'A' ? 'Larmet går' : 'Mötet i korridoren'),
-      env: (s) => (s.track === 'A' ? 'fabrik' : 'korridor'),
-      envVariant: (s) => (s.track === 'A' ? 'alarm' : 'warm'),
+      env: (s) => (s.track === 'A' ? 'larm' : 'korridor'),
+      envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
       place: (s) => (s.track === 'A' ? 'Linje 3' : 'Korridoren'),
       cinematic: (s) => s.track === 'A',
       async play(api) {

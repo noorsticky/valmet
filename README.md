@@ -68,7 +68,7 @@ js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
-assets/video/     sovrum.mp4, kontor.mp4, fika.mp4, lunch.mp4 (omkodade, utan ljudspår)
+assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm (.mp4) (omkodade, utan ljudspår)
 assets/img/       Stillbilder ur videorna + logo.png (tillfällig logga, utklippt ur kontorsfilmen)
 ```
 
@@ -104,7 +104,7 @@ När scenen öppnas växer den ut ur plattformen.
 
 ### Byta en ritad miljö mot en riktig animation
 
-De scener som saknar animation (bil, mötesrum, korridor, maskin, spegel) är
+De scener som saknar animation (bilen, maskinen kl 11:15 och spegeln) är
 ritade i CSS som platshållare. När en riktig film finns:
 
 1. Lägg filen i `assets/video/` och en stillbild i `assets/img/`.
