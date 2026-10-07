@@ -101,9 +101,14 @@
   };
 
   function buildEnv(host, name, variant, { thumb = false, live = false } = {}) {
+    if (host._stop) { host._stop(); host._stop = null; }
     host.innerHTML = '';
     if (host.dataset.base == null) host.dataset.base = host.className.split(' ').filter((c) => c && !c.startsWith('env')).join(' ');
     host.className = `${host.dataset.base} env env--${name} ${variant ? 'env--' + variant : ''}`;
+    // 3D-scener (bilen, maskinen) renderas med three.js; CSS-scenen är reserv utan WebGL
+    if (!thumb && window.Scene3D && Scene3D.has(name)) {
+      try { host._stop = Scene3D.mount(host, name, variant); return; } catch (e) { console.warn(e); host.innerHTML = ''; }
+    }
     if (VIDEO_ENVS[name]) {
       if (thumb && !live) {
         host.appendChild(Object.assign(h('img', 'env__video'), { src: POSTERS[name], alt: '' }));
@@ -407,6 +412,7 @@
 
   function cleanupScene() {
     fast = false;
+    if (el.env._stop) { el.env._stop(); el.env._stop = null; }
     el.hotspots.innerHTML = '';
     el.captions.innerHTML = '';
     el.choice.innerHTML = ''; el.choice.classList.remove('is-on');

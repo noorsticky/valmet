@@ -410,7 +410,7 @@ button { font: inherit; color: inherit; }
 .mirror__tabs { grid-area: tabs; display: flex; gap: 8px; padding: 6px; border-radius: 999px; background: rgba(14,20,14,.8); }
 .mirror__tab { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px 5px 5px; text-align: left; line-height: 1.15; border-radius: 999px; border: 0; background: transparent; color: #dfe5dc; font: 600 15px/1 var(--font); cursor: pointer; }
 .mirror__tab[aria-selected="true"] { background: #fff; color: #142014; }
-.mirror__tab small { display: block; font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; opacity: .85; }
+.mirror__tab small { display: block; font: 500 12px/1.2 var(--mono); letter-spacing: .06em; opacity: .85; }
 .mirror__face { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #3f4f3e no-repeat 50% 4% / 260%; }
 .mirror__info { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 110px 0 0; width: 380px; max-width: 100%; text-shadow: 0 1px 12px rgba(0,0,0,.6); }
 /* stor konturbokstav för dagen, bakom rubriken */
@@ -498,7 +498,7 @@ button { font: inherit; color: inherit; }
 .cal__grid { position: relative; height: 150px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #eee; }
 .cal__h { font-size: 13px; color: #555b55; padding-top: 6px; border-left: 1px solid #eee; padding-left: 6px; }
 .ev { position: absolute; top: 34px; left: 16.6%; width: 33%; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff; transition: transform 1.2s var(--ease), opacity 1.2s, top .5s var(--ease); }
-.ev--a { background: var(--blue-badge); }
+.ev--a { background: #2f6fd1; }
 .ev--b { background: #6a47b8; }
 .ev--lisa { left: 50%; top: 92px; background: var(--accent-2); }
 .panel--cal.is-clash .ev--a { top: 26px; box-shadow: 0 0 0 3px var(--alarm); }
