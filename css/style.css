@@ -183,15 +183,6 @@ button { font: inherit; color: inherit; }
 @keyframes culprit { 0%, 100% { box-shadow: 0 0 0 5px #ffb020, 0 0 30px 8px rgba(255,176,32,.6); } 50% { box-shadow: 0 0 0 5px #fff4d6, 0 0 70px 24px rgba(255,176,32,.95); } }
 .node.is-diving .node__prop { opacity: 0; transition-duration: .3s; }
 
-/* mobil: allt på högra sidan, större text eftersom tidslinjen skalas ner */
-.is-compact .node__arm { width: 110px; }
-.is-compact .node--right .node__plat { left: 110px; width: 200px; }
-.is-compact .node__disc { width: 200px; height: 92px; top: -46px; }
-.is-compact .node__prop { width: 150px; height: 150px; bottom: -10px; }
-.is-compact .node__label { width: 165px; top: -20px; gap: 8px; }
-.is-compact .node__pill { font-size: 23px; padding: 8px 12px; }
-.is-compact .node__title { font-size: 19px; max-width: 165px; }
-.is-compact .node__cta { font-size: 17px; }
 .node.is-dissolving { opacity: 0 !important; filter: blur(12px); transition-duration: 1.2s; }
 .node.is-dissolving .node__plat { transform: translateY(-40px) scale(.8); transition: transform 1.2s; }
 

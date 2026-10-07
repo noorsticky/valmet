@@ -16,10 +16,8 @@
   const T = (ms) => (REDUCED ? Math.round(ms * 0.35) : ms);
 
   const ROW = 290;        // lodrätt avstånd mellan punkterna (px i världen)
-  // Smal skärm (mobil): alla plattformar till höger om linjen, större text, kameran följer i sidled
-  const compact = () => innerWidth < 720;
-  const platX = () => (compact() ? 210 : 270);   // plattformens mitt, avstånd från linjen
-  const sideX = () => (compact() ? 380 : 600);   // sidospårets linje (till höger om huvudlinjen)
+  const PLAT_X = 270;     // plattformens avstånd från linjen
+  const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
   const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4' };
   const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', spegel: 'assets/img/sovrum.jpg' };
 
@@ -129,10 +127,10 @@
     let m = 0;
     visibleNodes().forEach((n, i) => {
       const side = n.lane === 'side';
-      const dir = side || compact() ? 1 : (m++ % 2 === 0 ? 1 : -1);   // huvudlinjen växlar höger/vänster
-      const x = side ? sideX() : 0;
+      const dir = side ? 1 : (m++ % 2 === 0 ? 1 : -1);   // huvudlinjen växlar höger/vänster
+      const x = side ? SIDE_X : 0;
       const y = i * ROW;
-      layout[n.id] = { x, y, dir, px: x + dir * platX(), py: y };
+      layout[n.id] = { x, y, dir, px: x + dir * PLAT_X, py: y };
     });
   }
   const hasSide = () => visibleNodes().some((n) => n.lane === 'side');
@@ -206,7 +204,7 @@
     if (!side.length) { g.innerHTML = ''; return; }
     const s0 = layout.n0730, e0 = layout.n1614;
     const f = layout[side[0].id], l = layout[side[side.length - 1].id];
-    const X = sideX();
+    const X = SIDE_X;
     const d = `M 0 ${s0.y} C 0 ${s0.y + ROW * 0.7}, ${X} ${f.y - ROW * 1.1}, ${X} ${f.y - ROW * 0.35} L ${X} ${l.y + ROW * 0.35} C ${X} ${l.y + ROW * 1.1}, 0 ${e0.y - ROW * 0.7}, 0 ${e0.y}`;
     let bp = $('#branchPath', g);
     if (bp && bp.getAttribute('d') === d) return;
@@ -231,8 +229,7 @@
   function focusPoint() { return { cx: window.innerWidth / 2, cy: window.innerHeight * 0.5 }; }
   // grundskala så att hela bredden (linje + plattformar) får plats även på mobil
   function baseScale() {
-    // mobil: etikett (≈170) + plattform (≈310) får plats; sidospåret nås genom att kameran följer med
-    const need = compact() ? 530 : hasSide() ? (sideX() + platX() + 200) * 2 : (platX() + 200) * 2;
+    const need = hasSide() ? (SIDE_X + PLAT_X + 200) * 2 : (PLAT_X + 200) * 2;
     return Math.max(0.36, Math.min(1.1, (innerWidth - 32) / need, innerHeight / 820));
   }
 
@@ -245,12 +242,10 @@
     if (!ms) void el.world.offsetWidth;
     return sleep(ms ? T(ms) : 0);
   }
-  // vilken x-position kameran ska centrera på för en linje (huvudlinje eller sidospår)
-  const centerX = (laneX = 0) => (compact() ? laneX + 70 : hasSide() ? sideX() * 0.5 : 0);
   // kameran: följ punkten lodrätt, håll linjen (och ev. sidospår) i bild
   const camTo = (id, s = 1, ms, ease) => {
     const p = layout[id];
-    return setCam(centerX(p.x), p.y + 30, s, ms, ease);
+    return setCam(hasSide() ? SIDE_X * 0.5 : 0, p.y + 30, s, ms, ease);
   };
   // kameran centrerad på en plattform (används vid hopp in/ut)
   const camPlat = (id, s, ms, ease) => { const p = layout[id]; return setCam(p.px, p.py - 40, s, ms, ease); };
@@ -834,7 +829,7 @@
             $('.js-again', body).addEventListener('click', () => restart());
             $('.js-tl', body).addEventListener('click', async () => {
               await exitScene(byId.nend);
-              await setCam(centerX(), layout.n1324.y, 0.32, 1400);
+              await setCam(0, layout.n1324.y, 0.32, 1400);
               banner('<strong>Din dag – rak och olycksfri.</strong><small>Tack för att du spelade.</small>', 'tl-banner--good');
             });
             dots.forEach((d) => d.classList.add('is-done'));
@@ -954,7 +949,7 @@
     busy = true;
     el.timeline.classList.remove('is-alarm');
     banner('<strong>Ett annat val. En annan dag.</strong>', 'tl-banner--good');
-    await setCam(compact() ? sideX() * 0.5 : sideX() * 0.5, layout.n1223.y, compact() ? 0.45 : 0.6, 1000);
+    await setCam(SIDE_X * 0.5, layout.n1223.y, 0.6, 1000);
     SFX.play('dissolve');
     $$('.node--side').forEach((e, i) => setTimeout(() => e.classList.add('is-dissolving'), i * T(220)));
     const bp = $('#branchPath');
@@ -982,10 +977,10 @@
     const dot = h('div', 'tl-pulse');
     el.world.appendChild(dot);
     dot.style.top = a.y + 'px';
-    setCam(centerX(), a.y, 0.8, 0);
+    setCam(0, a.y, 0.8, 0);
     const ms = T(2400);
     dot.animate([{ top: a.y + 'px' }, { top: b.y + 'px' }], { duration: ms, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' });
-    setCam(centerX(), b.y, 0.8, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.5,0,.5,1)');
+    setCam(0, b.y, 0.8, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.5,0,.5,1)');
     el.timeline.classList.add('is-healed');
     await sleep(ms + 200);
     dot.remove();
@@ -1007,7 +1002,7 @@
     renderTimeline();
     // etableringsbild: svep över hela dagen, landa på 06:00
     const last = visibleNodes().length - 1;
-    await setCam(centerX(), last * ROW * 0.5, 0.3, 0);
+    await setCam(0, last * ROW * 0.5, 0.3, 0);
     banner('<strong>En dag i produktionen.</strong><small>Varje punkt är ett ögonblick du kan hoppa in i.</small>');
     await sleep(T(1700));
     await goNext();
@@ -1028,13 +1023,7 @@
   const muteIcon = () => $$('.js-mute').forEach((b) => { b.textContent = SFX.isMuted() ? '🔇' : '🔊'; });
   $$('.js-mute').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); SFX.toggleMute(); muteIcon(); }));
   muteIcon();
-  let wasCompact = compact();
-  window.addEventListener('resize', () => {
-    el.timeline.classList.toggle('is-compact', compact());
-    if (compact() !== wasCompact) { wasCompact = compact(); $$('.node', el.nodes).forEach((n) => { delete n.dataset.sig; }); if (el.timeline.classList.contains('is-active')) renderTimeline(); }
-    if (!busy) setCam(cam.x, cam.y, cam.s, 0);
-  });
-  el.timeline.classList.toggle('is-compact', compact());
+  window.addEventListener('resize', () => { if (!busy) setCam(cam.x, cam.y, cam.s, 0); });
 
   /* ------------------------------------------------------------ utvecklarläge
      ?at=n1324           hoppa till en punkt (tidigare punkter markeras som spelade)
