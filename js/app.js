@@ -639,6 +639,23 @@
       el.memory.innerHTML = '';
     },
 
+    // gör att panelens innehåll alltid ryms utan scroll: krymper med zoom vid behov
+    fit(elm, host) {
+      if (!elm) return;
+      const run = () => {
+        elm.style.zoom = 1;
+        const box = (host || elm.parentElement);
+        const cs = getComputedStyle(box);
+        const availH = box.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+        const availW = box.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        const z = Math.min(1, availH / elm.scrollHeight, availW / elm.scrollWidth);
+        elm.style.zoom = z < 1 ? Math.max(0.55, z * 0.98) : 1;
+      };
+      run();
+      if (!elm._fitRO) { elm._fitRO = new ResizeObserver(() => requestAnimationFrame(run)); elm._fitRO.observe(host || elm.parentElement); }
+      return run;
+    },
+
     panel(cls, html) {
       const p = h('div', `panel ${cls}`, html);
       el.panelHost.innerHTML = '';
@@ -655,6 +672,7 @@
         let cur = Math.max(0, personas.findIndex((x) => x.id === 'ola'));
         const n = personas.length;
         const p = api.panel('panel--mirror', `
+          <div class="mirror__wrap">
           <div class="mirror__head"><h2 class="mirror__prompt" id="mirrorQ">${prompt}</h2>${sub ? `<p class="mirror__sub">${sub}</p>` : ''}</div>
           <div class="mirror__stage">
           <div class="mirror" role="group" aria-roledescription="karusell" aria-labelledby="mirrorQ">
@@ -673,13 +691,12 @@
             <button class="mirror__tab" role="tab" data-i="${k}"><span class="mirror__face" style="background-image:url(${x.img})"></span><span><small>Dag ${x.day}</small>${x.name}</span></button>`).join('')}
           </div>
           <article class="mirror__info" aria-live="polite">
-            <span class="mirror__letter" aria-hidden="true"></span>
-            <p class="mirror__day"></p>
             <h3 class="mirror__theme"></h3>
             <p class="mirror__who"></p>
             <p class="mirror__desc"></p>
             <button class="opt mirror__pick"></button>
           </article>
+          </div>
           </div>`);
         const slides = $$('.mirror__slide', p), tabs = $$('.mirror__tab', p), track = $('.mirror__track', p);
         const sync = () => {
@@ -691,14 +708,13 @@
           });
           tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === cur)); t.tabIndex = k === cur ? 0 : -1; });
           const x = personas[cur];
-          $('.mirror__letter', p).textContent = x.day;
-          $('.mirror__day', p).textContent = `Dag ${x.day} av ${n}`;
           const info = $('.mirror__info', p);
           info.classList.remove('is-swap'); void info.offsetWidth; info.classList.add('is-swap');
           $('.mirror__theme', p).textContent = x.theme;
           $('.mirror__who', p).textContent = `${x.name}, ${x.age} år · ${x.role}`;
           $('.mirror__desc', p).textContent = x.desc;
           $('.mirror__pick', p).textContent = `Välj dag ${x.day}`;
+          refit && refit();
         };
         const go = (k) => { cur = (k + n) % n; SFX.play('hover'); sync(); };
         $('.mirror__nav--prev', p).addEventListener('click', () => go(cur - 1));
@@ -737,7 +753,9 @@
           await api.closePanel(p);
           resolve(personas[cur].id);
         });
+        let refit = null;
         sync();
+        refit = api.fit($('.mirror__wrap', p), p);
       });
     },
 
@@ -766,10 +784,12 @@
             </div>
             <div class="dcal__foot"><button class="btn">Okej. Kör.</button></div>
           </div>`);
-        // börja med morgonen, glid sedan ner till krocken
-        const grid = $('.dcal__grid', p);
-        const clashEl = $('.dcal__clash', p);
-        if (clashEl) setTimeout(() => { grid.scrollTop = clashEl.offsetTop - grid.clientHeight * 0.45; SFX.play('warn'); }, T(1500));
+        // hela dagen får plats: timhöjden räknas fram ur tillgänglig höjd
+        const grid = $('.dcal__grid', p), hrs = $('.dcal__hours', p);
+        const size = () => { const hh = Math.max(22, Math.min(54, (grid.clientHeight - 26) / (to - from))); hrs.style.setProperty('--hh', hh + 'px'); p.classList.toggle('is-tight', hh < 40); };
+        size();
+        new ResizeObserver(size).observe(grid);
+        if ($('.dcal__clash', p)) setTimeout(() => SFX.play('warn'), T(1200));
         $('button', p).addEventListener('click', async () => { SFX.play('click'); await api.closePanel(p); resolve(); });
       });
     },
@@ -788,6 +808,7 @@
               </button></li>`).join('')}</ul>
             <div class="mailwin__foot"><button class="btn btn--ghost js-reset">Börja om</button><button class="btn btn--primary js-done" disabled>Klar</button></div>
           </div>`);
+        api.fit($('.mailwin', p), p);
         const sync = () => {
           $$('.mail', p).forEach((b) => {
             const i = order.indexOf(b.dataset.id);
@@ -851,6 +872,10 @@
         const body = $('.refl__body', p);
         const dots = $$('.refl__dots i', p);
         let idx = -1;
+        const refit = () => api.fit($('.refl', p), p);
+        // när ett svar ger återkoppling växer bladet – krymp igen så att allt ryms
+        let fitQueued = false;
+        new MutationObserver(() => { if (fitQueued) return; fitQueued = true; requestAnimationFrame(() => { fitQueued = false; refit(); }); }).observe(p, { childList: true, subtree: true });
 
         const foot = (label = 'Fortsätt', disabled = false) =>
           `<div class="refl__foot"><button class="btn btn--primary js-next" ${disabled ? 'disabled' : ''}>${label}</button></div>`;
@@ -863,7 +888,7 @@
           body.classList.add('is-out');
           await sleep(T(320));
           render(steps[n]);
-          body.scrollTop = 0;
+          refit();
           body.classList.remove('is-out');
         }
         const next = () => { SFX.play('click'); if (idx < steps.length - 1) go(idx + 1); };
