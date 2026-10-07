@@ -94,7 +94,7 @@ button { font: inherit; color: inherit; }
 .intro__sound { font: 400 13px/1 var(--mono); color: #a3ad9f; }
 
 @media (max-width: 860px) {
-  .intro .intro__stage { animation: none; top: 32%; transform: translate(-33%, -50%); }
+  .intro .intro__stage { animation: none; top: 24%; transform: translate(-33%, -50%); }
   .intro__shade { background: linear-gradient(rgba(8,10,14,.6), rgba(8,10,14,.1) 25%, rgba(8,10,14,.3) 45%, rgba(10,13,17,.94) 66%, #0c0f14 79%); }
   .intro__copy { top: auto; bottom: max(28px, env(safe-area-inset-bottom, 0px)); left: 16px; right: 16px; width: auto; transform: none; }
   .intro__meta { display: none; }
