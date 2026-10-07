@@ -60,6 +60,7 @@
   }
 
   const sounds = {
+    stamp: () => { tone({ freq: 140, type: 'triangle', dur: 0.12, vol: 0.35, attack: 0.002, slideTo: 60 }); noise({ dur: 0.08, vol: 0.25, from: 1800, to: 600 }); },
     ding: () => { tone({ freq: 2093, dur: 1.4, vol: 0.18, attack: 0.005 }); tone({ freq: 4186, dur: 0.9, vol: 0.05, attack: 0.005 }); },
     hum: () => tone({ freq: 110, type: 'sawtooth', dur: 2.2, vol: 0.03, attack: 0.3 }),
     click: () => tone({ freq: 880, type: 'triangle', dur: 0.07, vol: 0.12 }),

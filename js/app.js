@@ -459,7 +459,8 @@
       el.tcTime.textContent = time;
       el.tcPlace.textContent = place;
       el.titlecard.classList.add('is-on');
-      await sleep(fast ? 80 : T(2300));
+      if (!fast) setTimeout(() => SFX.play('stamp'), T(520));
+      await sleep(fast ? 80 : T(2600));
       el.titlecard.classList.remove('is-on');
       await sleep(fast ? 0 : T(350));
     },
@@ -608,7 +609,7 @@
 
     async memory(text, badge) {
       SFX.play('memory');
-      el.memory.innerHTML = `<div class="mem"><span>${text}</span></div>`;
+      el.memory.innerHTML = `<div class="mem" role="status"><svg class="mem__sign" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 2 38.5 34H1.5z" fill="#ffd400" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><rect x="18" y="12" width="4" height="12" rx="1" fill="#111"/><circle cx="20" cy="28.5" r="2.3" fill="#111"/></svg><span>${text}</span></div>`;
       await sleep(fast ? 300 : T(2600));
       const m = $('.mem', el.memory);
       m && m.classList.add('is-out');
@@ -633,7 +634,7 @@
             <button class="pcard ${x.locked ? 'is-locked' : ''}" data-id="${x.id}" ${x.locked ? 'aria-disabled="true"' : ''}>
               <span class="pcard__face"><span>${x.name[0]}</span></span>
               <strong>${x.name}, ${x.age} år</strong><span>${x.role}</span>
-              ${x.locked ? '<em>🔒 Kommer snart</em>' : '<em class="go">Välj</em>'}
+              ${x.locked ? '<em><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>Kommer snart</em>' : '<em class="go">Välj</em>'}
             </button>`).join('')}</div>`);
         $$('.pcard', p).forEach((b) => b.addEventListener('click', async () => {
           if (b.classList.contains('is-locked')) { SFX.play('warn'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
@@ -728,6 +729,7 @@
         const answers = {};
         const p = api.panel('panel--reflect', `
           <div class="refl">
+            <div class="refl__head"><span>Skiftrapport · Linje 3</span><span class="refl__page"></span></div>
             <div class="refl__dots">${steps.map(() => '<i></i>').join('')}</div>
             <div class="refl__body"></div>
           </div>`);
@@ -742,6 +744,7 @@
         async function go(n) {
           idx = n;
           dots.forEach((d, k) => { d.classList.toggle('is-done', k < n); d.classList.toggle('is-now', k === n); });
+          $('.refl__page', p).textContent = `Sida ${n + 1} av ${steps.length}`;
           body.classList.add('is-out');
           await sleep(T(320));
           render(steps[n]);
@@ -823,7 +826,7 @@
           } else if (st.type === 'closing') {
             const mine = answers.atagande || [];
             body.innerHTML = `${head}<h2 class="refl__q refl__q--big">${st.title}</h2><p class="refl__lead">${st.text}</p>
-              ${mine.length ? `<div class="pledge"><p class="refl__eyebrow">Mitt åtagande</p>${mine.map((m) => `<blockquote>${m}</blockquote>`).join('')}</div>` : ''}
+              ${mine.length ? `<div class="pledge"><p class="refl__eyebrow">Mitt åtagande</p>${mine.map((m) => `<blockquote>${m}</blockquote>`).join('')}<span class="pledge__stamp" aria-hidden="true">Signerat</span></div>` : ''}
               <p class="done-msg">Kursen är genomförd ✓</p>
               <div class="refl__foot"><button class="btn btn--ghost js-again">Spela igen</button><button class="btn btn--primary js-tl">Se din tidslinje</button></div>`;
             $('.js-again', body).addEventListener('click', () => restart());
@@ -1020,7 +1023,10 @@
   });
   $$('.js-pace').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); SFX.play('click'); setSelfPaced(!selfPaced); }));
   setSelfPaced(selfPaced);
-  const muteIcon = () => $$('.js-mute').forEach((b) => { b.textContent = SFX.isMuted() ? '🔇' : '🔊'; });
+  const SPEAKER = '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>';
+  const ICON_ON = `<svg viewBox="0 0 24 24" aria-hidden="true">${SPEAKER}<path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  const ICON_OFF = `<svg viewBox="0 0 24 24" aria-hidden="true">${SPEAKER}<path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+  const muteIcon = () => $$('.js-mute').forEach((b) => { b.innerHTML = SFX.isMuted() ? ICON_OFF : ICON_ON; b.setAttribute('aria-pressed', String(SFX.isMuted())); });
   $$('.js-mute').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); SFX.toggleMute(); muteIcon(); }));
   muteIcon();
   window.addEventListener('resize', () => { if (!busy) setCam(cam.x, cam.y, cam.s, 0); });

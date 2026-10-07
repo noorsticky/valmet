@@ -7,7 +7,7 @@
   <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700;800&family=Share+Tech+Mono&family=Roboto+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700;800&family=Share+Tech+Mono&family=Roboto+Mono:ital,wght@0,400;0,500;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -46,7 +46,7 @@
         <img class="tl-logo" src="assets/img/logo.png" alt="Valmet" onerror="this.style.visibility='hidden'">
         <div class="tl-header__actions">
           <button class="icon-btn js-mute" aria-label="Ljud av/på" title="Ljud av/på"></button>
-          <button class="icon-btn" id="resetBtn" aria-label="Börja om" title="Börja om">↺</button>
+          <button class="icon-btn" id="resetBtn" aria-label="Börja om" title="Börja om"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 3.5v4.5h4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </div>
       </header>
 
@@ -95,6 +95,7 @@
 
       <!-- Titelkort -->
       <div class="titlecard" id="titlecard" aria-live="polite">
+        <span class="titlecard__label" aria-hidden="true">Stämpelkort · Linje 3</span>
         <span class="titlecard__time" id="tcTime"></span>
         <span class="titlecard__place" id="tcPlace"></span>
       </div>
