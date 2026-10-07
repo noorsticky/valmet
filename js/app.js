@@ -667,6 +667,7 @@
             <button class="mirror__tab" role="tab" data-i="${k}"><span class="mirror__face" style="background-image:url(${x.img})"></span><span><small>Dag ${x.day}</small>${x.name}</span></button>`).join('')}
           </div>
           <article class="mirror__info" aria-live="polite">
+            <span class="mirror__letter" aria-hidden="true"></span>
             <p class="mirror__day"></p>
             <h3 class="mirror__theme"></h3>
             <p class="mirror__who"></p>
@@ -684,7 +685,10 @@
           });
           tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === cur)); t.tabIndex = k === cur ? 0 : -1; });
           const x = personas[cur];
-          $('.mirror__day', p).textContent = `Dag ${x.day}`;
+          $('.mirror__letter', p).textContent = x.day;
+          $('.mirror__day', p).textContent = `Dag ${x.day} av ${n}`;
+          const info = $('.mirror__info', p);
+          info.classList.remove('is-swap'); void info.offsetWidth; info.classList.add('is-swap');
           $('.mirror__theme', p).textContent = x.theme;
           $('.mirror__who', p).textContent = `${x.name}, ${x.age} år · ${x.role}`;
           $('.mirror__desc', p).textContent = x.desc;

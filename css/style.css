@@ -412,12 +412,20 @@ button { font: inherit; color: inherit; }
 .mirror__tab[aria-selected="true"] { background: #fff; color: #142014; }
 .mirror__tab small { display: block; font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; opacity: .85; }
 .mirror__face { flex: none; width: 34px; height: 34px; border-radius: 50%; background: #3f4f3e no-repeat 50% 4% / 260%; }
-.mirror__info { display: flex; flex-direction: column; gap: 10px; padding: 28px 28px 24px; border-radius: 4px; background: rgba(14,20,14,.86); border-top: 3px solid var(--accent); }
-.mirror__day { margin: 0; font: 500 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #9fe3a0; }
-.mirror__theme { margin: 0; font: 700 clamp(24px, 2.4vw, 30px)/1.15 var(--font); color: #fff; text-wrap: balance; }
-.mirror__who { margin: 0; font-size: 15px; font-weight: 600; color: #d3dad0; }
-.mirror__desc { margin: 2px 0 8px; font-size: 16px; line-height: 1.6; color: #e6ece3; min-height: 7.5em; }
-.mirror__pick.opt { flex: none; min-height: 52px; padding: 12px 24px; align-self: stretch; }
+.mirror__info { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 110px 0 0; width: 380px; max-width: 100%; text-shadow: 0 1px 12px rgba(0,0,0,.6); }
+/* stor konturbokstav för dagen, bakom rubriken */
+.mirror__letter { position: absolute; top: -70px; right: -8px; font: 800 300px/1 var(--font); color: transparent; -webkit-text-stroke: 2px rgba(232,238,228,.38); letter-spacing: -.04em; pointer-events: none; user-select: none; text-shadow: none; }
+.mirror__day { position: relative; margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #c9d3c6; }
+.mirror__theme { position: relative; margin: 0 0 10px; font: 800 clamp(30px, 3vw, 40px)/1.05 var(--font); letter-spacing: -.02em; color: #fff; text-wrap: balance; }
+.mirror__who { position: relative; margin: 0 0 18px; padding-bottom: 18px; font-size: 16px; color: #dfe5dc; border-bottom: 1px solid rgba(255,255,255,.3); width: 100%; }
+.mirror__desc { position: relative; margin: 0 0 22px; font-size: 17px; line-height: 1.6; color: #eef2ec; min-height: 8em; }
+.mirror__info.is-swap > * { animation: swapIn .5s var(--ease) both; }
+.mirror__info.is-swap .mirror__letter { animation: letterIn .6s var(--ease) both; }
+.mirror__info.is-swap .mirror__theme { animation-delay: .05s; }
+.mirror__info.is-swap .mirror__desc { animation-delay: .1s; }
+@keyframes swapIn { from { opacity: 0; transform: translateY(10px); } }
+@keyframes letterIn { from { opacity: 0; transform: translateX(-24px); } }
+.mirror__pick.opt { flex: none; min-height: 52px; padding: 12px 28px; align-self: flex-start; text-shadow: none; }
 .panel--mirror.is-picked .mirror__slide.is-center { transform: translateX(-50%) scale(1.04); filter: brightness(1.15); }
 .panel--mirror.is-picked .mirror__sheen { animation: sheenFlash .9s ease; }
 @keyframes sheenFlash { 40% { background-color: rgba(255,255,255,.25); } }
@@ -427,8 +435,10 @@ button { font: inherit; color: inherit; }
   .mirror__nav--prev { left: -8px; } .mirror__nav--next { right: -8px; }
   .mirror__stage { grid-template-columns: 1fr; grid-template-areas: "mirror" "tabs" "info"; gap: 12px; }
   .mirror__frame { --h: min(42vh, 380px); }
-  .mirror__info { padding: 18px; gap: 8px; }
-  .mirror__desc { min-height: 0; font-size: 15px; }
+  .mirror__info { padding: 56px 4px 0; width: auto; }
+  .mirror__letter { font-size: 150px; top: -36px; right: 0; }
+  .mirror__desc { min-height: 0; font-size: 16px; }
+  .mirror__pick.opt { align-self: stretch; }
   .panel--mirror { align-content: start; }
   .mirror__tab { padding-right: 10px; font-size: 14px; }
 }
