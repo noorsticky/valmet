@@ -80,6 +80,17 @@ button { font: inherit; color: inherit; }
 .intro__arrow { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: var(--bg); color: #fff; font-size: 16px; }
 .intro__start:hover .intro__arrow { animation: nudge .8s ease-in-out infinite; }
 @keyframes nudge { 50% { transform: translateX(3px); } }
+.intro__pace { margin-top: 22px; }
+.pace-toggle { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 8px 0; border: 0; background: none; color: #e6ece3; font: 500 15px/1.3 var(--font); cursor: pointer; text-align: left; }
+.pace-toggle__box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #c9d3c6; display: grid; place-items: center; flex: none; }
+.pace-toggle.is-on .pace-toggle__box { background: var(--accent); border-color: var(--accent); }
+.pace-toggle.is-on .pace-toggle__box::after { content: '✓'; color: #0d2a0e; font-size: 13px; font-weight: 800; }
+.pace-toggle__sub { flex-basis: 100%; padding-left: 30px; font-size: 13px; color: #b9c4b5; }
+.icon-btn--pace { font: 700 14px/1 var(--font); }
+.icon-btn--pace.is-on { background: var(--accent); color: #0d2a0e; }
+/* i egen takt: liten pil som visar att man klickar vidare */
+.cap.is-waiting::after { content: 'Klicka för att fortsätta ›'; display: block; margin-top: 10px; font: 500 13px/1 var(--font); color: #cfd8cc; animation: blinkSoft 1.6s ease-in-out infinite; }
+@keyframes blinkSoft { 50% { opacity: .55; } }
 .intro__sound { font: 400 13px/1 var(--mono); color: #a3ad9f; }
 
 @media (max-width: 860px) {
@@ -144,7 +155,7 @@ button { font: inherit; color: inherit; }
 .node--left .node__label { left: 32px; align-items: flex-start; text-align: left; }
 .node__pill { display: inline-block; padding: 7px 12px; border-radius: 7px; background: #8f9a8c; color: #1d2b1d; font: 600 17px/1 var(--font); font-variant-numeric: tabular-nums; letter-spacing: .02em; transition: .4s; white-space: nowrap; }
 .node__title { font-size: 14px; color: rgba(225,232,222,.7); line-height: 1.3; max-width: 200px; }
-.node__cta { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.node__cta { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 
 /* tillstånd: framtida, spelad, aktiv */
 .node.is-future .node__prop { opacity: .16; filter: grayscale(1) blur(1.5px); }
@@ -172,6 +183,15 @@ button { font: inherit; color: inherit; }
 @keyframes culprit { 0%, 100% { box-shadow: 0 0 0 5px #ffb020, 0 0 30px 8px rgba(255,176,32,.6); } 50% { box-shadow: 0 0 0 5px #fff4d6, 0 0 70px 24px rgba(255,176,32,.95); } }
 .node.is-diving .node__prop { opacity: 0; transition-duration: .3s; }
 
+/* mobil: allt på högra sidan, större text eftersom tidslinjen skalas ner */
+.is-compact .node__arm { width: 110px; }
+.is-compact .node--right .node__plat { left: 110px; width: 200px; }
+.is-compact .node__disc { width: 200px; height: 92px; top: -46px; }
+.is-compact .node__prop { width: 150px; height: 150px; bottom: -10px; }
+.is-compact .node__label { width: 165px; top: -20px; gap: 8px; }
+.is-compact .node__pill { font-size: 23px; padding: 8px 12px; }
+.is-compact .node__title { font-size: 19px; max-width: 165px; }
+.is-compact .node__cta { font-size: 17px; }
 .node.is-dissolving { opacity: 0 !important; filter: blur(12px); transition-duration: 1.2s; }
 .node.is-dissolving .node__plat { transform: translateY(-40px) scale(.8); transition: transform 1.2s; }
 
@@ -321,7 +341,7 @@ button { font: inherit; color: inherit; }
 .opt:active:not(:disabled) { transform: scale(.98); }
 .opt kbd { display: none; }
 .opt small { display: block; font-weight: 400; font-size: .8em; color: #3b423a; margin-top: 2px; }
-.opt__tag { position: absolute; top: -10px; right: 12px; font-size: 10px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; background: #ffb020; color: #3a2400; padding: 3px 8px; border-radius: 999px; }
+.opt__tag { position: absolute; top: -10px; right: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; font-weight: 700; background: #ffb020; color: #3a2400; padding: 3px 8px; border-radius: 999px; }
 .opt__tag--new { background: var(--accent); color: #0d2a0e; }
 .opt.is-fresh { animation: freshIn .9s var(--ease) backwards .25s, freshGlow 2.4s ease-in-out infinite 1.2s; }
 @keyframes freshIn { from { opacity: 0; transform: translateY(14px) scale(.96); } }
@@ -379,7 +399,7 @@ button { font: inherit; color: inherit; }
 .phone li { display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 12px; padding: 12px; border-left: 4px solid var(--blue-badge); font-size: 14px; animation: rise .5s var(--ease) both; animation-delay: calc(var(--i) * .12s + .3s); }
 .phone li time { font-weight: 700; font-variant-numeric: tabular-nums; }
 .phone li.clash { border-left-color: var(--alarm); background: #fff1f0; }
-.phone li em { margin-left: auto; font-style: normal; font-size: 11px; font-weight: 700; color: var(--alarm); text-transform: uppercase; }
+.phone li em { margin-left: auto; font-style: normal; font-size: 12px; font-weight: 700; color: var(--alarm); text-transform: uppercase; }
 .phone .btn { width: 100%; }
 
 /* mail */
