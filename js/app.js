@@ -471,8 +471,7 @@
       el.tcTime.textContent = time;
       el.tcPlace.textContent = place;
       el.titlecard.classList.add('is-on');
-      if (!fast) setTimeout(() => SFX.play('stamp'), T(520));
-      await sleep(fast ? 80 : T(2600));
+      await sleep(fast ? 80 : T(2300));
       el.titlecard.classList.remove('is-on');
       await sleep(fast ? 0 : T(350));
     },
@@ -732,14 +731,35 @@
       });
     },
 
-    agenda(items) {
+    /* Dagens kalender i dagsvy: timrutnät, block efter längd, nu-linje och krock sida vid sida */
+    agenda(items, { from = 6, to = 17, now = '06:20', date = 'Torsdag 2 oktober' } = {}) {
       return new Promise((resolve) => {
+        const min = (t) => { const [hh, mm] = t.split(':').map(Number); return hh * 60 + mm; };
+        const top = (t) => `calc(${(min(t) - from * 60) / 60} * var(--hh))`;
+        const hours = Array.from({ length: to - from + 1 }, (_, k) => from + k);
+        const clashAt = items.filter((x) => x.clash).map((x) => x.t);
         const p = api.panel('panel--agenda', `
-          <div class="phone">
-            <div class="phone__top"><b>I dag</b><span>tor 2 okt</span></div>
-            <ul>${items.map(([t, txt, clash], i) => `<li style="--i:${i}" class="${clash ? 'clash' : ''}"><time>${t}</time><span>${txt}</span>${clash ? '<em>Krock!</em>' : ''}</li>`).join('')}</ul>
-            <button class="btn btn--primary">Okej. Kör.</button>
+          <div class="dcal" role="img" aria-label="Kalender för i dag: ${items.map((x) => `${x.t} ${x.title}`).join(', ')}. Två möten krockar kl ${clashAt.join(', ')}.">
+            <div class="dcal__head"><b>I dag</b><span>${date}</span></div>
+            <div class="dcal__week">${['mån', 'tis', 'ons', 'tor', 'fre'].map((d, k) => `<span class="dcal__wd ${k === 3 ? 'is-today' : ''}">${d}<b>${29 + k > 30 ? 29 + k - 30 : 29 + k}</b></span>`).join('')}</div>
+            <div class="dcal__grid">
+              <div class="dcal__hours" style="--hours:${to - from}">
+                ${hours.map((hh) => `<div class="dcal__h" style="top:${top(`${hh}:00`)}"><span>${String(hh).padStart(2, '0')}</span></div>`).join('')}
+                <div class="dcal__now" style="top:${top(now)}"></div>
+                ${items.map((x, k) => {
+                  const pair = items.some((y) => y !== x && y.t === x.t);
+                  const side = pair ? (items.findIndex((y) => y.t === x.t) === k ? 'half-l' : 'half-r') : '';
+                  return `<div class="dcal__ev dcal__ev--${x.color || 'blue'} ${pair ? 'is-clash' : ''} ${side}" style="--i:${k};top:${top(x.t)};height:calc(${(x.d || 60) / 60} * var(--hh) - 3px)"><time>${x.t}</time><b>${x.title}</b></div>`;
+                }).join('')}
+                ${clashAt.map((t) => `<span class="dcal__clash" style="top:${top(t)}">Krock!</span>`).join('')}
+              </div>
+            </div>
+            <div class="dcal__foot"><button class="btn">Okej. Kör.</button></div>
           </div>`);
+        // börja med morgonen, glid sedan ner till krocken
+        const grid = $('.dcal__grid', p);
+        const clashEl = $('.dcal__clash', p);
+        if (clashEl) setTimeout(() => { grid.scrollTop = clashEl.offsetTop - grid.clientHeight * 0.45; SFX.play('warn'); }, T(1500));
         $('button', p).addEventListener('click', async () => { SFX.play('click'); await api.closePanel(p); resolve(); });
       });
     },
@@ -784,7 +804,7 @@
           <div class="cal__head">Kalender · torsdag</div>
           <div class="cal__grid">
             <span class="cal__h">14:00</span><span class="cal__h">15:00</span><span class="cal__h">16:00</span>
-            <div class="ev ev--a">14:30 Budgetgenomgång</div>
+            <div class="ev ev--a">14:30 Budgetmöte</div>
             <div class="ev ev--b">14:30 Avstämning underhåll</div>
             ${keepLisa ? '<div class="ev ev--lisa">15:30 Lisa – ledighet</div>' : ''}
           </div>

@@ -91,11 +91,12 @@ const STORY = {
         api.state.persona = who;
         api.setPersona(STORY.personas.find((p) => p.id === who));
         await api.agenda([
-          ['07:30', 'Dagligt möte – linje 3'],
-          ['10:15', 'Produktionsmöte, chefer'],
-          ['13:00', 'Mail & admin'],
-          ['14:30', 'Budgetgenomgång'],
-          ['14:30', 'Avstämning underhåll', true],
+          { t: '07:30', d: 30, title: 'Dagligt möte – linje 3', color: 'blue' },
+          { t: '10:15', d: 60, title: 'Produktionsmöte, chefer', color: 'purple' },
+          { t: '12:00', d: 30, title: 'Lunch', color: 'grey' },
+          { t: '13:00', d: 60, title: 'Mail & admin', color: 'grey' },
+          { t: '14:30', d: 60, title: 'Budgetmöte', color: 'blue' },
+          { t: '14:30', d: 45, title: 'Avstämning underhåll', color: 'green', clash: true },
         ]);
         await api.say('Fullbokat. Som vanligt.', { who: 'Ola', inner: true });
       },
@@ -351,7 +352,7 @@ const STORY = {
         await api.say('Ola inser att han är dubbelbokad.', { narrator: true });
         await api.calendarMove(api.state.choices.B === 'lisa');
         await api.say(api.state.choices.B === 'lisa'
-          ? 'Budgetgenomgången flyttas till i morgon. Tiden med Lisa 15:30 står kvar.'
+          ? 'Budgetmötet flyttas till i morgon. Tiden med Lisa 15:30 står kvar.'
           : 'Avstämningen med underhåll får flyttas till nästa vecka.', { narrator: true });
       },
     },
