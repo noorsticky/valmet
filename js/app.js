@@ -578,7 +578,7 @@
     overlay(kind, value) {
       if (kind === 'alarmclock') {
         let o = $('.ov-clock', el.stage);
-        if (!o) { o = h('div', 'ov-clock'); el.stage.appendChild(o); }
+        if (!o) { o = h('div', 'ov-clock'); o.setAttribute('aria-hidden', 'true'); el.stage.appendChild(o); }
         o.textContent = value;
       }
     },
