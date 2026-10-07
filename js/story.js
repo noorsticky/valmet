@@ -26,9 +26,15 @@ const STORY = {
   title: 'Produktion och press',
 
   personas: [
-    { id: 'tomas',  name: 'Tomas',  age: 54, role: 'Sitemanager',     pronoun: 'han', img: 'assets/people/tomas.webp' },
-    { id: 'ola',    name: 'Ola',    age: 42, role: 'Produktionschef', pronoun: 'han', img: 'assets/people/ola.webp' },
-    { id: 'ulrika', name: 'Ulrika', age: 47, role: 'Utvecklingschef', pronoun: 'hon', img: 'assets/people/ulrika.webp' },
+    { id: 'ulrika', name: 'Ulrika', age: 47, role: 'Utvecklingschef', pronoun: 'hon', img: 'assets/people/ulrika.webp',
+      day: 'A', theme: 'Människor och möten',
+      desc: 'Du leder ett team där det mesta händer i möten, i korridoren och i samtalen däremellan. Din dag formas av relationer, förväntningar och sådant som sällan syns i ett schema. Det som kräver mest av dig är sällan det som står på agendan.' },
+    { id: 'ola', name: 'Ola', age: 42, role: 'Produktionschef', pronoun: 'han', img: 'assets/people/ola.webp',
+      day: 'B', theme: 'Produktion och press',
+      desc: 'Du ansvarar för en verksamhet som inte får stanna. Dagen styrs av produktion, problem och beslut som behöver fattas nu. Du vet vad som krävs för att hålla ihop ett team under press – och du vet hur snabbt det kan gå åt fel håll.' },
+    { id: 'tomas', name: 'Tomas', age: 54, role: 'Sitemanager', pronoun: 'han', img: 'assets/people/tomas.webp',
+      day: 'C', theme: 'Förändring och tempo',
+      desc: 'Du jobbar i miljöer som förändras. Teamet, platsen, förutsättningarna – ingenting är helt förutsägbart. Du är van vid att lösa saker på plats och ta ansvar långt utanför det du direkt kontrollerar.' },
   ],
 
   nodes: [
@@ -81,7 +87,7 @@ const STORY = {
         api.clock('06:20');
         await api.title('06:20', 'Framför spegeln');
         await api.say('Du tänker igenom hur dagen ser ut… och gör ett val utifrån det.', { narrator: true });
-        const who = await api.personaPick(STORY.personas, 'Vem ser du i spegeln?');
+        const who = await api.personaPick(STORY.personas, 'Vem ser du i spegeln?', 'Välj den dag som är mest lik din egen arbetsdag.');
         api.state.persona = who;
         api.setPersona(STORY.personas.find((p) => p.id === who));
         await api.agenda([

@@ -645,12 +645,13 @@
 
     /* Spegeln: svepa mellan tre personer. Den i mitten står spegelvänd i glaset,
        de två andra syns vid sidorna så att det är tydligt att det finns tre. */
-    personaPick(personas, prompt) {
+    personaPick(personas, prompt, sub) {
       return new Promise((resolve) => {
         let cur = Math.max(0, personas.findIndex((x) => x.id === 'ola'));
         const n = personas.length;
         const p = api.panel('panel--mirror', `
-          <h2 class="mirror__prompt" id="mirrorQ">${prompt}</h2>
+          <div class="mirror__head"><h2 class="mirror__prompt" id="mirrorQ">${prompt}</h2>${sub ? `<p class="mirror__sub">${sub}</p>` : ''}</div>
+          <div class="mirror__stage">
           <div class="mirror" role="group" aria-roledescription="karusell" aria-labelledby="mirrorQ">
             <div class="mirror__frame">
               <div class="mirror__glass" tabindex="0" aria-label="Svep eller använd piltangenterna för att byta person">
@@ -664,11 +665,15 @@
             <button class="mirror__nav mirror__nav--next" aria-label="Nästa person"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
           <div class="mirror__tabs" role="tablist" aria-label="Personer">${personas.map((x, k) => `
-            <button class="mirror__tab" role="tab" data-i="${k}"><span class="mirror__face" style="background-image:url(${x.img})"></span>${x.name}</button>`).join('')}
+            <button class="mirror__tab" role="tab" data-i="${k}"><span class="mirror__face" style="background-image:url(${x.img})"></span><span><small>Dag ${x.day}</small>${x.name}</span></button>`).join('')}
           </div>
-          <div class="mirror__info" aria-live="polite">
+          <article class="mirror__info" aria-live="polite">
+            <p class="mirror__day"></p>
+            <h3 class="mirror__theme"></h3>
             <p class="mirror__who"></p>
+            <p class="mirror__desc"></p>
             <button class="opt mirror__pick"></button>
+          </article>
           </div>`);
         const slides = $$('.mirror__slide', p), tabs = $$('.mirror__tab', p), track = $('.mirror__track', p);
         const sync = () => {
@@ -680,8 +685,11 @@
           });
           tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === cur)); t.tabIndex = k === cur ? 0 : -1; });
           const x = personas[cur];
-          $('.mirror__who', p).innerHTML = `<strong>${x.name}, ${x.age} år</strong><span>${x.role}</span>`;
-          $('.mirror__pick', p).textContent = `Välj ${x.name}`;
+          $('.mirror__day', p).textContent = `Dag ${x.day}`;
+          $('.mirror__theme', p).textContent = x.theme;
+          $('.mirror__who', p).textContent = `${x.name}, ${x.age} år · ${x.role}`;
+          $('.mirror__desc', p).textContent = x.desc;
+          $('.mirror__pick', p).textContent = `Välj dag ${x.day}`;
         };
         const go = (k) => { cur = (k + n) % n; SFX.play('hover'); sync(); };
         $('.mirror__nav--prev', p).addEventListener('click', () => go(cur - 1));
