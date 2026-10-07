@@ -26,9 +26,9 @@ const STORY = {
   title: 'Produktion och press',
 
   personas: [
-    { id: 'tomas',  name: 'Tomas',  age: 54, role: 'Sitemanager',      locked: true },
-    { id: 'ola',    name: 'Ola',    age: 42, role: 'Produktionschef',  locked: false },
-    { id: 'ulrika', name: 'Ulrika', age: 47, role: 'Utvecklingschef',  locked: true },
+    { id: 'tomas',  name: 'Tomas',  age: 54, role: 'Sitemanager',     pronoun: 'han', img: 'assets/people/tomas.webp' },
+    { id: 'ola',    name: 'Ola',    age: 42, role: 'Produktionschef', pronoun: 'han', img: 'assets/people/ola.webp' },
+    { id: 'ulrika', name: 'Ulrika', age: 47, role: 'Utvecklingschef', pronoun: 'hon', img: 'assets/people/ulrika.webp' },
   ],
 
   nodes: [
@@ -75,7 +75,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 06:20 */
     {
-      id: 'n0620', prop: 'person', time: '06:20', title: 'Väljer person', kind: 'blue', badge: 'X', lane: 'main',
+      id: 'n0620', prop: (s) => `assets/people/${s.persona || 'ola'}.webp`, time: '06:20', title: 'Väljer person', kind: 'blue', badge: 'X', lane: 'main',
       env: 'spegel', place: 'Badrummet',
       async play(api) {
         api.clock('06:20');

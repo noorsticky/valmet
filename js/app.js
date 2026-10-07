@@ -10,6 +10,14 @@
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const h = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const val = (v, s) => (typeof v === 'function' ? v(s) : v);
+  // manuset är skrivet med "Ola" – byt till vald person (och pronomen) när texten visas
+  let persona = null;
+  function personalize(t) {
+    if (typeof t !== 'string' || !persona || persona.id === 'ola') return t;
+    let out = t.replace(/\bOlas\b/g, persona.name + 's').replace(/\bOla\b/g, persona.name);
+    if (persona.pronoun === 'hon') out = out.replace(/\bhan\b/g, 'hon').replace(/\bHan\b/g, 'Hon').replace(/\bhonom\b/g, 'henne').replace(/\bhans\b/g, 'hennes');
+    return out;
+  }
   const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -87,7 +95,7 @@
     spegel: () => `
       <div class="spegel">
         <video class="env__video spegel__bg" src="${VIDEO_ENVS.sovrum}" muted playsinline loop autoplay preload="auto"></video>
-        <div class="spegel__frame"><div class="spegel__glass"></div></div>
+
       </div>`,
     summary: () => `<div class="summ"><i></i><i></i><i></i></div>`,
   };
@@ -441,9 +449,13 @@
     },
 
     setPersona(p) {
+      persona = p;
       el.hudName.textContent = p.name;
       el.hudRole.textContent = `${p.role}, ${p.age} år`;
-      el.hudAvatar.textContent = p.name[0];
+      el.hudAvatar.textContent = '';
+      el.hudAvatar.classList.add('has-photo');
+      el.hudAvatar.style.backgroundImage = `url(${p.img})`;
+      el.hudAvatar.setAttribute('aria-label', p.name);
     },
 
     cinematic(on) {
@@ -466,10 +478,13 @@
     },
 
     say(text, o = {}) {
+      const isPlayer = o.who === 'Ola';
+      text = personalize(text);
+      o = { ...o, who: personalize(o.who) };
       return new Promise((resolve) => {
         // talare placeras vänster/höger i turordning per scen; Ola (spelaren), tankar och berättare i mitten
         let pos = 'center';
-        const spoken = o.who && !o.inner && !o.narrator && o.who !== 'Ola';
+        const spoken = o.who && !o.inner && !o.narrator && !isPlayer;
         if (spoken) {
           if (!speakers[o.who]) speakers[o.who] = Object.keys(speakers).length % 2 === 0 ? 'left' : 'right';
           pos = speakers[o.who];
@@ -510,6 +525,7 @@
     },
 
     choose(o) {
+      o = { ...o, prompt: personalize(o.prompt), options: o.options.map((x) => ({ ...x, label: personalize(x.label), sub: personalize(x.sub) })) };
       return new Promise((resolve) => {
         api.lastTimedOut = false;
         const kind = o.kind || 'pink';
@@ -608,6 +624,7 @@
     },
 
     async memory(text, badge) {
+      text = personalize(text);
       SFX.play('memory');
       el.memory.innerHTML = `<div class="mem" role="status"><svg class="mem__sign" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 2 38.5 34H1.5z" fill="#ffd400" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/><rect x="18" y="12" width="4" height="12" rx="1" fill="#111"/><circle cx="20" cy="28.5" r="2.3" fill="#111"/></svg><span>${text}</span></div>`;
       await sleep(fast ? 300 : T(2600));
@@ -626,24 +643,84 @@
     },
     async closePanel(p) { p.classList.remove('is-on'); await sleep(T(450)); p.remove(); },
 
+    /* Spegeln: svepa mellan tre personer. Den i mitten står spegelvänd i glaset,
+       de två andra syns vid sidorna så att det är tydligt att det finns tre. */
     personaPick(personas, prompt) {
       return new Promise((resolve) => {
+        let cur = Math.max(0, personas.findIndex((x) => x.id === 'ola'));
+        const n = personas.length;
         const p = api.panel('panel--mirror', `
-          <h2 class="mirror__prompt">${prompt}</h2>
-          <div class="mirror__cards">${personas.map((x) => `
-            <button class="pcard ${x.locked ? 'is-locked' : ''}" data-id="${x.id}" ${x.locked ? 'aria-disabled="true"' : ''}>
-              <span class="pcard__face"><span>${x.name[0]}</span></span>
-              <strong>${x.name}, ${x.age} år</strong><span>${x.role}</span>
-              ${x.locked ? '<em><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>Kommer snart</em>' : '<em class="go">Välj</em>'}
-            </button>`).join('')}</div>`);
-        $$('.pcard', p).forEach((b) => b.addEventListener('click', async () => {
-          if (b.classList.contains('is-locked')) { SFX.play('warn'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
+          <h2 class="mirror__prompt" id="mirrorQ">${prompt}</h2>
+          <div class="mirror" role="group" aria-roledescription="karusell" aria-labelledby="mirrorQ">
+            <div class="mirror__frame">
+              <div class="mirror__glass" tabindex="0" aria-label="Svep eller använd piltangenterna för att byta person">
+                <div class="mirror__track">${personas.map((x, k) => `
+                  <figure class="mirror__slide" data-i="${k}" aria-hidden="true"><img src="${x.img}" alt="" draggable="false"></figure>`).join('')}
+                </div>
+                <div class="mirror__sheen" aria-hidden="true"></div>
+              </div>
+            </div>
+            <button class="mirror__nav mirror__nav--prev" aria-label="Föregående person"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="mirror__nav mirror__nav--next" aria-label="Nästa person"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="mirror__tabs" role="tablist" aria-label="Personer">${personas.map((x, k) => `
+            <button class="mirror__tab" role="tab" data-i="${k}"><span class="mirror__face" style="background-image:url(${x.img})"></span>${x.name}</button>`).join('')}
+          </div>
+          <div class="mirror__info" aria-live="polite">
+            <p class="mirror__who"></p>
+            <button class="opt mirror__pick"></button>
+          </div>`);
+        const slides = $$('.mirror__slide', p), tabs = $$('.mirror__tab', p), track = $('.mirror__track', p);
+        const sync = () => {
+          slides.forEach((sl, k) => {
+            const off = ((k - cur + n + 1) % n) - 1; // -1, 0, 1 – runt om
+            sl.style.setProperty('--off', off);
+            sl.style.setProperty('--a', Math.abs(off));
+            sl.classList.toggle('is-center', off === 0);
+          });
+          tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === cur)); t.tabIndex = k === cur ? 0 : -1; });
+          const x = personas[cur];
+          $('.mirror__who', p).innerHTML = `<strong>${x.name}, ${x.age} år</strong><span>${x.role}</span>`;
+          $('.mirror__pick', p).textContent = `Välj ${x.name}`;
+        };
+        const go = (k) => { cur = (k + n) % n; SFX.play('hover'); sync(); };
+        $('.mirror__nav--prev', p).addEventListener('click', () => go(cur - 1));
+        $('.mirror__nav--next', p).addEventListener('click', () => go(cur + 1));
+        tabs.forEach((t) => t.addEventListener('click', () => go(+t.dataset.i)));
+        slides.forEach((sl) => sl.addEventListener('click', () => { if (!sl.classList.contains('is-center') && !dragged) go(+sl.dataset.i); }));
+        p.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); go(cur + 1); }
+        });
+        // svep
+        const glass = $('.mirror__glass', p);
+        let sx = null, dragged = false;
+        glass.addEventListener('pointerdown', (e) => { sx = e.clientX; dragged = false; glass.setPointerCapture(e.pointerId); track.classList.add('is-drag'); });
+        glass.addEventListener('pointermove', (e) => {
+          if (sx == null) return;
+          const dx = e.clientX - sx;
+          if (Math.abs(dx) > 6) dragged = true;
+          track.style.setProperty('--drag', `${dx}px`);
+        });
+        const end = (e) => {
+          if (sx == null) return;
+          const dx = e.clientX - sx;
+          sx = null;
+          track.classList.remove('is-drag');
+          track.style.setProperty('--drag', '0px');
+          if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+          setTimeout(() => { dragged = false; }, 0);
+        };
+        glass.addEventListener('pointerup', end);
+        glass.addEventListener('pointercancel', end);
+        $('.mirror__pick', p).addEventListener('click', async () => {
           SFX.play('select');
-          b.classList.add('is-picked');
-          await sleep(T(700));
+          p.classList.add('is-picked');
+          await sleep(T(900));
           await api.closePanel(p);
-          resolve(b.dataset.id);
-        }));
+          resolve(personas[cur].id);
+        });
+        sync();
       });
     },
 
@@ -665,7 +742,7 @@
         const p = api.panel('panel--mail', `
           <div class="mailwin">
             <div class="mailwin__bar"><i></i><i></i><i></i><span>Inkorg – 3 olästa</span></div>
-            <p class="mailwin__help">Klicka på mailen i den ordning Ola ska ta hand om dem.</p>
+            <p class="mailwin__help">${personalize('Klicka på mailen i den ordning Ola ska ta hand om dem.')}</p>
             <ul class="mailwin__list">${mails.map((m) => `
               <li><button class="mail" data-id="${m.id}">
                 <span class="mail__rank"></span>
@@ -754,6 +831,9 @@
         const next = () => { SFX.play('click'); if (idx < steps.length - 1) go(idx + 1); };
 
         function render(st) {
+          st = JSON.parse(JSON.stringify(st, (k, v) => (typeof v === 'string' ? personalize(v) : v)), (k, v) => v);
+          const orig = steps[idx];
+          if (orig.respond) st.respond = (a) => personalize(orig.respond(a));
           const head = `<p class="refl__eyebrow">${st.eyebrow || ''}</p>`;
           if (st.type === 'recap') {
             body.innerHTML = `${head}<h2 class="refl__q">${st.title}</h2>

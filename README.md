@@ -69,6 +69,7 @@ js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
 assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm (.mp4) (omkodade, utan ljudspår)
+assets/people/    Tomas, Ola och Ulrika (transparenta bilder för spegeln, tidslinjen och HUD)
 assets/img/       Stillbilder ur videorna + logo.png (tillfällig logga, utklippt ur kontorsfilmen)
 ```
 
@@ -88,6 +89,14 @@ await api.hotspot({ x: 38, y: 68, w: 5, h: 6, label: 'Öppna inkorgen' }); // kl
 
 Hotspots och klockdisplayen på väckarklockan ligger i videons koordinatsystem
 (procent av 1920×1080). De följer alltså bilden oavsett skärmstorlek.
+
+### Spegeln (06:20)
+
+Användaren sveper mellan Tomas, Ola och Ulrika. Personen i mitten står spegelvänd i
+glaset och de två andra syns vid sidorna. Det går också att använda pilknapparna,
+namnflikarna eller vänster- och högerpil på tangentbordet. Manuset är skrivet för Ola.
+När en annan person väljs byts namnet ut i alla texter, och för Ulrika byts även
+han/honom/hans till hon/henne/hennes (`personalize()` i `app.js`).
 
 ### Tidslinjen
 
