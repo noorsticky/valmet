@@ -456,6 +456,7 @@
 
     setPersona(p) {
       persona = p;
+      $('#hudWho').hidden = false;
       el.hudName.textContent = p.name;
       el.hudRole.textContent = `${p.role}, ${p.age} år`;
       el.hudAvatar.textContent = '';
