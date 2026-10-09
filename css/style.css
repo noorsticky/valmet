@@ -59,52 +59,51 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 /* ===================================================================== INTRO */
-/* Startsidan: helskärm i Olas sovrum, väckarklockan blinkar 06:00, texten till höger */
-.intro { background: #0c0f14; overflow: hidden; }
-.intro .intro__stage { animation: introPush 24s linear both; }
-@keyframes introPush { from { transform: translate(-50%, -50%) scale(1.04); } to { transform: translate(-50%, -50%) scale(1.12); } }
-.intro__shade { position: absolute; inset: 0; background:
-  linear-gradient(90deg, rgba(8,10,14,0) 30%, rgba(8,10,14,.55) 52%, rgba(8,10,14,.86) 78%),
-  linear-gradient(rgba(8,10,14,.55), transparent 22%, transparent 75%, rgba(8,10,14,.6)); }
-.intro__top { position: absolute; z-index: 2; top: clamp(20px, 4vw, 44px); left: clamp(16px, 5vw, 64px); right: clamp(16px, 5vw, 64px); display: flex; align-items: center; gap: 18px; }
-.intro__logo { height: clamp(26px, 3vw, 36px); width: auto; }
-.intro__meta { font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #c9d3c6; padding-left: 18px; border-left: 1px solid rgba(255,255,255,.25); }
-.intro__copy { position: absolute; z-index: 2; right: clamp(16px, 6vw, 96px); top: 50%; transform: translateY(-46%); width: min(560px, 44vw); }
+/* Startsidan: typografisk och stram – inget ur kursen visas i förväg */
+.intro { display: grid; grid-template-rows: auto 1fr auto; padding: clamp(28px, 4.5vw, 64px) clamp(28px, 6vw, 96px); background: #101a11; overflow: hidden; }
+.intro::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .06; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+/* tunna ramlinjer som ritas in */
+.intro__frame { position: absolute; inset: 0; pointer-events: none; }
+.intro__frame i { position: absolute; background: rgba(220,232,214,.22); }
+.intro__frame i:nth-child(1), .intro__frame i:nth-child(2) { left: clamp(14px, 2.4vw, 32px); right: clamp(14px, 2.4vw, 32px); height: 1px; transform-origin: left; animation: lineX 1.2s var(--ease) both .1s; }
+.intro__frame i:nth-child(1) { top: clamp(14px, 2.4vw, 32px); } .intro__frame i:nth-child(2) { bottom: clamp(14px, 2.4vw, 32px); }
+.intro__frame i:nth-child(3), .intro__frame i:nth-child(4) { top: clamp(14px, 2.4vw, 32px); bottom: clamp(14px, 2.4vw, 32px); width: 1px; transform-origin: top; animation: lineY 1.2s var(--ease) both .25s; }
+.intro__frame i:nth-child(3) { left: clamp(14px, 2.4vw, 32px); } .intro__frame i:nth-child(4) { right: clamp(14px, 2.4vw, 32px); }
+@keyframes lineX { from { transform: scaleX(0); } } @keyframes lineY { from { transform: scaleY(0); } }
+.intro__top, .intro__foot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.intro__logo { height: clamp(24px, 2.6vw, 32px); width: auto; }
+.intro__meta { font: 500 12px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: #c9d3c6; }
+.intro__copy { position: relative; z-index: 1; align-self: center; max-width: 980px; }
 .intro__copy > * { animation: rise 1s var(--ease) both; }
-.intro__copy > :nth-child(1) { animation-delay: .5s; }
-.intro__copy > :nth-child(2) { animation-delay: .62s; }
-.intro__copy > :nth-child(3) { animation-delay: .74s; }
-.intro__copy > :nth-child(4) { animation-delay: .86s; }
-.intro__kicker { margin: 0 0 18px; font: 400 14px/1.4 var(--mono); letter-spacing: .06em; color: #7dff5a; text-shadow: 0 0 10px rgba(125,255,90,.5); }
-.intro__title { margin: 0 0 24px; font: 800 clamp(48px, 6.6vw, 112px)/.9 var(--font); letter-spacing: -.035em; color: #f4f6f2; text-wrap: balance; }
-.intro__title em { font-style: normal; font-weight: 400; color: #a7b8a3; }
-.intro__lead { margin: 0 0 34px; font-size: clamp(16px, 1.35vw, 19px); line-height: 1.6; color: #d3dad0; }
-.intro__actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-.intro__start { display: inline-flex; align-items: center; gap: 14px; padding: 16px 18px 16px 26px; border-radius: 10px; border: 0; background: #fff; color: #142014; font: 600 18px/1 var(--font); cursor: pointer; box-shadow: 0 0 0 1px rgba(255,255,255,.6), 0 0 26px 4px rgba(150,230,140,.35); transition: transform .2s var(--ease), box-shadow .3s; }
-.intro__start:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px #fff, 0 0 40px 8px rgba(150,230,140,.5); }
-.intro__arrow { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: var(--bg); color: #fff; font-size: 16px; }
+.intro__copy > :nth-child(1) { animation-delay: .35s; } .intro__copy > :nth-child(2) { animation-delay: .5s; } .intro__copy > :nth-child(3) { animation-delay: .65s; }
+.intro__title { margin: 0 0 clamp(18px, 2.4vw, 30px); font: 800 clamp(84px, 15vw, 220px)/.82 var(--font); letter-spacing: -.055em; color: #f2f5f0; margin-left: -.05em; }
+.intro__lead { margin: 0 0 clamp(28px, 3.5vw, 44px); max-width: 30em; font-size: clamp(18px, 1.55vw, 22px); line-height: 1.5; color: #cdd6c9; }
+.intro__actions { display: flex; align-items: center; gap: 18px 34px; flex-wrap: wrap; }
+.intro__start { display: inline-flex; align-items: center; gap: 16px; padding: 18px 18px 18px 28px; border-radius: 6px; border: 0; background: #f2f5f0; color: #101a11; font: 700 18px/1 var(--font); cursor: pointer; transition: transform .2s var(--ease), background .2s; }
+.intro__start:hover { transform: translateY(-2px); background: #fff; }
+.intro__arrow { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 4px; background: var(--accent); color: #0d2a0e; font-size: 17px; }
 .intro__start:hover .intro__arrow { animation: nudge .8s ease-in-out infinite; }
 @keyframes nudge { 50% { transform: translateX(3px); } }
-.intro__pace { margin-top: 22px; }
-.pace-toggle { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 8px 0; border: 0; background: none; color: #e6ece3; font: 500 15px/1.3 var(--font); cursor: pointer; text-align: left; }
 .pace-toggle__box { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #c9d3c6; display: grid; place-items: center; flex: none; }
 .pace-toggle.is-on .pace-toggle__box { background: var(--accent); border-color: var(--accent); }
 .pace-toggle.is-on .pace-toggle__box::after { content: '✓'; color: #0d2a0e; font-size: 13px; font-weight: 800; }
 .pace-toggle__sub { flex-basis: 100%; padding-left: 30px; font-size: 13px; color: #b9c4b5; }
 .icon-btn--pace { font: 700 14px/1 var(--font); }
 .icon-btn--pace.is-on { background: var(--accent); color: #0d2a0e; }
-/* i egen takt: liten pil som visar att man klickar vidare */
 .cap.is-waiting::after { content: 'Klicka för att fortsätta ›'; display: block; margin-top: 10px; font: 500 13px/1 var(--font); color: #cfd8cc; animation: blinkSoft 1.6s ease-in-out infinite; }
 @keyframes blinkSoft { 50% { opacity: .55; } }
-.intro__sound { font: 400 13px/1 var(--mono); color: #c9d3c6; }
-
-@media (max-width: 860px) {
-  .intro .intro__stage { animation: none; top: 24%; transform: translate(-33%, -50%); }
-  .intro__shade { background: linear-gradient(rgba(8,10,14,.6), rgba(8,10,14,.1) 25%, rgba(8,10,14,.3) 45%, rgba(10,13,17,.94) 66%, #0c0f14 79%); }
-  .intro__copy { top: auto; bottom: max(28px, env(safe-area-inset-bottom, 0px)); left: 16px; right: 16px; width: auto; transform: none; }
+.pace-toggle { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; padding: 8px 0; border: 0; background: none; color: #e6ece3; font: 500 15px/1.3 var(--font); cursor: pointer; text-align: left; }
+.intro .pace-toggle { padding: 0; }
+.intro .pace-toggle__sub { color: #b9c4b5; flex-basis: 100%; padding-left: 30px; font-size: 13px; }
+.intro__sound { font: 400 13px/1 var(--mono); color: #b9c4b5; }
+.intro__clock { font: 400 clamp(20px, 2vw, 26px)/1 'Share Tech Mono', var(--mono); letter-spacing: .06em; color: #7dff5a; font-variant-numeric: tabular-nums; }
+.intro.is-ringing .intro__clock { animation: ledBlink .5s steps(1) infinite; }
+@media (max-width: 720px) {
+  .intro { padding: 36px 26px; }
   .intro__meta { display: none; }
+  .intro__copy { align-self: end; padding-bottom: 6vh; }
+  .intro__actions { flex-direction: column; align-items: flex-start; }
 }
-@media (prefers-reduced-motion: reduce) { .intro .intro__stage { animation: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
 
 /* ===================================================================== TIDSLINJE (lodrät) */

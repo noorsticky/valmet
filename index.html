@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Produktion och press</title>
+  <title>Vår dag</title>
   <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,28 +15,23 @@
 
     <!-- ===== Startskärm ===== -->
     <section id="intro" class="layer intro is-active" aria-label="Start">
-      <!-- helskärm: Olas sovrum kl 06:00 -->
-      <div class="stage intro__stage" aria-hidden="true">
-        <video class="env__video" src="assets/video/sovrum.mp4" poster="assets/img/sovrum.jpg" muted autoplay loop playsinline preload="auto"></video>
-        <div class="ov-clock">06:00</div>
-      </div>
-      <div class="intro__shade" aria-hidden="true"></div>
+      <div class="intro__frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <header class="intro__top">
         <img class="intro__logo" src="assets/img/logo.png" alt="Valmet" onerror="this.remove()">
         <span class="intro__meta">Arbetsmiljö &amp; ledarskap</span>
       </header>
       <div class="intro__copy">
-        <p class="intro__kicker">06:00 · Sovrummet</p>
-        <h1 class="intro__title">Produktion <em>och</em> press</h1>
-        <p class="intro__lead">En helt vanlig arbetsdag på linje 3. Du kliver in i en chefs vardag, från första snoozen till sista mötet. Några av besluten avgör hur dagen slutar för någon annan.</p>
+        <h1 class="intro__title">Vår dag</h1>
+        <p class="intro__lead">En arbetsdag. Många små beslut. Några av dem avgör hur dagen slutar för någon annan.</p>
         <div class="intro__actions">
           <button class="intro__start" id="startBtn"><span class="intro__startlabel">Starta dagen</span><span class="intro__arrow" aria-hidden="true">→</span></button>
-          <span class="intro__sound">Bäst med ljud på</span>
-        </div>
-        <div class="intro__pace">
-          <button class="pace-toggle js-pace" type="button" aria-pressed="false"><span class="pace-toggle__box" aria-hidden="true"></span>Läs i egen takt <span class="pace-toggle__sub">texter står kvar tills du klickar, inga tidsgränser</span></button>
+          <button class="pace-toggle js-pace" type="button" aria-pressed="false"><span class="pace-toggle__box" aria-hidden="true"></span>Läs i egen takt <span class="pace-toggle__sub">Texter står kvar tills du klickar. Inga tidsgränser.</span></button>
         </div>
       </div>
+      <footer class="intro__foot">
+        <span class="intro__sound">Bäst med ljud på</span>
+        <span class="intro__clock" aria-hidden="true"><span id="introClock">05:59:48</span></span>
+      </footer>
     </section>
 
     <!-- ===== Tidslinjen ===== -->

@@ -23,7 +23,7 @@ const MEETING_OPTIONS = [
 ];
 
 const STORY = {
-  title: 'Produktion och press',
+  title: 'Vår dag',
 
   personas: [
     { id: 'ulrika', name: 'Ulrika', age: 47, role: 'Utvecklingschef', pronoun: 'hon', img: 'assets/people/ulrika.webp',

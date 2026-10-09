@@ -1,4 +1,4 @@
-# Produktion och press – Valmet
+# Vår dag – Valmet
 
 Spelifierad kurs i form av en tidslinje genom Olas arbetsdag. Varje punkt på
 tidslinjen är en scen som användaren "hoppar in i". Kursen är en prototyp i ren
