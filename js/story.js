@@ -354,6 +354,15 @@ const STORY = {
         await api.say(api.state.choices.B === 'lisa'
           ? 'Budgetmötet flyttas till i morgon. Tiden med Lisa 15:30 står kvar.'
           : 'Avstämningen med underhåll får flyttas till nästa vecka.', { narrator: true });
+        // följden av mailordningen kl 13:24: det som hamnade sist kommer ikapp
+        const lastMail = (api.state.choices.C || []).slice(-1)[0];
+        if (lastMail === 'kim') {
+          await api.say('Visste du att Kim var sjuk? Vi har varit en person kort på linje 3 hela eftermiddagen.', { who: 'Jonna, skiftledare' });
+        } else if (lastMail === 'rapport') {
+          await api.say('Påminnelse: månadsrapporten ska vara inne kl 15. Den saknas fortfarande.', { who: 'Ekonomi', small: true });
+        } else if (lastMail === 'aw') {
+          await api.say('Jag bokade AW:n utan dig. Hoppas det går bra!', { who: 'Sara (HR)', small: true });
+        }
       },
     },
 
@@ -432,8 +441,11 @@ const STORY = {
         await api.title('17:05', 'På väg hem');
         await api.say('Vilken dag.', { who: 'Ola', inner: true });
         if (s.accident) {
-          await api.say('Allt hängde på en mening i morse. ”Håll tempot uppe.”', { who: 'Ola', inner: true });
-          await api.say('Jag sa det för att vi hade bråttom. Inte för att någon skulle skadas.', { who: 'Ola', inner: true });
+          const waited = s.firstA === 'avvakta';
+          await api.say(waited ? 'Allt hängde på en mening i morse. ”Vi avvaktar.”' : 'Allt hängde på en mening i morse. ”Håll tempot uppe.”', { who: 'Ola', inner: true });
+          await api.say(waited
+            ? 'Jag sa det för att underhåll inte hann. Inte för att någon skulle skadas.'
+            : 'Jag sa det för att vi hade bråttom. Inte för att någon skulle skadas.', { who: 'Ola', inner: true });
         } else {
           await api.say('En skylt. Det var allt som behövdes.', { who: 'Ola', inner: true });
         }
