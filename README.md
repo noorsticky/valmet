@@ -70,7 +70,7 @@ js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
 assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm (.mp4) (omkodade, utan ljudspår)
 assets/people/    Tomas, Ola och Ulrika (transparenta bilder för spegeln, tidslinjen och HUD)
-assets/img/       Stillbilder ur videorna + logo.png (tillfällig logga, utklippt ur kontorsfilmen)
+assets/img/       Stillbilder ur videorna + Valmet-loggan (valmet-logo.svg och valmet-logo-white.svg med vit text för mörk bakgrund)
 ```
 
 ### Redigera innehåll
@@ -108,8 +108,7 @@ När scenen öppnas växer den ut ur plattformen.
 - **Föremål:** varje nod har `prop: '<namn>'` i `story.js`. Namnen finns i `js/props.js`.
   Vill ni använda egna 3D-renderingar, sätt `prop: 'assets/props/kopp.png'`
   (en PNG med transparent bakgrund, ungefär kvadratisk, där föremålet står längst ner).
-- **Logga:** `assets/img/logo.png` är en tillfällig vit logga som är utklippt ur kontorsfilmen.
-  Byt den mot den officiella filen, gärna den vita med grön pil.
+- **Logga:** `assets/img/valmet-logo.svg` är originalet. `valmet-logo-white.svg` är samma logga med vit text, och den används på de mörka bakgrunderna.
 
 ### Byta en ritad miljö mot en riktig animation
 

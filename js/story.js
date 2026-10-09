@@ -15,6 +15,13 @@
 const BAD_A = ['lugnt', 'avvakta'];   // valen kl 07:30 som leder till olyckan
 const GOOD_A = ['rapport', 'skylt'];
 
+/* Följden av mailordningen kl 13:24: det som hamnade sist i inkorgen hinner ikapp kl 15:30 */
+const MAIL_FALLOUT = {
+  kim: { recap: 'Kims sjukanmälan låg sist – i morgon saknas en person på morgonskiftet.' },
+  rapport: { recap: 'Månadsrapporten låg sist – den kom aldrig in till kl 15.' },
+  aw: { recap: 'AW-mailet låg sist – fredagsbordet blev fullbokat utan dig.' },
+};
+
 const MEETING_OPTIONS = [
   { id: 'lugnt',   label: '”Ta det lugnt men håll tempot uppe…”' },
   { id: 'avvakta', label: '”Vi avvaktar tills nån har tittat på det…”' },
@@ -364,6 +371,22 @@ const STORY = {
       async play(api) {
         api.clock('15:30');
         await api.title('15:30', 'Femton minuter över');
+        // följden av hur inkorgen prioriterades kl 13:24
+        const order = api.state.choices.C || [];
+        const last = order[order.length - 1];
+        if (last === 'kim') {
+          await api.say('Ola, Kim är sjuk i morgon också. Ingen har ringt in någon ersättare – vi blir en kort på morgonskiftet.', { who: 'Jonna, skiftledare' });
+          await api.say('Sjukanmälan låg kvar längst ner i inkorgen.', { narrator: true });
+          await api.memory('Kims sjukanmälan fick vänta för länge.', 'C');
+        } else if (last === 'rapport') {
+          await api.say('Påminnelse: månadsrapporten skulle in kl 15.00. Vi har inte fått den.', { who: 'Ekonomi', small: true });
+          await api.say('Den hann jag aldrig med. Nu blir det kvällsjobb.', { who: 'Ola', inner: true });
+          await api.memory('Rapporten blev liggande.', 'C');
+        } else if (last === 'aw') {
+          await api.say('AW:n på fredag är fullbokad nu – du hann inte svara. Nästa gång!', { who: 'Sara (HR)', small: true });
+          await api.say('Det var nog inte hela världen. Eller?', { who: 'Ola', inner: true });
+        }
+        if (order[0] === 'kim') await api.say('Tack för att du löste ersättare för Kim direkt. Morgonskiftet är fullt i morgon.', { who: 'Jonna, skiftledare' });
         const lisa = api.state.choices.B === 'lisa';
         const options = [
           { id: 'nyheter', label: 'Läser nyheter' },
@@ -474,6 +497,7 @@ function buildReflection(s) {
         : { time: '07:30', text: `Du sa: ${SAID[s.choices.A]}`, key: true },
       { time: '08:03', text: s.choices.B === 'lisa' ? 'Du stannade och bokade en tid med Lisa.' : '”Det tar vi senare…” Lisa fick vänta.' },
       mailFirst && { time: '13:24', text: `I inkorgen började du med ${mailFirst}.` },
+      MAIL_FALLOUT[(s.choices.C || [])[2]] && { time: '15:30', text: MAIL_FALLOUT[(s.choices.C || [])[2]].recap },
       breakTxt && { time: '15:30', text: `Med femton minuter över ${breakTxt}.` },
       rewound
         ? { time: '16:14', was: 'Larmet gick vid pressen.', text: 'Den nyanställde gick hem till förskolan.', key: true }
