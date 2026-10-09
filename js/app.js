@@ -903,7 +903,7 @@
             body.innerHTML = `${head}<h2 class="refl__q">${st.title}</h2>
               <ol class="recap">${st.items.map((it, k) => `
                 <li class="${it.key ? 'is-key' : ''}" style="--i:${k}"><time>${it.time}</time>
-                  <span>${it.was ? `<s>${it.was}</s>` : ''}${it.text}</span></li>`).join('')}</ol>${foot()}`;
+                  <span>${it.was ? `<span class="recap__was">${it.was}</span>` : ''}${it.text}</span></li>`).join('')}</ol>${foot()}`;
           } else if (st.type === 'choice') {
             body.innerHTML = `${head}<h2 class="refl__q">${st.question}</h2>${st.hint ? `<p class="refl__hint">${st.hint}</p>` : ''}
               <div class="refl__opts">${st.options.map((o) => `<button class="opt" data-id="${o.id}">${o.label}</button>`).join('')}</div>
@@ -1056,7 +1056,7 @@
   async function chainBack() {
     busy = true;
     el.timeline.classList.add('is-alarm');
-    banner('<strong>Något gick fel.</strong><small>Följ kedjan tillbaka…</small>', 'tl-banner--alarm');
+    banner('<strong>Dagen tog en annan vändning.</strong><small>Vi följer trådarna bakåt…</small>', 'tl-banner--alarm');
     const chain = ['n1614', 'n1402', 'n1223', 'n1115', 'n0730'];
     for (const id of chain) {
       await camTo(id, 1, 800);
@@ -1068,7 +1068,7 @@
     state.phase = 'rewind';
     renderTimeline();
     await camTo('n0730', 1.05, 700);
-    banner('<strong>Hur hade detta kunnat förhindras?</strong><small>Valet kl 07:30 lyser. Hoppa tillbaka och ändra det.</small>', 'tl-banner--alarm');
+    banner('<strong>Allt började i ett litet ögonblick.</strong><small>Valet kl 07:30 lyser. Hoppa tillbaka och prova ett annat.</small>', 'tl-banner--alarm');
     busy = false;
   }
 
@@ -1155,7 +1155,7 @@
     // etableringsbild: svep över hela dagen, landa på 06:00
     const last = visibleNodes().length - 1;
     await setCam(0, last * ROW * 0.5, 0.3, 0);
-    banner('<strong>En dag i produktionen.</strong><small>Varje punkt är ett ögonblick du kan hoppa in i.</small>');
+    banner('<strong>Här är dagen.</strong><small>Varje punkt är ett ögonblick du kan hoppa in i.</small>');
     await sleep(T(1700));
     await goNext();
   }

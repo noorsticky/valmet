@@ -17,9 +17,9 @@ const GOOD_A = ['rapport', 'skylt'];
 
 /* Följden av mailordningen kl 13:24: det som hamnade sist i inkorgen hinner ikapp kl 15:30 */
 const MAIL_FALLOUT = {
-  kim: { recap: 'Kims sjukanmälan låg sist – i morgon saknas en person på morgonskiftet.' },
-  rapport: { recap: 'Månadsrapporten låg sist – den kom aldrig in till kl 15.' },
-  aw: { recap: 'AW-mailet låg sist – fredagsbordet blev fullbokat utan dig.' },
+  kim: { recap: 'Kims sjukanmälan hamnade sist – och morgondagens bemanning blev en överraskning.' },
+  rapport: { recap: 'Månadsrapporten hamnade sist – den fick bli kvällsjobb.' },
+  aw: { recap: 'AW-mailet hamnade sist – fredagsbordet fylldes utan dig.' },
 };
 
 const MEETING_OPTIONS = [
@@ -62,7 +62,7 @@ const STORY = {
           const opts = [{ id: 'up', label: 'Gå upp' }];
           if (t < 2) opts.unshift({ id: 'snooze', label: 'Snooza 10 min', sub: t === 1 ? 'Sista gången…' : '' });
           const pick = await api.choose({
-            prompt: t < 2 ? 'Snooze or lose?' : 'Två snoozar. Nu GÅR man upp.',
+            prompt: t < 2 ? 'Snooze or lose?' : 'Två snoozar avklarade. Kaffet väntar!',
             options: opts, kind: 'pink',
             hotspot: t < 2 ? { x: 24.5, y: 53, w: 15, h: 17, id: 'snooze', label: 'Snooza' } : null,
           });
@@ -170,25 +170,24 @@ const STORY = {
             timer: 14, timeoutId: 'lugnt',
             timerLabel: 'Mötet drar ut på tiden…',
           });
-          if (api.lastTimedOut) await api.say('Tiden rann iväg. Ola hör sig själv säga: ”Ta det lugnt men håll tempot uppe…”', { narrator: true });
+          if (api.lastTimedOut) await api.say('Mötet drar ut på tiden, och Ola säger det som så ofta sägs: ”Ta det lugnt men håll tempot uppe…”', { narrator: true });
         } else {
-          // Andra försöket: tidigare val markerat, fel val ger en tankeställare.
+          // Andra försöket: första svaret är markerat (inte överstruket), nya svar dyker upp.
           const tried = new Set(api.state.triedA || []);
           while (true) {
             pick = await api.choose({
-              prompt: 'Hur hade detta kunnat förhindras? Vad säger Ola nu?',
+              prompt: 'Nu vet du hur dagen kan sluta. Vad säger Ola den här gången?',
               options: MEETING_OPTIONS.map((o) => ({
                 ...o,
-                tag: tried.has(o.id) ? 'Förra gången' : GOOD_A.includes(o.id) ? 'Nytt' : '',
+                tag: tried.has(o.id) ? 'Ditt första svar' : GOOD_A.includes(o.id) ? 'Nytt' : '',
                 fresh: GOOD_A.includes(o.id),
-                disabled: tried.has(o.id) && BAD_A.includes(o.id),
               })),
               kind: 'key', badge: 'A',
             });
             if (GOOD_A.includes(pick)) break;
             tried.add(pick);
-            api.sfx('warn');
-            await api.say('Hmm… tänk på vad som hände kl 16:14. Skulle det här ha stoppat det?', { who: 'Ola', inner: true });
+            api.sfx('memory');
+            await api.say('Hmm, det låter som i morse – och vi vet hur eftermiddagen blev då. Finns det något som skyddar pressen redan nu?', { who: 'Ola', inner: true });
           }
         }
         api.state.choices.A = pick;
@@ -203,7 +202,7 @@ const STORY = {
         }[pick];
         await api.say(replies[0], { narrator: true });
         await api.say(replies[1], { who: pick === 'skylt' ? 'Erik, tekniker' : 'Jonna, skiftledare' });
-        await api.memory('Detta val påverkar resten av dagen.', 'A');
+        await api.memory('Det här valet följer med resten av dagen.', 'A');
         api.stopLoop('room');
       },
     },
@@ -227,14 +226,14 @@ const STORY = {
         });
         api.state.choices.B = pick;
         if (pick === 'motet') {
-          await api.say('Ola viftar bort Lisa.', { narrator: true });
+          await api.say('Ola hinner inte stanna.', { narrator: true });
           await api.say('Det tar vi senare…', { who: 'Ola' });
           await api.say('…okej.', { who: 'Lisa', small: true });
         } else {
           await api.say('Jag är sen, men det här är viktigt. Kan vi ses 15:30?', { who: 'Ola' });
           await api.say('Tack! Det passar perfekt.', { who: 'Lisa' });
         }
-        await api.memory('Lisa kommer att minnas det här.', 'B');
+        await api.memory('Lisa kommer ihåg det här – på ett eller annat sätt.', 'B');
       },
     },
 
@@ -330,7 +329,7 @@ const STORY = {
           { id: 'aw', from: 'Sara (HR)', subject: 'AW på fredag?', preview: 'Vem är på? 🍻 Svara gärna i dag så jag kan boka.' },
         ]);
         api.state.choices.C = order;
-        await api.memory('Dina prioriteringar har noterats.', 'C');
+        await api.memory('Inkorgen är sorterad. Vi får se vad som hinner ikapp.', 'C');
       },
     },
 
@@ -342,7 +341,7 @@ const STORY = {
         api.clock('14:02');
         api.loop('room');
         await api.title('14:02', 'Vid fikat');
-        await api.say('Rävarna häcklar den nyanställde om säkerhet.', { narrator: true });
+        await api.say('Rävarna skämtar med den nyanställde om säkerhet.', { narrator: true });
         await api.say('Ta på dig skyddshandskarna nu! Kaffet är ju jättevarmt!!!', { who: 'Gammal räv' });
         await api.say('Skratt runt bordet. Den nyanställde säger inget mer om skyddet.', { narrator: true });
         api.stopLoop('room');
@@ -376,12 +375,12 @@ const STORY = {
         const last = order[order.length - 1];
         if (last === 'kim') {
           await api.say('Ola, Kim är sjuk i morgon också. Ingen har ringt in någon ersättare – vi blir en kort på morgonskiftet.', { who: 'Jonna, skiftledare' });
-          await api.say('Sjukanmälan låg kvar längst ner i inkorgen.', { narrator: true });
-          await api.memory('Kims sjukanmälan fick vänta för länge.', 'C');
+          await api.say('Sjukanmälan hamnade längst ner i högen. Det händer de flesta en stressig dag.', { narrator: true });
+          await api.memory('Botten av inkorgen hann ikapp.', 'C');
         } else if (last === 'rapport') {
           await api.say('Påminnelse: månadsrapporten skulle in kl 15.00. Vi har inte fått den.', { who: 'Ekonomi', small: true });
           await api.say('Den hann jag aldrig med. Nu blir det kvällsjobb.', { who: 'Ola', inner: true });
-          await api.memory('Rapporten blev liggande.', 'C');
+          await api.memory('Allt hinns inte med – och det är också värt att veta.', 'C');
         } else if (last === 'aw') {
           await api.say('AW:n på fredag är fullbokad nu – du hann inte svara. Nästa gång!', { who: 'Sara (HR)', small: true });
           await api.say('Det var nog inte hela världen. Eller?', { who: 'Ola', inner: true });
@@ -426,7 +425,7 @@ const STORY = {
           api.sfx('heartbeat');
           await api.wait(700);
           api.stopLoop('siren');
-          await api.bigQuestion('Hur hade detta kunnat förhindras?');
+          await api.bigQuestion('Vad hade kunnat göra skillnad?');
           api.tint(null);
           api.state.accident = true;
         } else {
@@ -493,14 +492,14 @@ function buildReflection(s) {
     items: [
       { time: '06:00', text: s.snooze ? `Du snoozade ${s.snooze} ${s.snooze === 1 ? 'gång' : 'gånger'}.` : 'Du gick upp direkt.' },
       rewound
-        ? { time: '07:30', was: SAID[s.firstA], text: `Du ändrade dig: ${SAID[s.choices.A]}`, key: true }
+        ? { time: '07:30', was: `Först: ${SAID[s.firstA]}`, text: `Andra gången: ${SAID[s.choices.A]}`, key: true }
         : { time: '07:30', text: `Du sa: ${SAID[s.choices.A]}`, key: true },
-      { time: '08:03', text: s.choices.B === 'lisa' ? 'Du stannade och bokade en tid med Lisa.' : '”Det tar vi senare…” Lisa fick vänta.' },
+      { time: '08:03', text: s.choices.B === 'lisa' ? 'Du stannade och bokade en tid med Lisa.' : '”Det tar vi senare…” – mötet kändes mer akut.' },
       mailFirst && { time: '13:24', text: `I inkorgen började du med ${mailFirst}.` },
       MAIL_FALLOUT[(s.choices.C || [])[2]] && { time: '15:30', text: MAIL_FALLOUT[(s.choices.C || [])[2]].recap },
       breakTxt && { time: '15:30', text: `Med femton minuter över ${breakTxt}.` },
       rewound
-        ? { time: '16:14', was: 'Larmet gick vid pressen.', text: 'Den nyanställde gick hem till förskolan.', key: true }
+        ? { time: '16:14', was: 'Först: larmet gick vid pressen.', text: 'Andra gången: den nyanställde gick hem till förskolan.', key: true }
         : { time: '16:14', text: 'Den nyanställde gick hem till förskolan.', key: true },
     ].filter(Boolean),
   });
@@ -509,8 +508,8 @@ function buildReflection(s) {
   if (rewound) {
     steps.push({
       type: 'choice', id: 'orsak', eyebrow: 'Kl 07:30',
-      question: `Första gången sa du ${SAID[s.firstA]} Vad tror du låg bakom?`,
-      hint: 'Det finns inget rätt svar. Välj det som ligger närmast.',
+      question: `Första gången blev det ${SAID[s.firstA]} Det säger nästan alla i stunden. Vad tror du gör att det känns rätt att säga?`,
+      hint: 'Det finns inga rätt eller fel svar här. Välj det som känns närmast.',
       options: [
         { id: 'tid', label: 'Tidspressen – nästa stopp närmade sig' },
         { id: 'allvar', label: 'Det kändes inte så allvarligt' },
@@ -532,7 +531,7 @@ function buildReflection(s) {
     question: 'Hur ofta ställs du inför liknande val – där tempot står mot säkerheten?',
     labels: ['Nästan aldrig', 'Varje dag'],
     respond: (v) => (v <= 2
-      ? 'Skönt. Fundera ändå på om det är för att det inte händer – eller för att det inte syns.'
+      ? 'Skönt! Ett tips att ta med: håll utkik ändå – ibland händer det mest där det syns minst.'
       : v === 3
         ? 'Då vet du hur det känns. En enkel fråga att bära med sig: ”Vad skulle jag önska att jag sagt, om det här gick fel i eftermiddag?”'
         : 'Då är du inte ensam. När valet kommer ofta behövs en gemensam spelregel i teamet, så att ingen behöver avgöra det själv under press.'),
@@ -543,10 +542,10 @@ function buildReflection(s) {
     type: 'text', id: 'vantar', eyebrow: 'Kl 08:03',
     question: s.choices.B === 'lisa'
       ? 'Du stannade för Lisa, fast du var sen. Vem på din arbetsplats skulle behöva samma minut från dig den här veckan?'
-      : '”Det tar vi senare…” Lisa fick vänta. Finns det någon som väntar på ett svar från dig just nu?',
+      : '”Det tar vi senare…” är en mening vi alla har sagt. Finns det någon som väntar på ett svar från dig just nu?',
     placeholder: 'Ett namn, eller en tanke …',
     hint: 'Det du skriver stannar här, på din skärm.',
-    respond: (t) => (t ? 'Bra. Boka in det innan du stänger kursen – senare blir lätt aldrig.' : 'Helt okej. Frågan får följa med dig ändå.'),
+    respond: (t) => (t ? 'Fint. Kanske värt en rad i kalendern redan i dag? ”Senare” har en tendens att bli väldigt senare.' : 'Helt okej. Frågan får följa med dig ändå.'),
   });
 
   /* 5. Det här tar vi med oss */
@@ -578,7 +577,7 @@ function buildReflection(s) {
     type: 'closing', eyebrow: '17:42',
     title: 'Den nyanställde hann till förskolan i dag.',
     text: rewound
-      ? 'I spelet kunde du spola tillbaka till 07:30. I verkligheten finns bara nästa morgonmöte.'
+      ? 'Här kunde du spola tillbaka till 07:30. I verkligheten får du en ny chans varje morgonmöte – och nu vet du vad en enda mening kan göra.'
       : 'Det berodde på ett beslut kl 07:30. I morgon är det du som sitter på morgonmötet.',
   });
   return steps;

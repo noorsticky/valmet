@@ -39,7 +39,7 @@ används systemtypsnitt.
    röda kedjan bakåt och 07:30 blinkar. Ett klick spolar tillbaka (klockan räknas
    ner från 16:14 till 07:30) och användaren får välja om. Nu dyker de rätta svaren upp,
    markerade "Nytt": "Jag skriver en rapport direkt" och "Sätt upp en tydlig varningsskylt".
-   Det svar man valde förra gången är överstruket.
+   Det svar man valde första gången är markerat "Ditt första svar".
 5. När valet blir rätt löses sidohändelserna upp och tidslinjen blir rak. En grön
    ljuspuls går längs linjen och 16:14 blir **A2**.
 6. **Reflektionen (hemfärden kl 17:05)** speglar morgonens bilfärd. Efter några tankar från Ola
