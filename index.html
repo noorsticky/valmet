@@ -36,6 +36,13 @@
 
     <!-- ===== Tidslinjen ===== -->
     <section id="timeline" class="layer timeline" aria-label="Tidslinje">
+      <!-- bakgrund: himlen följer dagen från gryning (06:00) till skymning (17:00) -->
+      <div class="tl-sky" aria-hidden="true">
+        <i class="tl-sky__dawn"></i><i class="tl-sky__day"></i><i class="tl-sky__dusk"></i>
+        <i class="tl-sky__glow"></i>
+        <canvas class="tl-motes" id="tlMotes"></canvas>
+        <i class="tl-sky__grain"></i><i class="tl-sky__vignette"></i>
+      </div>
       <header class="tl-header">
         <div class="tl-header__side"></div>
         <img class="tl-logo" src="assets/img/valmet-logo-white.svg" alt="Valmet" onerror="this.style.visibility='hidden'">

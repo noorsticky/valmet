@@ -246,12 +246,53 @@
     return Math.max(0.36, Math.min(1.1, (innerWidth - 32) / need, innerHeight / 820));
   }
 
+  /* bakgrundens tid på dygnet: 0 = 06:00 (gryning), 0.5 = mitt på dagen, 1 = 17:00 (skymning) */
+  let skyT = 0;
+  function skyAt(y) {
+    const ys = Object.values(layout).map((p) => p.y);
+    const max = ys.length ? Math.max(...ys) : 1;
+    const t = Math.max(0, Math.min(1, y / (max || 1)));
+    skyT = t;
+    const dawn = Math.max(0, 1 - t * 2.2), dusk = Math.max(0, (t - 0.55) * 2.2), day = Math.max(0, 1 - dawn - dusk);
+    el.timeline.style.setProperty('--dawn', dawn.toFixed(3));
+    el.timeline.style.setProperty('--day', Math.min(1, day).toFixed(3));
+    el.timeline.style.setProperty('--dusk', Math.min(1, dusk).toFixed(3));
+  }
+  // svävande ljuspartiklar med lätt parallax mot kameran
+  (function motes() {
+    const c = $('#tlMotes'); if (!c) return;
+    const g = c.getContext('2d');
+    const pts = Array.from({ length: 46 }, () => ({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 1.8, v: 0.004 + Math.random() * 0.01, d: 0.2 + Math.random() * 0.8, a: Math.random() * 6.28 }));
+    let w = 0, h = 0, last = performance.now();
+    const fit = () => { const dpr = Math.min(2, devicePixelRatio || 1); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    new ResizeObserver(fit).observe(c); fit();
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (el.timeline.classList.contains('is-active') && !REDUCED) {
+        g.clearRect(0, 0, w, h);
+        const warm = skyT < 0.3 || skyT > 0.7;
+        pts.forEach((p) => {
+          p.y -= p.v * dt * p.d; p.a += dt * 0.6;
+          if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
+          const px = (p.x + Math.sin(p.a) * 0.004) * w;
+          const py = ((p.y - cam.y * 0.00012 * p.d) % 1 + 1) % 1 * h;
+          g.beginPath(); g.arc(px, py, p.r, 0, 6.29);
+          g.fillStyle = warm ? `rgba(255,224,180,${0.12 + p.d * 0.22})` : `rgba(210,245,200,${0.1 + p.d * 0.2})`;
+          g.fill();
+        });
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  })();
+
   function setCam(x, y, s, ms = 900, ease = 'cubic-bezier(.65,0,.25,1)') {
     Object.assign(cam, { x, y, s });
     const { cx, cy } = focusPoint();
     const k = s * baseScale();
     el.world.style.transition = ms ? `transform ${T(ms)}ms ${ease}` : 'none';
     el.world.style.transform = `translate(${cx - x * k}px, ${cy - y * k}px) scale(${k})`;
+    skyAt(y);
     if (!ms) void el.world.offsetWidth;
     return sleep(ms ? T(ms) : 0);
   }

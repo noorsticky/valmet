@@ -107,7 +107,28 @@ button { font: inherit; color: inherit; }
 @keyframes rise { from { opacity: 0; transform: translateY(24px); } }
 
 /* ===================================================================== TIDSLINJE (lodrät) */
-.timeline { background: radial-gradient(70% 60% at 50% 45%, #233423 0%, var(--bg) 75%); }
+.timeline { background: var(--bg); --dawn: 1; --day: 0; --dusk: 0; }
+/* himmel som följer dagen: tre lager som tonas mot varandra när kameran rör sig */
+.tl-sky { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.tl-sky > i { position: absolute; inset: 0; transition: opacity 1.4s ease; }
+.tl-sky__dawn { opacity: var(--dawn); background:
+  radial-gradient(90% 55% at 70% -5%, rgba(255,176,120,.20), transparent 70%),
+  radial-gradient(60% 50% at 15% 10%, rgba(120,150,210,.16), transparent 70%),
+  linear-gradient(180deg, #172539 0%, #1b2a26 45%, #1a2a1b 100%); }
+.tl-sky__day { opacity: var(--day); background:
+  radial-gradient(80% 60% at 50% -10%, rgba(214,240,190,.18), transparent 70%),
+  radial-gradient(70% 60% at 50% 110%, rgba(92,201,95,.10), transparent 70%),
+  linear-gradient(180deg, #23382a 0%, #1f311f 55%, #1b2b1b 100%); }
+.tl-sky__dusk { opacity: var(--dusk); background:
+  radial-gradient(90% 55% at 25% 105%, rgba(255,140,90,.18), transparent 70%),
+  radial-gradient(70% 50% at 85% 0%, rgba(150,110,200,.16), transparent 70%),
+  linear-gradient(180deg, #221c33 0%, #1f2329 50%, #1a2519 100%); }
+/* mjukt ljus bakom det som är i fokus */
+.tl-sky__glow { background: radial-gradient(34vmax 26vmax at 58% 50%, rgba(150,230,140,.10), transparent 70%); animation: glowBreath 6s ease-in-out infinite; }
+@keyframes glowBreath { 50% { opacity: .55; } }
+.tl-motes { position: absolute; inset: 0; width: 100%; height: 100%; }
+.tl-sky__grain { opacity: .05 !important; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+.tl-sky__vignette { background: radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(4,8,4,.55)); }
 .timeline::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 60% at 50% 45%, transparent, rgba(255,0,0,.22)); opacity: 0; transition: opacity 1s; }
 .timeline.is-alarm::after { opacity: 1; animation: alarmBreath 2.4s ease-in-out infinite; }
 @keyframes alarmBreath { 50% { opacity: .55; } }
