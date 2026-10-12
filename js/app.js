@@ -94,8 +94,11 @@
       </div>`,
     spegel: () => `
       <div class="spegel">
-        <video class="env__video spegel__bg" src="${VIDEO_ENVS.sovrum}" muted playsinline loop autoplay preload="auto"></video>
-
+        <div class="spegel__tiles"></div>
+        <div class="spegel__lamp"><i></i></div>
+        <div class="spegel__light"></div>
+        <div class="spegel__counter"></div>
+        <div class="spegel__steam"><i></i><i></i><i></i><i></i></div>
       </div>`,
     summary: () => `<div class="summ"><i></i><i></i><i></i></div>`,
   };
@@ -723,6 +726,8 @@
                 <div class="mirror__track">${personas.map((x, k) => `
                   <figure class="mirror__slide" data-i="${k}" aria-hidden="true"><img src="${x.img}" alt="" draggable="false"></figure>`).join('')}
                 </div>
+                <canvas class="mirror__fog" aria-hidden="true"></canvas>
+                <p class="mirror__hint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3l-2.3-4a1.5 1.5 0 0 1 2.6-1.5L9 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Torka av spegeln</p>
                 <div class="mirror__sheen" aria-hidden="true"></div>
               </div>
             </div>
@@ -758,7 +763,64 @@
           $('.mirror__pick', p).textContent = `Välj dag ${x.day}`;
           refit && refit();
         };
-        const go = (k) => { cur = (k + n) % n; SFX.play('hover'); sync(); };
+        const glassEl = $('.mirror__glass', p);
+        const go = (k) => {
+          if (fogged) return;
+          cur = (k + n) % n; SFX.play('hover'); sync();
+          glassEl.classList.remove('is-sweep'); void glassEl.offsetWidth; glassEl.classList.add('is-sweep');
+        };
+
+        /* imma: torka bort med fingret/musen; försvinner av sig själv efter en stund */
+        let fogged = true;
+        p.classList.add('is-fogged');
+        const fog = $('.mirror__fog', p), fg = fog.getContext('2d');
+        const paintFog = () => {
+          const r = fog.getBoundingClientRect();
+          fog.width = Math.max(60, Math.round(r.width / 3)); fog.height = Math.max(90, Math.round(r.height / 3));
+          const gr = fg.createLinearGradient(0, 0, 0, fog.height);
+          gr.addColorStop(0, 'rgba(226,234,240,.94)'); gr.addColorStop(1, 'rgba(200,212,222,.9)');
+          fg.globalCompositeOperation = 'source-over'; fg.fillStyle = gr; fg.fillRect(0, 0, fog.width, fog.height);
+          for (let i = 0; i < 260; i++) { fg.fillStyle = `rgba(255,255,255,${Math.random() * 0.18})`; fg.beginPath(); fg.arc(Math.random() * fog.width, Math.random() * fog.height, Math.random() * 2.2, 0, 6.3); fg.fill(); }
+        };
+        requestAnimationFrame(paintFog);
+        let lastWipe = null, wipeCount = 0;
+        const clearFog = () => {
+          if (!fogged) return;
+          fogged = false;
+          p.classList.remove('is-fogged'); p.classList.add('is-clear');
+          SFX.play('dissolve');
+          clearTimeout(autoClear);
+          refit && refit();
+        };
+        const wipe = (e) => {
+          if (!fogged) return;
+          const r = fog.getBoundingClientRect();
+          const x = (e.clientX - r.left) * fog.width / r.width, y = (e.clientY - r.top) * fog.height / r.height;
+          fg.globalCompositeOperation = 'destination-out';
+          fg.lineCap = 'round'; fg.lineJoin = 'round'; fg.lineWidth = fog.width * 0.22;
+          fg.beginPath(); fg.moveTo(lastWipe ? lastWipe[0] : x, lastWipe ? lastWipe[1] : y); fg.lineTo(x, y); fg.stroke();
+          lastWipe = [x, y];
+          if (++wipeCount % 12 === 0) {
+            const d = fg.getImageData(0, 0, fog.width, fog.height).data;
+            let clear = 0; for (let i = 3; i < d.length; i += 16) if (d[i] < 40) clear++;
+            if (clear / (d.length / 16) > 0.45) clearFog();
+          }
+        };
+        const autoClear = setTimeout(clearFog, T(9000));
+        glassEl.addEventListener('pointermove', (e) => { if (fogged && (e.buttons || e.pointerType === 'mouse')) wipe(e); });
+        glassEl.addEventListener('pointerleave', () => { lastWipe = null; });
+        glassEl.addEventListener('pointerup', () => { lastWipe = null; });
+        glassEl.addEventListener('keydown', (e) => { if (fogged && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); clearFog(); } });
+
+        /* spegeln lutar lite mot pekaren och reflexen följer med */
+        const frameEl = $('.mirror__frame', p);
+        if (!REDUCED) p.addEventListener('pointermove', (e) => {
+          const r = frameEl.getBoundingClientRect();
+          const dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth / 2)));
+          const dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight / 2)));
+          frameEl.style.setProperty('--rx', `${-dy * 5}deg`); frameEl.style.setProperty('--ry', `${dx * 7}deg`);
+          frameEl.style.setProperty('--sx', `${dx * 30}%`);
+        });
         $('.mirror__nav--prev', p).addEventListener('click', () => go(cur - 1));
         $('.mirror__nav--next', p).addEventListener('click', () => go(cur + 1));
         tabs.forEach((t) => t.addEventListener('click', () => go(+t.dataset.i)));
@@ -770,12 +832,12 @@
         // svep
         const glass = $('.mirror__glass', p);
         let sx = null, dragged = false;
-        glass.addEventListener('pointerdown', (e) => { sx = e.clientX; dragged = false; glass.setPointerCapture(e.pointerId); track.classList.add('is-drag'); });
+        glass.addEventListener('pointerdown', (e) => { if (fogged) { lastWipe = null; wipe(e); return; } sx = e.clientX; dragged = false; glass.setPointerCapture(e.pointerId); track.classList.add('is-drag'); });
         glass.addEventListener('pointermove', (e) => {
           if (sx == null) return;
           const dx = e.clientX - sx;
           if (Math.abs(dx) > 6) dragged = true;
-          track.style.setProperty('--drag', `${dx}px`);
+          if (!fogged) track.style.setProperty('--drag', `${dx}px`);
         });
         const end = (e) => {
           if (sx == null) return;
@@ -783,7 +845,7 @@
           sx = null;
           track.classList.remove('is-drag');
           track.style.setProperty('--drag', '0px');
-          if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+          if (!fogged && Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
           setTimeout(() => { dragged = false; }, 0);
         };
         glass.addEventListener('pointerup', end);
@@ -791,7 +853,7 @@
         $('.mirror__pick', p).addEventListener('click', async () => {
           SFX.play('select');
           p.classList.add('is-picked');
-          await sleep(T(900));
+          await sleep(T(1300));
           await api.closePanel(p);
           resolve(personas[cur].id);
         });
