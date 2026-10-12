@@ -26,8 +26,8 @@
   const ROW = 290;        // lodrätt avstånd mellan punkterna (px i världen)
   const PLAT_X = 270;     // plattformens avstånd från linjen
   const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
-  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4' };
-  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', spegel: 'assets/img/sovrum.jpg' };
+  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4', bil: 'assets/video/bil.mp4' };
+  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', bil: 'assets/img/bil.jpg', spegel: 'assets/img/sovrum.jpg' };
 
   /* ------------------------------------------------------------ state */
   const freshState = () => ({
@@ -105,8 +105,8 @@
     host.innerHTML = '';
     if (host.dataset.base == null) host.dataset.base = host.className.split(' ').filter((c) => c && !c.startsWith('env')).join(' ');
     host.className = `${host.dataset.base} env env--${name} ${variant ? 'env--' + variant : ''}`;
-    // 3D-scener (bilen, maskinen) renderas med three.js; CSS-scenen är reserv utan WebGL
-    if (!thumb && window.Scene3D && Scene3D.has(name)) {
+    // 3D-scener (maskinen) renderas med three.js när det inte finns en film; CSS-scenen är reserv utan WebGL
+    if (!thumb && !VIDEO_ENVS[name] && window.Scene3D && Scene3D.has(name)) {
       try { host._stop = Scene3D.mount(host, name, variant); return; } catch (e) { console.warn(e); host.innerHTML = ''; }
     }
     if (VIDEO_ENVS[name]) {

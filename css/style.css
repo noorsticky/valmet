@@ -245,6 +245,8 @@ button { font: inherit; color: inherit; }
 .env__tone { position: absolute; inset: 0; pointer-events: none; }
 .env__tone--dim { background: rgba(10,14,30,.35); }
 .env__tone--dark { background: linear-gradient(rgba(8,12,28,.55), rgba(8,12,28,.35)); }
+.env--dusk .env__video { filter: brightness(.62) saturate(1.2) sepia(.3) hue-rotate(-18deg) contrast(1.08); }
+.env__tone--dusk { background: linear-gradient(180deg, rgba(80,40,140,.55) 0%, rgba(230,100,70,.28) 45%, rgba(20,12,30,.45) 100%); mix-blend-mode: multiply; }
 .env__tone--warm { background: radial-gradient(70% 60% at 50% 40%, rgba(255,190,110,.22), rgba(120,60,10,.12)); mix-blend-mode: soft-light; }
 .hotspots { position: absolute; inset: 0; pointer-events: none; }
 

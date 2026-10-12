@@ -68,7 +68,7 @@ js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
-assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm (.mp4) (omkodade, utan ljudspår)
+assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm, bil (.mp4) (omkodade, utan ljudspår)
 assets/people/    Tomas, Ola och Ulrika (transparenta bilder för spegeln, tidslinjen och HUD)
 assets/img/       Stillbilder ur videorna + Valmet-loggan (valmet-logo.svg och valmet-logo-white.svg med vit text för mörk bakgrund)
 ```
@@ -112,7 +112,7 @@ När scenen öppnas växer den ut ur plattformen.
 
 ### Byta en ritad miljö mot en riktig animation
 
-De scener som saknar animation (bilen, maskinen kl 11:15 och spegeln) är
+De scener som saknar animation (maskinen kl 11:15 och spegeln) är
 ritade i CSS som platshållare. När en riktig film finns:
 
 1. Lägg filen i `assets/video/` och en stillbild i `assets/img/`.
