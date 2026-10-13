@@ -13,7 +13,7 @@
   // manuset är skrivet med "Ola" – byt till vald person (och pronomen) när texten visas
   let persona = null;
   function personalize(t) {
-    if (typeof t !== 'string' || !persona || persona.id === 'ola') return t;
+    if (typeof t !== 'string' || !persona || persona.id === 'ola' || (DAY && DAY.own)) return t;
     let out = t.replace(/\bOlas\b/g, persona.name + 's').replace(/\bOla\b/g, persona.name);
     if (persona.pronoun === 'hon') out = out.replace(/\bhan\b/g, 'hon').replace(/\bHan\b/g, 'Hon').replace(/\bhonom\b/g, 'henne').replace(/\bhans\b/g, 'hennes');
     return out;
@@ -32,11 +32,19 @@
   /* ------------------------------------------------------------ state */
   const freshState = () => ({
     choices: {}, snooze: 0, track: null, played: [], persona: null,
-    rewound: false, firstA: null, triedA: [], accident: false, phase: 'normal',
+    rewound: false, firstA: null, triedA: [], accident: false, phase: 'normal', signals: [],
   });
   let state = freshState();
-  const nodes = STORY.nodes;
-  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  /* Varje person kan ha en egen dag (STORY.days). Dagen byts när man väljer person i spegeln;
+     06:00 och 06:20 är gemensamma. Personer utan egen dag spelar Olas dag med sitt namn. */
+  let DAY = STORY.days.ola;
+  let nodes = DAY.nodes;
+  let byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  function useDay(personaId) {
+    DAY = STORY.dayFor(personaId);
+    nodes = DAY.nodes;
+    byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  }
 
   const isVisible = (n) => !n.track || state.track === n.track;
   const visibleNodes = () => nodes.filter(isVisible);
@@ -155,6 +163,12 @@
     computeLayout();
     const next = nextNode();
     const existing = Object.fromEntries($$('.node', el.nodes).map((e) => [e.dataset.id, e]));
+    // punkter från en annan dag (före personvalet) tonas bort när dagen byts
+    Object.entries(existing).forEach(([id, e]) => {
+      if (byId[id] || e.classList.contains('is-dissolving')) return;
+      e.classList.add('is-dissolving'); e.disabled = true;
+      setTimeout(() => e.remove(), T(1200));
+    });
 
     nodes.forEach((n) => {
       let e = existing[n.id];
@@ -163,7 +177,7 @@
       const pos = layout[n.id];
       const played = isPlayed(n);
       const isNext = next && next.id === n.id;
-      const culprit = state.phase === 'rewind' && n.id === 'n0730';
+      const culprit = state.phase === 'rewind' && n.id === DAY.critical;
       const known = played || isNext || culprit || n.lane === 'side';
       const badge = val(n.badge, state);
       const sig = [val(n.title, state), badge, val(n.prop, state), played, isNext, known, culprit, pos.dir].join('|');
@@ -217,7 +231,7 @@
     const side = visibleNodes().filter((n) => n.lane === 'side');
     const g = $('#branch', el.lines);
     if (!side.length) { g.innerHTML = ''; return; }
-    const s0 = layout.n0730, e0 = layout.n1614;
+    const s0 = layout[DAY.critical], e0 = layout[DAY.consequence];
     const f = layout[side[0].id], l = layout[side[side.length - 1].id];
     const X = SIDE_X;
     const d = `M 0 ${s0.y} C 0 ${s0.y + ROW * 0.7}, ${X} ${f.y - ROW * 1.1}, ${X} ${f.y - ROW * 0.35} L ${X} ${l.y + ROW * 0.35} C ${X} ${l.y + ROW * 1.1}, 0 ${e0.y - ROW * 0.7}, 0 ${e0.y}`;
@@ -441,7 +455,8 @@
     el.fxTint.className = 'fx fx--tint';
     el.eyelids.style.setProperty('--open', 1);
     el.stage.style.filter = '';
-    $$('.ov-clock', el.stage).forEach((o) => o.remove());
+    $$('.ov-clock, .ov-note', el.stage).forEach((o) => o.remove());
+    $$('.notif, .sighost', el.scene).forEach((o) => o.remove());
     el.scene.classList.remove('is-cinematic', 'is-shake', 'is-reflect', 'is-dozing');
     $$('video', el.env).forEach((v) => v.pause());
   }
@@ -475,6 +490,7 @@
 
     setPersona(p) {
       persona = p;
+      if (STORY.dayFor(p.id) !== DAY) useDay(p.id);
       $('#hudWho').hidden = false;
       el.hudName.textContent = p.name;
       el.hudRole.textContent = `${p.role}, ${p.age} år`;
@@ -503,7 +519,7 @@
     },
 
     say(text, o = {}) {
-      const isPlayer = o.who === 'Ola';
+      const isPlayer = o.who === 'Ola' || (persona && o.who === persona.name);
       text = personalize(text);
       o = { ...o, who: personalize(o.who) };
       return new Promise((resolve) => {
@@ -617,7 +633,51 @@
     },
     hotspot(o) { return api._hotspot(o); },
 
+    /* Signaler: diskreta punkter som deltagaren kan upptäcka (eller missa).
+       Blockerar aldrig scenen; en upptäckt sparas i state.signals och visas som en kort notis. */
+    signal({ id, line, ...spot }) {
+      if (state.signals.includes(id)) return;
+      api._hotspot({ label: 'Titta närmare', ...spot }).then(() => api._foundSignal(id, line));
+    },
+    _foundSignal(id, line) {
+      if (!state.signals.includes(id)) state.signals.push(id);
+      SFX.play('select');
+      let host = $('.sighost', el.scene);
+      if (!host) { host = h('div', 'sighost'); host.setAttribute('aria-live', 'polite'); el.scene.appendChild(host); }
+      const t = h('div', 'sigtoast', `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg><span><small>Du lade märke till något</small>${line}</span>`);
+      host.innerHTML = '';
+      host.appendChild(t);
+      requestAnimationFrame(() => t.classList.add('is-on'));
+      setTimeout(() => { t.classList.remove('is-on'); setTimeout(() => t.remove(), T(500)); }, T(4200 + line.length * 30));
+    },
+    signalCount: () => state.signals.length,
+
+    /* Mobilnotis som glider in uppifrån. signal: { id, line } lägger en signalpunkt på tidsstämpeln. */
+    notify({ app = 'Mejl', from, subject, text, stamp, signal }) {
+      api.unnotify();
+      SFX.play('notif');
+      const n = h('div', 'notif');
+      n.innerHTML = `<div class="notif__top"><span class="notif__app">${app}</span><span class="notif__stamp">${stamp || 'nu'}</span></div>
+        <b class="notif__from">${from}</b>${subject ? `<strong class="notif__subj">${subject}</strong>` : ''}<p class="notif__text">${text}</p>`;
+      el.scene.appendChild(n);
+      if (signal && !state.signals.includes(signal.id)) {
+        const b = h('button', 'notif__sig', '<span class="hotspot__pulse"></span>');
+        b.setAttribute('aria-label', 'Titta närmare på tidsstämpeln');
+        b.addEventListener('click', (e) => { e.stopPropagation(); b.remove(); api._foundSignal(signal.id, signal.line); });
+        $('.notif__stamp', n).appendChild(b);
+      }
+      requestAnimationFrame(() => requestAnimationFrame(() => n.classList.add('is-on')));
+      return n;
+    },
+    unnotify() { $$('.notif', el.scene).forEach((n) => { n.classList.remove('is-on'); setTimeout(() => n.remove(), T(500)); }); },
+
     overlay(kind, value) {
+      if (kind === 'note') {
+        let o = $('.ov-note', el.stage);
+        if (!o) { o = h('div', 'ov-note'); o.setAttribute('aria-hidden', 'true'); el.stage.appendChild(o); }
+        o.innerHTML = value;
+        return;
+      }
       if (kind === 'alarmclock') {
         let o = $('.ov-clock', el.stage);
         if (!o) { o = h('div', 'ov-clock'); o.setAttribute('aria-hidden', 'true'); el.stage.appendChild(o); }
@@ -890,7 +950,7 @@
         const p = api.panel('panel--mail', `
           <div class="mailwin">
             <div class="mailwin__bar"><i></i><i></i><i></i><span>Inkorg – 3 olästa</span></div>
-            <p class="mailwin__help">${personalize('Klicka på mailen i den ordning Ola ska ta hand om dem.')}</p>
+            <p class="mailwin__help">Klicka på mailen i den ordning ${persona ? persona.name : 'Ola'} ska ta hand om dem.</p>
             <ul class="mailwin__list">${mails.map((m) => `
               <li><button class="mail" data-id="${m.id}">
                 <span class="mail__rank"></span>
@@ -955,7 +1015,7 @@
         const answers = {};
         const p = api.panel('panel--reflect', `
           <div class="refl">
-            <div class="refl__head"><span>Skiftrapport · Linje 3</span><span class="refl__page"></span></div>
+            <div class="refl__head"><span>${DAY.reportHead || 'Skiftrapport'}</span><span class="refl__page"></span></div>
             <div class="refl__dots">${steps.map(() => '<i></i>').join('')}</div>
             <div class="refl__body"></div>
           </div>`);
@@ -1064,9 +1124,9 @@
               <div class="refl__foot"><button class="btn btn--ghost js-again">Spela igen</button><button class="btn btn--primary js-tl">Se din tidslinje</button></div>`;
             $('.js-again', body).addEventListener('click', () => restart());
             $('.js-tl', body).addEventListener('click', async () => {
-              await exitScene(byId.nend);
-              await setCam(0, layout.n1324.y, 0.32, 1400);
-              banner('<strong>Din dag – rak och olycksfri.</strong><small>Tack för att du spelade.</small>', 'tl-banner--good');
+              await exitScene(byId[DAY.end]);
+              await setCam(0, layout[DAY.overview].y, 0.32, 1400);
+              banner(`<strong>${DAY.endBanner}</strong><small>Tack för att du spelade.</small>`, 'tl-banner--good');
             });
             dots.forEach((d) => d.classList.add('is-done'));
             resolve(answers);
@@ -1097,10 +1157,10 @@
      =================================================================== */
   async function afterScene(n) {
     // Spår avgörs av det kritiska valet kl 07:30
-    if (n.id === 'n0730') {
+    if (n.id === DAY.critical) {
       const wasRewind = state.phase === 'rewind';
       // vid omspelning byts spåret först när sidohändelserna lösts upp (straighten)
-      if (!wasRewind) state.track = BAD_A.includes(state.choices.A) ? 'A' : 'A2';
+      if (!wasRewind) state.track = DAY.bad.includes(state.choices.A) ? 'A' : 'A2';
       if (wasRewind) {
         await exitScene(n);
         await straighten();
@@ -1108,11 +1168,11 @@
       }
     }
 
-    if (n.id !== 'nend') await exitScene(n);
+    if (n.id !== DAY.end) await exitScene(n);
 
-    if (n.id === 'nend') return; // sammanfattningen blir kvar
+    if (n.id === DAY.end) return; // sammanfattningen blir kvar
 
-    if (n.id === 'n1614' && state.accident && state.phase === 'normal') {
+    if (n.id === DAY.consequence && state.accident && state.phase === 'normal') {
       await chainBack();
       return;
     }
@@ -1136,7 +1196,7 @@
 
   function onNodeClick(n) {
     if (busy) return;
-    if (state.phase === 'rewind' && n.id === 'n0730') { doRewind(n); return; }
+    if (state.phase === 'rewind' && n.id === DAY.critical) { doRewind(n); return; }
     const nx = nextNode();
     if (nx && nx.id === n.id) { SFX.play('click'); enterNode(n); }
   }
@@ -1146,7 +1206,7 @@
     busy = true;
     el.timeline.classList.add('is-alarm');
     banner('<strong>Dagen tog en annan vändning.</strong><small>Vi följer trådarna bakåt…</small>', 'tl-banner--alarm');
-    const chain = ['n1614', 'n1402', 'n1223', 'n1115', 'n0730'];
+    const chain = DAY.chain;
     for (const id of chain) {
       await camTo(id, 1, 800);
       const e = $(`.node[data-id="${id}"]`);
@@ -1156,8 +1216,8 @@
     }
     state.phase = 'rewind';
     renderTimeline();
-    await camTo('n0730', 1.05, 700);
-    banner('<strong>Allt började i ett litet ögonblick.</strong><small>Valet kl 07:30 lyser. Hoppa tillbaka och prova ett annat.</small>', 'tl-banner--alarm');
+    await camTo(DAY.critical, 1.05, 700);
+    banner(`<strong>Allt började i ett litet ögonblick.</strong><small>Valet kl ${byId[DAY.critical].time} lyser. Hoppa tillbaka och prova ett annat.</small>`, 'tl-banner--alarm');
     busy = false;
   }
 
@@ -1166,8 +1226,9 @@
     banner('');
     SFX.play('rewind');
     el.rewind.classList.add('is-on');
-    // klockan spolas bakåt 16:14 -> 07:30
-    const from = 16 * 60 + 14, to = 7 * 60 + 30;
+    // klockan spolas bakåt från konsekvensen till det kritiska valet
+    const mins = (t) => { const [hh, mm] = t.split(':').map(Number); return hh * 60 + mm; };
+    const from = mins(byId[DAY.consequence].time), to = mins(byId[DAY.critical].time);
     const steps = 40;
     for (let i = 0; i <= steps; i++) {
       const m = Math.round(from - (from - to) * (i / steps) ** 0.7);
@@ -1185,7 +1246,7 @@
     busy = true;
     el.timeline.classList.remove('is-alarm');
     banner('<strong>Ett annat val. En annan dag.</strong>', 'tl-banner--good');
-    await setCam(SIDE_X * 0.5, layout.n1223.y, 0.6, 1000);
+    await setCam(SIDE_X * 0.5, layout[DAY.sideFocus].y, 0.6, 1000);
     SFX.play('dissolve');
     $$('.node--side').forEach((e, i) => setTimeout(() => e.classList.add('is-dissolving'), i * T(220)));
     const bp = $('#branchPath');
@@ -1193,16 +1254,16 @@
     await sleep(T(1500));
     $$('.node--side').forEach((e) => e.remove());
     state.track = 'A2';
-    // 16:14 spelas om i ny version
-    state.played = state.played.filter((id) => id !== 'n1614' && !byId[id].track);
+    // konsekvensen spelas om i ny version
+    state.played = state.played.filter((id) => id !== DAY.consequence && !byId[id].track);
     state.phase = 'fixed';
     delete el.timeline.dataset.branchShown;
     renderTimeline();
     await sleep(T(700));
     // ljuspuls längs den raka linjen
-    await lightPulse('n0730', 'n1614');
+    await lightPulse(DAY.critical, DAY.consequence);
     SFX.play('success');
-    banner('<strong>Tidslinjen är rak igen.</strong><small>Olyckan inträffade aldrig.</small>', 'tl-banner--good');
+    banner(`<strong>Tidslinjen är rak igen.</strong><small>${DAY.healedText}</small>`, 'tl-banner--good');
     await sleep(T(1400));
     busy = false;
     await goNext();
@@ -1277,29 +1338,35 @@
   window.addEventListener('resize', () => { if (!busy) setCam(cam.x, cam.y, cam.s, 0); });
 
   /* ------------------------------------------------------------ utvecklarläge
-     ?at=n1324           hoppa till en punkt (tidigare punkter markeras som spelade)
-     ?at=n1614&a=lugnt   välj vad som svarades kl 07:30 */
+     ?at=n1324                 hoppa till en punkt (tidigare punkter markeras som spelade)
+     ?at=n1614&a=lugnt         välj vad som svarades vid det kritiska valet
+     ?p=ulrika&at=u1330&a=vilosa&b=sen   Ulrikas dag */
   const qs = new URLSearchParams(location.search);
+  const devPersona = STORY.personas.find((x) => x.id === (qs.get('p') || 'ola')) || STORY.personas[1];
+  useDay(devPersona.id);
   if (qs.get('at') && byId[qs.get('at')]) {
     const target = qs.get('at');
     const idx = nodes.findIndex((n) => n.id === target);
-    if (idx > nodes.findIndex((n) => n.id === 'n0730')) {
-      state.choices.A = qs.get('a') || 'lugnt';
+    const past = (id) => idx > nodes.findIndex((n) => n.id === id);
+    if (past(DAY.critical)) {
+      state.choices.A = qs.get('a') || DAY.bad[0];
       state.firstA = state.choices.A;
       state.triedA = [state.choices.A];
-      state.track = BAD_A.includes(state.choices.A) ? 'A' : 'A2';
+      state.track = DAY.bad.includes(state.choices.A) ? 'A' : 'A2';
     }
-    if (idx > nodes.findIndex((n) => n.id === 'n0803')) state.choices.B = qs.get('b') || 'motet';
-    if (idx > nodes.findIndex((n) => n.id === 'n1324')) state.choices.C = ['rapport', 'kim', 'aw'];
+    DAY.dev(state, qs, past);
+    state.persona = devPersona.id;
     state.played = nodes.slice(0, idx).filter(isVisible).map((n) => n.id);
-    if (target === 'n1614' && state.track === 'A') state.accident = false;
-    api.setPersona(STORY.personas[1]);
+    if (target === DAY.consequence && state.track === 'A') state.accident = false;
+    api.setPersona(devPersona);
     el.timeline.dataset.branchShown = '1';
     $('.intro__startlabel').textContent = `Fortsätt vid ${byId[target].time}`;
+  } else {
+    useDay('ola');
   }
 
   // fokus på element utanför bild får aldrig scrolla upplevelsen
   $$('#app, .layer, #tlViewport, #sceneWorld').forEach((x) => x.addEventListener('scroll', () => { x.scrollTop = 0; x.scrollLeft = 0; }));
 
-  window.__pp = { state: () => state, busy: () => busy, enterNode, nodes, api };
+  window.__pp = { state: () => state, busy: () => busy, enterNode, nodes: () => nodes, day: () => DAY, api };
 })();

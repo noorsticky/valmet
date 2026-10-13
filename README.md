@@ -64,7 +64,7 @@ ett möte kl 15:30, som dyker upp både i kalendern kl 14:30 och som ett val kl 
 ```
 index.html        Skal + UI-lager (HUD, filmfält, repliker, val, paneler)
 css/style.css     All stil, inklusive de ritade miljöerna
-js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg
+js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg – Olas dag och Ulrikas dag
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
@@ -73,6 +73,19 @@ assets/props/     Renderade ikoner för tidslinjen (klocka, bil, kopp, whiteboar
 assets/people/    Tomas, Ola och Ulrika (transparenta bilder för spegeln, tidslinjen och HUD)
 assets/img/       Stillbilder ur videorna + Valmet-loggan (valmet-logo.svg och valmet-logo-white.svg med vit text för mörk bakgrund)
 ```
+
+### Flera dagar
+
+Varje person kan ha en egen dag. `STORY.days` i `js/story.js` talar om för motorn vilka
+noder dagen har och vilket val som är det kritiska (`critical`), var konsekvensen ligger
+(`consequence`) och vilka sidohändelser kedjan följer bakåt (`chain`). Punkterna 06:00 och
+06:20 är gemensamma. Dagen byts när man väljer person i spegeln.
+
+- **Olas dag** (dag B): kritiskt val 07:30, konsekvens 16:14.
+- **Ulrikas dag** (dag A, spår 2 ”Vi löser det”): kritiskt val 08:30, konsekvens 16:10.
+  Den har också fyra signaler som deltagaren kan upptäcka (`api.signal`, `api.notify`).
+  Skiftrapporten visar hur många man såg.
+- **Tomas** har ingen egen dag än. Han spelar Olas dag med sitt namn.
 
 ### Redigera innehåll
 
@@ -124,5 +137,7 @@ ritade i CSS som platshållare. När en riktig film finns:
 
 - `?at=n1324` startar direkt vid en viss punkt. Tidigare punkter räknas som spelade.
 - `?at=n1614&a=lugnt` startar vid olyckan (`a=skylt` ger den lyckliga versionen).
+- `?p=ulrika&at=u1330&a=vilosa&b=sen` startar i Ulrikas dag. `a` är svaret 08:30
+  (`vilosa`, `nasta`, `flytta`, `vidare`) och `b` är valet 09:05 (`stanna`, `boka`, `sen`).
 - På tangentbordet väljer siffrorna 1–4 alternativ, och mellanslag går vidare
   i repliker.
