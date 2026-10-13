@@ -48,7 +48,7 @@
     intro: $('#intro'), timeline: $('#timeline'), scene: $('#scene'),
     viewport: $('#tlViewport'), world: $('#tlWorld'), lines: $('#tlLines'), nodes: $('#tlNodes'), banner: $('#tlBanner'),
     sceneWorld: $('#sceneWorld'), stage: $('#stage'), env: $('#env'), hotspots: $('#hotspots'),
-    hud: $('#hud'), hudClock: $('#hudClock'), hudProgress: $('#hudProgress'), hudName: $('#hudName'), hudRole: $('#hudRole'), hudAvatar: $('#hudAvatar'),
+    hud: $('#hud'), hudClock: $('#hudClock'), hudName: $('#hudName'), hudRole: $('#hudRole'), hudAvatar: $('#hudAvatar'),
     titlecard: $('#titlecard'), tcTime: $('#tcTime'), tcPlace: $('#tcPlace'),
     captions: $('#captions'), memory: $('#memory'), choice: $('#choice'), panelHost: $('#panelHost'),
     fxTint: $('#fxTint'), eyelids: $('#eyelids'), skip: $('#skipBtn'), rewind: $('#rewind'), rewindClock: $('#rewindClock'),
@@ -202,7 +202,6 @@
       }
     });
     drawLines();
-    renderProgress();
   }
 
   function drawLines() {
@@ -234,11 +233,6 @@
       el.timeline.dataset.branchShown = '1';
       setTimeout(() => { bp.style.transition = `stroke-dashoffset ${T(1800)}ms ease`; bp.style.strokeDashoffset = 0; }, T(900));
     }
-  }
-
-  function renderProgress() {
-    el.hudProgress.innerHTML = visibleNodes().map((n) =>
-      `<i class="pdot pdot--${n.kind} ${isPlayed(n) ? 'is-done' : ''} ${current && current.id === n.id ? 'is-now' : ''}" title="${n.time}"></i>`).join('');
   }
 
   /* ------------------------------------------------------------ kamera */
@@ -490,7 +484,6 @@
     el.scene.classList.toggle('is-summary', env === 'summary');
     el.skip.classList.toggle('is-on', !!val(n.cinematic, state));
     if (n.eyesClosed) { el.scene.classList.add('is-dozing'); el.eyelids.style.setProperty('--open', 0); el.stage.style.filter = 'blur(12px) brightness(.55) saturate(.5)'; }
-    renderProgress();
   }
 
   function cleanupScene() {
