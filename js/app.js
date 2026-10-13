@@ -324,6 +324,20 @@
   // kameran centrerad på en plattform (används vid hopp in/ut)
   const camPlat = (id, s, ms, ease) => { const p = layout[id]; return setCam(p.px, p.py - 40, s, ms, ease); };
 
+  /* panoreringen följer tidslinjen: bara upp/ner, från första till sista punkten.
+     Vid drag går det att dra lite förbi kanten (gummiband), sedan fjädrar kameran tillbaka. */
+  function panBounds() {
+    const ys = Object.values(layout).map((p) => p.y + 30);
+    return { x: hasSide() ? SIDE_X * 0.5 : 0, y0: ys.length ? Math.min(...ys) : 0, y1: ys.length ? Math.max(...ys) : 0 };
+  }
+  const clampY = (y, b = panBounds()) => Math.max(b.y0, Math.min(b.y1, y));
+  function rubberY(y, b = panBounds()) {
+    const c = clampY(y, b), over = y - c;
+    if (!over) return y;
+    const lim = 140; // max överdrag i världen
+    return c + Math.sign(over) * lim * (1 - Math.exp(-Math.abs(over) / (lim * 1.6)));
+  }
+
   // dra för att panorera
   (function enableDrag() {
     let drag = null;
@@ -331,7 +345,7 @@
       if (e.target.closest('.node')) return;
       if (busy) return;
       const sx = glide.on ? glide.tx : cam.x, sy = glide.on ? glide.ty : cam.y;
-      drag = { x: e.clientX, y: e.clientY, cx: sx, cy: sy, vx: 0, vy: 0, t: performance.now(), px: e.clientX, py: e.clientY };
+      drag = { x: e.clientX, y: e.clientY, cx: sx, cy: clampY(sy), vx: 0, vy: 0, t: performance.now(), px: e.clientX, py: e.clientY };
       el.viewport.setPointerCapture(e.pointerId);
     });
     el.viewport.addEventListener('pointermove', (e) => {
@@ -342,12 +356,13 @@
       drag.vx = drag.vx * 0.6 + ((e.clientX - drag.px) / dt) * 0.4;
       drag.vy = drag.vy * 0.6 + ((e.clientY - drag.py) / dt) * 0.4;
       drag.t = now; drag.px = e.clientX; drag.py = e.clientY;
-      glideTo(drag.cx - (e.clientX - drag.x) / k, drag.cy - (e.clientY - drag.y) / k);
+      glideTo(panBounds().x, rubberY(drag.cy - (e.clientY - drag.y) / k));
     });
     const endDrag = () => {
       if (!drag) return;
       const k = cam.s * baseScale();
-      if (performance.now() - drag.t < 80) glideTo(glide.tx - (drag.vx * 220) / k, glide.ty - (drag.vy * 220) / k);
+      const fling = performance.now() - drag.t < 80 ? (drag.vy * 220) / k : 0;
+      glideTo(panBounds().x, clampY(glide.ty - fling));
       drag = null;
     };
     el.viewport.addEventListener('pointerup', endDrag);
@@ -357,8 +372,8 @@
       e.preventDefault();
       const k = cam.s * baseScale();
       const unit = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? innerHeight : 1;
-      const bx = glide.on ? glide.tx : cam.x, by = glide.on ? glide.ty : cam.y;
-      glideTo(bx + (e.deltaX * unit) / k, by + (e.deltaY * unit) / k);
+      const by = glide.on ? glide.ty : cam.y;
+      glideTo(panBounds().x, clampY(by + (e.deltaY * unit) / k));
     }, { passive: false });
   })();
 
