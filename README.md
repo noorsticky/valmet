@@ -69,7 +69,7 @@ js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Syntetiserade ljud (WebAudio). Kan bytas mot riktiga ljudfiler
 assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm, bil (.mp4) (omkodade, utan ljudspår)
-assets/props/     Renderade ikoner för tidslinjen (klocka, bil, kopp, laptop, hjälm, skrivbord, fika, kalender, larm, hus)
+assets/props/     Renderade ikoner för tidslinjen (klocka, bil, kopp, whiteboard, laptop, hjälm, skrivbord, fika, kalender, mobil, larm, vinka, hus)
 assets/people/    Tomas, Ola och Ulrika (transparenta bilder för spegeln, tidslinjen och HUD)
 assets/img/       Stillbilder ur videorna + Valmet-loggan (valmet-logo.svg och valmet-logo-white.svg med vit text för mörk bakgrund)
 ```

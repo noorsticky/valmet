@@ -147,7 +147,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 07:30 */
     {
-      id: 'n0730', prop: 'tavla', time: '07:30', title: 'Dagligt möte', kind: 'blue', badge: 'A', lane: 'main', critical: true,
+      id: 'n0730', prop: 'assets/props/whiteboard.webp', time: '07:30', title: 'Dagligt möte', kind: 'blue', badge: 'A', lane: 'main', critical: true,
       env: 'mote', place: 'Mötesrummet, linje 3',
       async play(api) {
         const replay = !!api.state.rewound;
@@ -365,7 +365,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 15:30 */
     {
-      id: 'n1530', prop: 'mobil', time: '15:30', title: 'Femton minuter över', kind: 'pink', lane: 'main',
+      id: 'n1530', prop: 'assets/props/mobil.webp', time: '15:30', title: 'Femton minuter över', kind: 'pink', lane: 'main',
       env: 'kontor', place: 'Olas kontor',
       async play(api) {
         api.clock('15:30');
@@ -407,7 +407,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 16:14 */
     {
-      id: 'n1614', prop: (s) => (s.track === 'A' ? 'assets/props/larm.webp' : 'ryggsack'), time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
+      id: 'n1614', prop: (s) => (s.track === 'A' ? 'assets/props/larm.webp' : 'assets/props/vinka.webp'), time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
       title: (s) => (s.track === 'A' ? 'Larmet går' : 'Mötet i korridoren'),
       env: (s) => (s.track === 'A' ? 'larm' : 'korridor'),
       envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
