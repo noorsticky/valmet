@@ -27,6 +27,8 @@
   const PLAT_X = 270;     // plattformens avstånd från linjen
   const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
   const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4', bil: 'assets/video/bil.mp4' };
+  // stillbildsmiljöer (t.ex. platshållare tills en film finns) – byt bilden, eller flytta namnet till VIDEO_ENVS när filmen är klar
+  const IMAGE_ENVS = { kok: 'assets/img/kok.jpg', 'motesrum-kvall': 'assets/img/motesrum-kvall.jpg' };
   const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', bil: 'assets/img/bil.jpg', spegel: 'assets/img/sovrum.jpg' };
 
   /* ------------------------------------------------------------ state */
@@ -117,6 +119,11 @@
     if (host.dataset.base == null) host.dataset.base = host.className.split(' ').filter((c) => c && !c.startsWith('env')).join(' ');
     host.className = `${host.dataset.base} env env--${name} ${variant ? 'env--' + variant : ''}`;
     // 3D-scener (maskinen) renderas med three.js när det inte finns en film; CSS-scenen är reserv utan WebGL
+    if (IMAGE_ENVS[name] && !VIDEO_ENVS[name]) {
+      host.appendChild(Object.assign(h('img', 'env__video'), { src: IMAGE_ENVS[name], alt: '' }));
+      if (variant) host.appendChild(h('div', `env__tone env__tone--${variant}`));
+      return;
+    }
     if (!thumb && !VIDEO_ENVS[name] && window.Scene3D && Scene3D.has(name)) {
       try { host._stop = Scene3D.mount(host, name, variant); return; } catch (e) { console.warn(e); host.innerHTML = ''; }
     }
@@ -455,7 +462,7 @@
     el.fxTint.className = 'fx fx--tint';
     el.eyelids.style.setProperty('--open', 1);
     el.stage.style.filter = '';
-    $$('.ov-clock, .ov-note', el.stage).forEach((o) => o.remove());
+    $$('.ov-clock, .ov-note, .ov-person', el.stage).forEach((o) => o.remove());
     $$('.notif, .sighost', el.scene).forEach((o) => o.remove());
     el.scene.classList.remove('is-cinematic', 'is-shake', 'is-reflect', 'is-dozing');
     $$('video', el.env).forEach((v) => v.pause());
@@ -672,6 +679,15 @@
     unnotify() { $$('.notif', el.scene).forEach((n) => { n.classList.remove('is-on'); setTimeout(() => n.remove(), T(500)); }); },
 
     overlay(kind, value) {
+      // en person (utklippt bild) som står i scenen: { src, x, bottom, h } i procent av scenen
+      if (kind === 'person') {
+        $$('.ov-person', el.stage).forEach((o) => o.remove());
+        if (!value) return;
+        const o = Object.assign(h('img', 'ov-person'), { src: value.src, alt: '' });
+        Object.assign(o.style, { left: value.x + '%', bottom: (value.bottom || 0) + '%', height: (value.h || 70) + '%' });
+        el.stage.appendChild(o);
+        return;
+      }
       if (kind === 'note') {
         let o = $('.ov-note', el.stage);
         if (!o) { o = h('div', 'ov-note'); o.setAttribute('aria-hidden', 'true'); el.stage.appendChild(o); }

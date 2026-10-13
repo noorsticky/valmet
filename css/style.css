@@ -424,6 +424,10 @@ button { font: inherit; color: inherit; }
 .sigtoast svg { flex: none; width: 24px; height: 24px; color: #f2c14e; }
 .sigtoast small { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #f2c14e; margin-bottom: 2px; }
 
+/* person i scenen (Emma) – utklippt bild ovanpå miljön */
+.ov-person { pointer-events: none; position: absolute; transform: translateX(-50%); filter: drop-shadow(0 18px 24px rgba(0,0,0,.35)); animation: personIn .9s var(--ease-out) both; }
+@keyframes personIn { from { opacity: 0; transform: translateX(-50%) translateY(2%); } }
+
 /* lapp på Emmas skärm (11:10) */
 .ov-note { pointer-events: none; position: absolute; left: 73.5%; top: 36%; width: 9%; aspect-ratio: 1; padding: .5%; background: linear-gradient(160deg, #fff3a6, #f6df6b); color: #3a3410;
   font: 700 calc(max(100vw, 177.78vh) * 0.0105)/1.15 var(--hand); transform: rotate(4deg); box-shadow: 0 6px 14px rgba(0,0,0,.35); }

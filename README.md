@@ -87,6 +87,17 @@ noder dagen har och vilket val som är det kritiska (`critical`), var konsekvens
   Skiftrapporten visar hur många man såg.
 - **Tomas** har ingen egen dag än. Han spelar Olas dag med sitt namn.
 
+### Platshållare i Ulrikas dag
+
+De här filerna är platshållare. Byt ut filen med samma namn och storlek så syns den riktiga bilden direkt:
+
+- Ikoner (420×420 px, transparent webp): `assets/props/projektmote.webp` (10:20), `inkorg.webp` (13:30),
+  `motesbord.webp` (14:20), `tom-stol.webp` (15:00), `stangd-laptop.webp` (16:10)
+- Bakgrunder (1920×1080 jpg): `assets/img/kok.jpg` (07:05), `assets/img/motesrum-kvall.jpg` (16:10).
+  När det finns en film: lägg den i `assets/video/` och namnet i `VIDEO_ENVS` i `js/app.js`.
+- Emma (utklippt helfigur, transparent webp, ca 600×1400 px): `assets/people/emma.webp`.
+  Hon står i scenerna 09:05, 15:00 och 16:10.
+
 ### Redigera innehåll
 
 Allt manus finns i `js/story.js`. En scen är en `async play(api)`-funktion:

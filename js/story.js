@@ -601,17 +601,19 @@ const U_SIGNALS = {
   s4: { time: '15:40', text: 'att Emma satt kvar sent igen' },
 };
 // sidohändelsernas repliker beror på vad Ulrika svarade först kl 08:30
+// Emma (platshållare tills en riktig bild finns – byt assets/people/emma.webp)
+const EMMA = 'assets/people/emma.webp';
 const uSide = (s, vilosa, nasta) => (s.choices.A === 'nasta' ? nasta : vilosa);
 
 const ULRIKA_NODES = [
   /* ------------------------------------------------------------ 07:05 */
   {
     id: 'u0705', prop: 'assets/props/mobil.webp', time: '07:05', title: 'Ett sent mejl', kind: 'film', lane: 'main',
-    env: 'bil', place: 'På väg till jobbet', cinematic: true,
+    env: 'kok', place: 'Köket', cinematic: true,
     async play(api) {
       api.clock('07:05');
-      api.loop('car');
-      await api.title('07:05', 'På väg till jobbet');
+      api.loop('room');
+      await api.title('07:05', 'Köket');
       await api.say('…och nu blir det lite musik för dig som är på väg till jobbet.', { who: 'Radion', small: true });
       await api.wait(400);
       api.notify({
@@ -624,7 +626,7 @@ const ULRIKA_NODES = [
       await api.say('Den nya leveransen får vi ta på teammötet halv nio. Det löser sig.', { who: 'Ulrika', inner: true });
       await api.wait(1800);
       api.unnotify();
-      api.stopLoop('car');
+      api.stopLoop('room');
     },
   },
 
@@ -719,6 +721,7 @@ const ULRIKA_NODES = [
     async play(api) {
       api.clock('09:05');
       await api.title('09:05', 'Korridoren');
+      api.overlay('person', { src: EMMA, x: 62, bottom: 4, h: 74 });
       await api.say('Du är redan sen till ledningsgruppen.', { narrator: true });
       await api.say('Ulrika! Har du två minuter? Det gäller leveransen…', { who: 'Emma' });
       const pick = await api.choose({
@@ -748,7 +751,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 10:20 */
   {
-    id: 'u1020', prop: 'assets/props/kalender.webp', time: '10:20', title: 'Projektmötet', kind: 'film', lane: 'main',
+    id: 'u1020', prop: 'assets/props/projektmote.webp', time: '10:20', title: 'Projektmötet', kind: 'film', lane: 'main',
     env: 'mote', envVariant: 'dark', place: 'Projektrummet', cinematic: true,
     async play(api) {
       api.clock('10:20');
@@ -824,7 +827,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 13:30 */
   {
-    id: 'u1330', prop: 'assets/props/laptop.webp', time: '13:30', title: 'Inkorgen', kind: 'blue', badge: 'C', lane: 'main',
+    id: 'u1330', prop: 'assets/props/inkorg.webp', time: '13:30', title: 'Inkorgen', kind: 'blue', badge: 'C', lane: 'main',
     env: 'kontor', place: 'Ulrikas kontor',
     async play(api) {
       api.clock('13:30');
@@ -853,7 +856,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 14:20 (A) */
   {
-    id: 'u1420', prop: 'assets/props/whiteboard.webp', time: '14:20', title: 'Risken som inte lyfts', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+    id: 'u1420', prop: 'assets/props/motesbord.webp', time: '14:20', title: 'Risken som inte lyfts', kind: 'side', badge: 'A', lane: 'side', track: 'A',
     env: 'mote', envVariant: 'dim', place: 'Mötesrummet', cinematic: true,
     async play(api) {
       api.clock('14:20');
@@ -870,7 +873,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 15:00 */
   {
-    id: 'u1500', prop: 'assets/props/kalender.webp', time: '15:00', title: 'Avstämningen', kind: 'film', lane: 'main',
+    id: 'u1500', prop: 'assets/props/tom-stol.webp', time: '15:00', title: 'Avstämningen', kind: 'film', lane: 'main',
     env: 'mote', place: 'Mötesrummet', cinematic: true,
     async play(api) {
       api.clock('15:00');
@@ -878,6 +881,7 @@ const ULRIKA_NODES = [
       await api.title('15:00', 'Avstämningen');
       const b = api.state.choices.B;
       if (b === 'boka') {
+        api.overlay('person', { src: EMMA, x: 70, bottom: 0, h: 72 });
         await api.say('Tack för att du tog dig tid.', { who: 'Emma' });
         await api.say('Jag har sagt ja till lite för mycket. Jag vet inte riktigt hur det blev så.', { who: 'Emma' });
         await api.say('Bra att du säger det. Vi tittar på det tillsammans.', { who: 'Ulrika' });
@@ -936,17 +940,18 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 16:10 */
   {
-    id: 'u1610', prop: (s) => (s.track === 'A' ? 'assets/props/laptop.webp' : 'assets/props/vinka.webp'), time: '16:10', kind: 'blue', lane: 'main',
+    id: 'u1610', prop: (s) => (s.track === 'A' ? 'assets/props/stangd-laptop.webp' : 'assets/props/vinka.webp'), time: '16:10', kind: 'blue', lane: 'main',
     badge: (s) => (s.track === 'A' ? 'A' : 'A2'),
     title: (s) => (s.track === 'A' ? 'Emma i mötesrummet' : 'Emma på väg hem'),
-    env: (s) => (s.track === 'A' ? 'mote' : 'korridor'),
-    envVariant: (s) => (s.track === 'A' ? 'dim' : 'warm'),
+    env: (s) => (s.track === 'A' ? 'motesrum-kvall' : 'korridor'),
+    envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
     place: (s) => (s.track === 'A' ? 'Mötesrummet' : 'Korridoren'),
     async play(api) {
       const s = api.state;
       api.clock('16:10');
       api.loop('room');
       if (s.track === 'A') {
+        api.overlay('person', { src: EMMA, x: 80, bottom: 2, h: 70 });
         await api.title('16:10', 'Mötesrummet');
         await api.say('Ulrika går förbi ett nästan tomt mötesrum. Emma sitter ensam, med datorn stängd.', { narrator: true });
         await api.say('Hur är det?', { who: 'Ulrika' });
@@ -983,6 +988,7 @@ const ULRIKA_NODES = [
         await api.bigQuestion('Vad hade hänt om frågan på morgonen fått ett annat svar?');
         s.accident = true;
       } else {
+        api.overlay('person', { src: EMMA, x: 60, bottom: 4, h: 74 });
         await api.title('16:10', 'Korridoren');
         if (s.choices.A === 'vidare') {
           await api.say('Tack för att du tog frågan vidare. Skönt att det inte bara hänger på oss.', { who: 'Emma' });
