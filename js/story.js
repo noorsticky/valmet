@@ -47,7 +47,7 @@ const STORY = {
   nodes: [
     /* ------------------------------------------------------------ 06:00 */
     {
-      id: 'n0600', prop: 'klocka', time: '06:00', title: 'Snooze or lose', kind: 'pink', lane: 'main', eyesClosed: true,
+      id: 'n0600', prop: 'assets/props/klocka.webp', time: '06:00', title: 'Snooze or lose', kind: 'pink', lane: 'main', eyesClosed: true,
       env: 'sovrum', place: 'Sovrummet',
       async play(api) {
         api.clock('06:00');
@@ -111,7 +111,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 06:50 */
     {
-      id: 'n0650', prop: 'bil', time: '06:50', title: 'Bilfärd till jobbet', kind: 'film', lane: 'main',
+      id: 'n0650', prop: 'assets/props/bil.webp', time: '06:50', title: 'Bilfärd till jobbet', kind: 'film', lane: 'main',
       env: 'bil', place: 'På väg till jobbet', cinematic: true,
       async play(api) {
         api.clock('06:50');
@@ -127,7 +127,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 07:15 */
     {
-      id: 'n0715', prop: 'kopp', time: '07:15', title: 'Svart kaffe eller havrebös', kind: 'pink', lane: 'main',
+      id: 'n0715', prop: 'assets/props/kopp.webp', time: '07:15', title: 'Svart kaffe eller havrebös', kind: 'pink', lane: 'main',
       env: 'fika', place: 'Personalrummet',
       async play(api) {
         api.clock('07:15');
@@ -350,7 +350,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 14:30 */
     {
-      id: 'n1430', prop: 'kalender', time: '14:30', title: 'Dubbelbokad', kind: 'film', lane: 'main',
+      id: 'n1430', prop: 'assets/props/kalender.webp', time: '14:30', title: 'Dubbelbokad', kind: 'film', lane: 'main',
       env: 'kontor', place: 'Olas kontor', cinematic: true,
       async play(api) {
         api.clock('14:30');
@@ -407,7 +407,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 16:14 */
     {
-      id: 'n1614', prop: (s) => (s.track === 'A' ? 'larm' : 'ryggsack'), time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
+      id: 'n1614', prop: (s) => (s.track === 'A' ? 'assets/props/larm.webp' : 'ryggsack'), time: '16:14', kind: 'blue', badge: (s) => (s.track === 'A' ? 'A' : 'A2'), lane: 'main',
       title: (s) => (s.track === 'A' ? 'Larmet går' : 'Mötet i korridoren'),
       env: (s) => (s.track === 'A' ? 'larm' : 'korridor'),
       envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
