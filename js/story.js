@@ -239,7 +239,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 10:15 */
     {
-      id: 'n1015', prop: 'skarm', time: '10:15', title: 'Produktionsmöte chefer', kind: 'film', lane: 'main',
+      id: 'n1015', prop: 'assets/props/laptop.webp', time: '10:15', title: 'Produktionsmöte chefer', kind: 'film', lane: 'main',
       env: 'mote', envVariant: 'dark', place: 'Ledningsrummet', cinematic: true,
       async play(api) {
         api.clock('10:15');
@@ -252,7 +252,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 11:15 (A) */
     {
-      id: 'n1115', prop: 'maskin', time: '11:15', title: 'Vid maskinen', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+      id: 'n1115', prop: 'assets/props/hjalm.webp', time: '11:15', title: 'Vid maskinen', kind: 'side', badge: 'A', lane: 'side', track: 'A',
       env: 'fabrik', place: 'Pressen, linje 3', cinematic: true,
       async play(api) {
         api.clock('11:15');
@@ -316,7 +316,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 13:24 */
     {
-      id: 'n1324', prop: 'laptop', time: '13:24', title: 'Vid datorn', kind: 'blue', badge: 'C', lane: 'main',
+      id: 'n1324', prop: 'assets/props/skrivbord.webp', time: '13:24', title: 'Vid datorn', kind: 'blue', badge: 'C', lane: 'main',
       env: 'kontor', place: 'Olas kontor',
       async play(api) {
         api.clock('13:24');
@@ -335,7 +335,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 14:02 (A) */
     {
-      id: 'n1402', prop: 'handske', time: '14:02', title: 'Vid fikat', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+      id: 'n1402', prop: 'assets/props/fika.webp', time: '14:02', title: 'Vid fikat', kind: 'side', badge: 'A', lane: 'side', track: 'A',
       env: 'fika', place: 'Fikarummet', cinematic: true,
       async play(api) {
         api.clock('14:02');
@@ -444,7 +444,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ Summering */
     {
-      id: 'nend', prop: 'checklista', time: 'Dagens slut', title: 'På väg hem', kind: 'green', lane: 'main',
+      id: 'nend', prop: 'assets/props/hus.webp', time: 'Dagens slut', title: 'På väg hem', kind: 'green', lane: 'main',
       env: 'bil', envVariant: 'dusk', place: 'På väg hem',
       async play(api) {
         const s = api.state;

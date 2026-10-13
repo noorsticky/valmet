@@ -332,9 +332,11 @@
   })();
 
   function banner(html, cls = '') {
+    // när bannern döljs behålls texten tills den tonat ut (annars syns en tom ruta)
+    if (!html) { el.banner.classList.remove('is-on'); return; }
     el.banner.className = `tl-banner ${cls}`;
-    el.banner.innerHTML = html || '';
-    el.banner.classList.toggle('is-on', !!html);
+    el.banner.innerHTML = html;
+    el.banner.classList.add('is-on');
   }
 
   /* ===================================================================
