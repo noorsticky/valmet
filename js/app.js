@@ -251,15 +251,17 @@
 
   /* bakgrundens tid på dygnet: 0 = 06:00 (gryning), 0.5 = mitt på dagen, 1 = 17:00 (skymning) */
   let skyT = 0;
+  const skyEl = $('.tl-sky', el.timeline);
   function skyAt(y) {
     const ys = Object.values(layout).map((p) => p.y);
     const max = ys.length ? Math.max(...ys) : 1;
     const t = Math.max(0, Math.min(1, y / (max || 1)));
     skyT = t;
     const dawn = Math.max(0, 1 - t * 2.2), dusk = Math.max(0, (t - 0.55) * 2.2), day = Math.max(0, 1 - dawn - dusk);
-    el.timeline.style.setProperty('--dawn', dawn.toFixed(3));
-    el.timeline.style.setProperty('--day', Math.min(1, day).toFixed(3));
-    el.timeline.style.setProperty('--dusk', Math.min(1, dusk).toFixed(3));
+    // sätts på himlen själv (inte hela tidslinjen) så att bara den räknas om när kameran rör sig
+    skyEl.style.setProperty('--dawn', dawn.toFixed(3));
+    skyEl.style.setProperty('--day', Math.min(1, day).toFixed(3));
+    skyEl.style.setProperty('--dusk', Math.min(1, dusk).toFixed(3));
   }
   // svävande ljuspartiklar med lätt parallax mot kameran
   (function motes() {
@@ -289,15 +291,36 @@
     requestAnimationFrame(tick);
   })();
 
-  function setCam(x, y, s, ms = 900, ease = 'cubic-bezier(.65,0,.25,1)') {
+  let camTweening = false;
+  const glide = { on: false, tx: 0, ty: 0, last: 0 };
+  function setCam(x, y, s, ms = 900, ease = 'cubic-bezier(.65,0,.25,1)', fromGlide = false) {
+    if (!fromGlide) glide.on = false; // en styrd kameraåkning tar över från fri panorering
     Object.assign(cam, { x, y, s });
     const { cx, cy } = focusPoint();
     const k = s * baseScale();
-    el.world.style.transition = ms ? `transform ${T(ms)}ms ${ease}` : 'none';
-    el.world.style.transform = `translate(${cx - x * k}px, ${cy - y * k}px) scale(${k})`;
+    if (ms) { el.world.style.transition = `transform ${T(ms)}ms ${ease}`; camTweening = true; }
+    else if (camTweening) { el.world.style.transition = 'none'; camTweening = false; }
+    el.world.style.transform = `translate3d(${cx - x * k}px, ${cy - y * k}px, 0) scale(${k})`;
     skyAt(y);
-    if (!ms) void el.world.offsetWidth;
+    // tvinga omritning bara när en pågående övergång ska avbrytas (inte varje bildruta)
+    if (!ms && !fromGlide) void el.world.offsetWidth;
     return sleep(ms ? T(ms) : 0);
+  }
+  /* mjuk panorering: hjul och drag sätter ett mål, kameran glider dit bildruta för bildruta */
+  function glideTo(x, y) {
+    glide.tx = x; glide.ty = y;
+    if (glide.on) return;
+    glide.on = true; glide.last = performance.now();
+    requestAnimationFrame(function step(now) {
+      if (!glide.on) return;
+      const dt = Math.min(0.05, (now - glide.last) / 1000); glide.last = now;
+      const f = 1 - Math.exp(-dt * (REDUCED ? 40 : 11));
+      const nx = cam.x + (glide.tx - cam.x) * f, ny = cam.y + (glide.ty - cam.y) * f;
+      const done = Math.abs(glide.tx - nx) < 0.3 && Math.abs(glide.ty - ny) < 0.3;
+      setCam(done ? glide.tx : nx, done ? glide.ty : ny, cam.s, 0, undefined, true);
+      if (done) { glide.on = false; return; }
+      requestAnimationFrame(step);
+    });
   }
   // kameran: följ punkten lodrätt, håll linjen (och ev. sidospår) i bild
   const camTo = (id, s = 1, ms, ease) => {
@@ -312,22 +335,36 @@
     let drag = null;
     el.viewport.addEventListener('pointerdown', (e) => {
       if (e.target.closest('.node')) return;
-      drag = { x: e.clientX, y: e.clientY, cx: cam.x, cy: cam.y, moved: false };
+      if (busy) return;
+      const sx = glide.on ? glide.tx : cam.x, sy = glide.on ? glide.ty : cam.y;
+      drag = { x: e.clientX, y: e.clientY, cx: sx, cy: sy, vx: 0, vy: 0, t: performance.now(), px: e.clientX, py: e.clientY };
       el.viewport.setPointerCapture(e.pointerId);
     });
     el.viewport.addEventListener('pointermove', (e) => {
       if (!drag) return;
       const k = cam.s * baseScale();
-      const dx = (e.clientX - drag.x) / k, dy = (e.clientY - drag.y) / k;
-      if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-      setCam(drag.cx - dx, drag.cy - dy, cam.s, 0);
+      const now = performance.now(), dt = Math.max(1, now - drag.t);
+      // fart (px/ms) med lätt utjämning, används för att låta kameran rulla ut när man släpper
+      drag.vx = drag.vx * 0.6 + ((e.clientX - drag.px) / dt) * 0.4;
+      drag.vy = drag.vy * 0.6 + ((e.clientY - drag.py) / dt) * 0.4;
+      drag.t = now; drag.px = e.clientX; drag.py = e.clientY;
+      glideTo(drag.cx - (e.clientX - drag.x) / k, drag.cy - (e.clientY - drag.y) / k);
     });
-    el.viewport.addEventListener('pointerup', () => { drag = null; });
+    const endDrag = () => {
+      if (!drag) return;
+      const k = cam.s * baseScale();
+      if (performance.now() - drag.t < 80) glideTo(glide.tx - (drag.vx * 220) / k, glide.ty - (drag.vy * 220) / k);
+      drag = null;
+    };
+    el.viewport.addEventListener('pointerup', endDrag);
+    el.viewport.addEventListener('pointercancel', endDrag);
     el.viewport.addEventListener('wheel', (e) => {
       if (busy) return;
       e.preventDefault();
       const k = cam.s * baseScale();
-      setCam(cam.x + e.deltaX / k, cam.y + e.deltaY / k, cam.s, 0);
+      const unit = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? innerHeight : 1;
+      const bx = glide.on ? glide.tx : cam.x, by = glide.on ? glide.ty : cam.y;
+      glideTo(bx + (e.deltaX * unit) / k, by + (e.deltaY * unit) / k);
     }, { passive: false });
   })();
 
@@ -816,13 +853,24 @@
 
         /* spegeln lutar lite mot pekaren och reflexen följer med */
         const frameEl = $('.mirror__frame', p);
-        if (!REDUCED) p.addEventListener('pointermove', (e) => {
-          const r = frameEl.getBoundingClientRect();
-          const dx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth / 2)));
-          const dy = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight / 2)));
-          frameEl.style.setProperty('--rx', `${-dy * 5}deg`); frameEl.style.setProperty('--ry', `${dx * 7}deg`);
-          frameEl.style.setProperty('--sx', `${dx * 30}%`);
-        });
+        if (!REDUCED) {
+          // målet sätts av pekaren, lutningen glider dit en gång per bildruta (ingen CSS-övergång som startas om)
+          const tilt = { x: 0, y: 0, tx: 0, ty: 0, raf: 0, last: 0 };
+          const step = (now) => {
+            const dt = Math.min(0.05, (now - tilt.last) / 1000 || 0.016); tilt.last = now;
+            const f = 1 - Math.exp(-dt * 7);
+            tilt.x += (tilt.tx - tilt.x) * f; tilt.y += (tilt.ty - tilt.y) * f;
+            frameEl.style.setProperty('--rx', `${(-tilt.y * 5).toFixed(2)}deg`); frameEl.style.setProperty('--ry', `${(tilt.x * 7).toFixed(2)}deg`);
+            frameEl.style.setProperty('--sx', `${(tilt.x * 30).toFixed(2)}%`);
+            tilt.raf = Math.abs(tilt.tx - tilt.x) + Math.abs(tilt.ty - tilt.y) > 0.002 && p.isConnected ? requestAnimationFrame(step) : 0;
+          };
+          p.addEventListener('pointermove', (e) => {
+            const r = frameEl.getBoundingClientRect();
+            tilt.tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth / 2)));
+            tilt.ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight / 2)));
+            if (!tilt.raf) { tilt.last = performance.now(); tilt.raf = requestAnimationFrame(step); }
+          });
+        }
         $('.mirror__nav--prev', p).addEventListener('click', () => go(cur - 1));
         $('.mirror__nav--next', p).addEventListener('click', () => go(cur + 1));
         tabs.forEach((t) => t.addEventListener('click', () => go(+t.dataset.i)));
