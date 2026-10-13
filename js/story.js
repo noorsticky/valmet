@@ -209,7 +209,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 08:03 */
     {
-      id: 'n0803', prop: 'prat', time: '08:03', title: 'Korridoren', kind: 'blue', badge: 'B', lane: 'main',
+      id: 'n0803', prop: 'assets/props/prat.webp', time: '08:03', title: 'Korridoren', kind: 'blue', badge: 'B', lane: 'main',
       env: 'korridor', place: 'Korridoren',
       async play(api) {
         api.clock('08:03');
@@ -266,7 +266,7 @@ const STORY = {
 
     /* ------------------------------------------------------------ 12:00 */
     {
-      id: 'n1200', prop: 'lada', time: '12:00', title: 'Vad är det för lunch i lådan?', kind: 'pink', lane: 'main',
+      id: 'n1200', prop: 'assets/props/mikro.webp', time: '12:00', title: 'Vad är det för lunch i lådan?', kind: 'pink', lane: 'main',
       env: 'lunch', place: 'Lunchrummet',
       async play(api) {
         api.clock('12:00');
