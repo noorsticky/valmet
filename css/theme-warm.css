@@ -75,9 +75,13 @@
 .tl-pulse { background: #fff3dd; box-shadow: 0 0 20px 8px rgba(var(--sun-rgb),.85), 0 0 60px 24px rgba(var(--sun-rgb),.4); }
 
 /* ------------------------------------------------------------ punkterna */
-.node__dot { background: #8d867b; box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px rgba(244,236,222,.28); }
-.node.is-played .node__dot { background: #d6cec2; }
-.node.is-next .node__dot, .node.is-culprit .node__dot { background: var(--cream); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px var(--cream), 0 0 22px 4px rgba(var(--sun-rgb),.45); }
+/* punkten ritas som en form: fyllning (innerst), mörk mellanring och en tät ljus kant – allt ogenomskinligt,
+   så att linjen bakom aldrig skymtar igenom och ringarna alltid ligger exakt runt varandra */
+.node__dot { --fill: #8d867b; --ring: #57524a; left: -17px; top: -17px; width: 34px; height: 34px; padding: 3px;
+  border: 2px solid var(--ring); background: linear-gradient(var(--fill), var(--fill)) content-box, var(--bg); box-shadow: none; }
+.node.is-played .node__dot { --fill: #d6cec2; --ring: #8a8378; }
+.node.is-next .node__dot, .node.is-culprit .node__dot { --fill: var(--cream); --ring: var(--cream); box-shadow: 0 0 22px 4px rgba(var(--sun-rgb),.45); }
+.node.is-played .node__dot, .node.is-next .node__dot, .node.is-culprit .node__dot { background: linear-gradient(var(--fill), var(--fill)) content-box, var(--bg); }
 .node__arm { background: rgba(244,236,222,.22); }
 
 /* tiden som ren typografi i en mjuk kapsel i stället för en grå låda */
