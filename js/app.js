@@ -275,11 +275,16 @@
     const g = $('#branch', el.lines);
     if (!side.length) { g.innerHTML = ''; return; }
     const s0 = layout[DAY.critical], e0 = layout[DAY.consequence];
+    const f = layout[side[0].id], l = layout[side[side.length - 1].id];
     const X = SIDE_X;
-    // grenen viker av i luckan mellan två rader: rakt ner en bit under punkten, en mjuk S-kurva ut till
-    // sidospåret, rakt ner förbi sidohändelserna och tillbaka in på samma sätt strax ovanför konsekvensen
-    const a0 = s0.y + ROW * 0.2, a1 = s0.y + ROW * 0.9, b0 = e0.y - ROW * 0.9, b1 = e0.y - ROW * 0.2, k = ROW * 0.42;
-    const d = `M 0 ${s0.y} L 0 ${a0} C 0 ${a0 + k}, ${X} ${a1 - k}, ${X} ${a1} L ${X} ${b0} C ${X} ${b0 + k}, 0 ${b1 - k}, 0 ${b1} L 0 ${e0.y}`;
+    // grenen är en lång, rundad S-kurva: den använder hela utrymmet fram till första sidohändelsen
+    // (och från den sista tillbaka till konsekvensen), med lodräta handtag så att böjarna blir mjuka.
+    // Punkterna emellan ligger till vänster, så kurvan går fri från ikoner och etiketter.
+    const spanOut = Math.max(ROW * 0.85, Math.min(ROW * 1.9, f.y - s0.y - ROW * 0.3));
+    const spanIn = Math.max(ROW * 0.85, Math.min(ROW * 1.9, e0.y - l.y - ROW * 0.3));
+    const a0 = s0.y + ROW * 0.12, a1 = a0 + spanOut, b1 = e0.y - ROW * 0.12, b0 = b1 - spanIn;
+    const ko = spanOut * 0.55, ki = spanIn * 0.55;
+    const d = `M 0 ${s0.y} L 0 ${a0} C 0 ${a0 + ko}, ${X} ${a1 - ko}, ${X} ${a1} L ${X} ${b0} C ${X} ${b0 + ki}, 0 ${b1 - ki}, 0 ${b1} L 0 ${e0.y}`;
     let bp = $('#branchPath', g);
     if (bp && bp.getAttribute('d') === d) return;
     g.innerHTML = `<path class="branch" id="branchPath" d="${d}"/>`;
@@ -401,9 +406,11 @@
     const p0 = layout[n.id];
     const S0 = 1.3;
     await setCam(p0.px, p0.py, S0, 800, 'cubic-bezier(.45,0,.2,1)');
-    const disc = $(`.node[data-id="${n.id}"] .node__disc`);
-    const r = disc.getBoundingClientRect();
-    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
+    await setCam(p0.px, p0.py, S0, 0); // landa exakt (avbryt en ev. halvfärdig övergång)
+    // skivans läge räknas ut i stället för att mätas: den ligger mitt i bild efter landningen
+    const kk = S0 * baseScale();
+    const { cx, cy } = focusPoint();
+    const rx = 125 * kk, ry = 58 * kk;
     const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
     const S1 = S0 * Math.max(4, (R * 1.15) / rx); // så djupt att skivan fyller skärmen
     await setCam(p0.px, p0.py, S0 * 0.94, T(260), 'cubic-bezier(.2,.7,.3,1)');
@@ -422,6 +429,7 @@
     const dive = 'cubic-bezier(.55,0,.75,.35)';
     const k = S1 / (S0 * 0.94);
     setCam(p0.px, p0.py, S1, ms / (REDUCED ? 0.35 : 1), dive);
+    el.sceneWorld.style.transformOrigin = `${cx}px ${cy}px`; // scenen växer ut ur skivan, inte ur skärmens mitt
     const anims = [
       el.scene.animate([
         { clipPath: `ellipse(${rx * 0.94}px ${ry * 0.94}px at ${cx}px ${cy}px)` },
@@ -436,6 +444,7 @@
     el.scene.style.clipPath = 'none';
     await sleep(T(160));
     anims.forEach((a) => a.cancel());
+    el.sceneWorld.style.transformOrigin = '';
     $$('.node.is-diving').forEach((x) => x.classList.remove('is-diving'));
     show(el.timeline, false);
     busy = false;
@@ -453,8 +462,10 @@
     const p0 = layout[n.id];
     const S0 = 1.3;
     await setCam(p0.px, p0.py, S0, 0);
-    const r = $(`.node[data-id="${n.id}"] .node__disc`).getBoundingClientRect();
-    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
+    const kk = S0 * baseScale();
+    const { cx, cy } = focusPoint();
+    const rx = 125 * kk, ry = 58 * kk;
+    el.sceneWorld.style.transformOrigin = `${cx}px ${cy}px`;
     const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
     const S1 = S0 * Math.max(4, (R * 1.15) / rx);
     await setCam(p0.px, p0.py, S1, 0);
@@ -474,6 +485,7 @@
     show(el.scene, false);
     anims.forEach((a) => a.cancel());
     el.scene.style.clipPath = '';
+    el.sceneWorld.style.transformOrigin = '';
     cleanupScene();
     current = null;
     busy = false;
