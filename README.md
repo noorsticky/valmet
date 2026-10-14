@@ -96,7 +96,7 @@ De här filerna är platshållare. Byt ut filen med samma namn och storlek så s
 - Bakgrunder (1920×1080 jpg): `assets/img/kok.jpg` (07:05), `assets/img/motesrum-kvall.jpg` (16:10).
   När det finns en film: lägg den i `assets/video/` och namnet i `VIDEO_ENVS` i `js/app.js`.
 - Emma (utklippt helfigur, transparent webp, ca 600×1400 px): `assets/people/emma.webp`.
-  Hon står i scenerna 09:05, 15:00 och 16:10.
+  Hon står i scenerna 09:05 och 16:10 (efter rätt val).
 
 ### Redigera innehåll
 
@@ -149,6 +149,6 @@ ritade i CSS som platshållare. När en riktig film finns:
 - `?at=n1324` startar direkt vid en viss punkt. Tidigare punkter räknas som spelade.
 - `?at=n1614&a=lugnt` startar vid olyckan (`a=skylt` ger den lyckliga versionen).
 - `?p=ulrika&at=u1330&a=vilosa&b=sen` startar i Ulrikas dag. `a` är svaret 08:30
-  (`vilosa`, `nasta`, `flytta`, `vidare`) och `b` är valet 09:05 (`stanna`, `boka`, `sen`).
+  (`vilosa`, `nasta`, `flytta`, `vidare`) och `b` är valet 09:05 (`stanna`, `sen`).
 - På tangentbordet väljer siffrorna 1–4 alternativ, och mellanslag går vidare
   i repliker.

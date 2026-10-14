@@ -728,7 +728,6 @@ const ULRIKA_NODES = [
         prompt: 'Vad gör Ulrika?',
         options: [
           { id: 'stanna', label: 'Stannar', sub: 'Två minuter går väl' },
-          { id: 'boka', label: 'Bokar en tid', sub: 'Kl 15:00 i dag' },
           { id: 'sen', label: '”Vi tar det sen!”', sub: 'Skyndar vidare' },
         ],
         kind: 'key', badge: 'B',
@@ -738,9 +737,6 @@ const ULRIKA_NODES = [
         await api.say('Klart, två minuter.', { who: 'Ulrika' });
         await api.say('Det är bara… det är mycket nu.', { who: 'Emma' });
         await api.say('Mer hinner hon inte säga innan Ulrikas telefon plingar. Mötet har börjat.', { narrator: true });
-      } else if (pick === 'boka') {
-        await api.say('Jag är sen nu. Kan vi ses 15:00? Jag bokar in det.', { who: 'Ulrika' });
-        await api.say('Ja. Tack, det vore bra.', { who: 'Emma' });
       } else {
         await api.say('Vi tar det sen!', { who: 'Ulrika' });
         await api.say('…okej.', { who: 'Emma', small: true });
@@ -880,24 +876,15 @@ const ULRIKA_NODES = [
       api.loop('room');
       await api.title('15:00', 'Avstämningen');
       const b = api.state.choices.B;
-      if (b === 'boka') {
-        api.overlay('person', { src: EMMA, x: 70, bottom: 0, h: 72 });
-        await api.say('Tack för att du tog dig tid.', { who: 'Emma' });
-        await api.say('Jag har sagt ja till lite för mycket. Jag vet inte riktigt hur det blev så.', { who: 'Emma' });
-        await api.say('Bra att du säger det. Vi tittar på det tillsammans.', { who: 'Ulrika' });
-        await api.say('Skönt att få säga det.', { who: 'Emma' });
-        await api.say('Frågan från i morse finns kvar, men nu vet Ulrika mer.', { narrator: true });
-      } else {
-        api.signal({ id: 's3', x: 73, y: 51, w: 14, h: 12, line: 'Emma brukar aldrig missa en avstämning.' });
-        await api.say('Avstämningen börjar. Emmas stol står tom.', { narrator: true });
-        if (b === 'stanna') {
-          api.notify({ app: 'Chatt', from: 'Emma', stamp: '15:02', text: 'Förlåt, jag missade avstämningen. Sitter fast med leveransen.' });
-          await api.wait(1500);
-        }
-        await api.say('Då kör vi utan Emma i dag.', { who: 'Ulrika' });
-        await api.wait(2200);
-        api.unnotify();
+      api.signal({ id: 's3', x: 73, y: 51, w: 14, h: 12, line: 'Emma brukar aldrig missa en avstämning.' });
+      await api.say('Avstämningen börjar. Emmas stol står tom.', { narrator: true });
+      if (b === 'stanna') {
+        api.notify({ app: 'Chatt', from: 'Emma', stamp: '15:02', text: 'Förlåt, jag missade avstämningen. Sitter fast med leveransen.' });
+        await api.wait(1500);
       }
+      await api.say('Då kör vi utan Emma i dag.', { who: 'Ulrika' });
+      await api.wait(2200);
+      api.unnotify();
       api.stopLoop('room');
     },
   },
@@ -942,7 +929,7 @@ const ULRIKA_NODES = [
   {
     id: 'u1610', prop: (s) => (s.track === 'A' ? 'assets/props/stangd-laptop.webp' : 'assets/props/vinka.webp'), time: '16:10', kind: 'blue', lane: 'main',
     badge: (s) => (s.track === 'A' ? 'A' : 'A2'),
-    title: (s) => (s.track === 'A' ? 'Emma i mötesrummet' : 'Emma på väg hem'),
+    title: (s) => (s.track === 'A' ? 'Emma har åkt hem' : 'Emma på väg hem'),
     env: (s) => (s.track === 'A' ? 'motesrum-kvall' : 'korridor'),
     envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
     place: (s) => (s.track === 'A' ? 'Mötesrummet' : 'Korridoren'),
@@ -951,40 +938,47 @@ const ULRIKA_NODES = [
       api.clock('16:10');
       api.loop('room');
       if (s.track === 'A') {
-        api.overlay('person', { src: EMMA, x: 80, bottom: 2, h: 70 });
         await api.title('16:10', 'Mötesrummet');
-        await api.say('Ulrika går förbi ett nästan tomt mötesrum. Emma sitter ensam, med datorn stängd.', { narrator: true });
-        await api.say('Hur är det?', { who: 'Ulrika' });
-        await api.say('Jag vet faktiskt inte. Jag har försökt få ihop allt, men jag vet inte längre vad som är viktigast.', { who: 'Emma' });
-        if ((s.choices.C || [])[0] === 'emma') await api.say('Ditt svar i inkorgen hjälpte. Men det är för mycket ändå.', { who: 'Emma' });
+        await api.say('Ulrika letar efter Emma inför i morgon. Mötesrummet är tomt. Emmas dator står kvar, stängd.', { narrator: true });
+        await api.say('Emma har åkt hem. Hon fick hjärtklappning och kunde inte andas ordentligt.', { who: 'Linn' });
+        await api.say('Hon sa att hon inte vet hur hon ska få ihop det här längre.', { who: 'Linn' });
+        api.sfx('heartbeat');
+        await api.say('Ulrika ringer Emma.', { narrator: true });
+        await api.say('Förlåt. Jag har försökt få ihop allt, men jag vet inte längre vad som är viktigast.', { who: 'Emma, i telefon' });
+        if ((s.choices.C || [])[0] === 'emma') await api.say('Ditt svar i inkorgen hjälpte. Men det var för mycket ändå.', { who: 'Emma, i telefon' });
         await api.say('Varför sa du inget?', { who: 'Ulrika' });
         await api.say(s.choices.A === 'nasta'
           ? 'Jag försökte ju. Men jag tänkte att det fick vänta till nästa vecka.'
-          : 'Jag försökte ju. Men jag tänkte att du hade sagt att vi skulle lösa det.', { who: 'Emma' });
+          : 'Jag försökte ju. Men jag tänkte att du hade sagt att vi skulle lösa det.', { who: 'Emma, i telefon' });
         const meet = await api.choose({
-          prompt: 'Hur möter Ulrika Emma?',
+          prompt: 'Vad säger Ulrika till Emma?',
           options: [
-            { id: 'lyssna', label: 'Lyssnar först' },
-            { id: 'forslag', label: 'Ger förslag direkt' },
-            { id: 'imorgon', label: 'Föreslår att de tar det i morgon' },
+            { id: 'lyssna', label: 'Frågar hur hon mår', sub: 'Och lyssnar' },
+            { id: 'forslag', label: 'Lovar att lösa leveransen', sub: '”Tänk inte på det nu”' },
+            { id: 'vila', label: 'Säger att hon ska vila', sub: 'Och höra av sig i morgon' },
           ],
           kind: 'key',
         });
         s.meet = meet;
         if (meet === 'lyssna') {
-          await api.say('Ulrika drar fram en stol och sätter sig.', { narrator: true });
-          await api.say('Det är skönt att någon frågar.', { who: 'Emma' });
+          await api.say('Hur mår du nu, Emma?', { who: 'Ulrika' });
+          await api.say('Lite bättre. Det är skönt att du ringer.', { who: 'Emma, i telefon' });
         } else if (meet === 'forslag') {
-          await api.say('Vi stryker demon och flyttar testerna. Då borde det gå.', { who: 'Ulrika' });
-          await api.say('Det låter bra. Jag vet bara inte om jag hinner.', { who: 'Emma' });
+          await api.say('Tänk inte på leveransen nu. Vi löser det.', { who: 'Ulrika' });
+          await api.say('Ulrika hör själv hur det låter. Samma tre ord som i morse.', { narrator: true });
         } else {
-          await api.say('Vi tar det i morgon bitti, du och jag. Okej?', { who: 'Ulrika' });
-          await api.say('Okej.', { who: 'Emma' });
-          await api.say('Emma packar ihop. Det känns ändå lite lättare nu när ett samtal är bokat.', { narrator: true });
+          await api.say('Vila nu. Hör av dig i morgon, när du orkar.', { who: 'Ulrika' });
+          await api.say('Okej. Förlåt.', { who: 'Emma, i telefon' });
+          await api.say('Du har inget att be om förlåtelse för.', { who: 'Ulrika' });
         }
+        api.notify({ app: 'Chatt', from: 'Patrik (projektledare)', stamp: '16:24', text: 'Hörde att Emma gått hem. Hinner ni leveransen till fredag?' });
+        await api.wait(1800);
+        api.unnotify();
+        api.stopLoop('room');
+        await api.say('Emma blir sjukskriven resten av veckan. Leveransen hinns inte.', { narrator: true, big: true });
         await api.wait(500);
         await api.say(s.choices.A === 'nasta' ? '”Vi tar prioriteringarna nästa vecka.”' : '”Vi löser det. Alla får hjälpas åt lite extra.”', { who: 'Ulrika, i morse', small: true });
-        api.stopLoop('room');
+        await api.say('Ingen enskild mening gjorde det här. Men ingen sa heller vad som fick vänta.', { narrator: true });
         await api.bigQuestion('Vad hade hänt om frågan på morgonen fått ett annat svar?');
         s.accident = true;
       } else {
@@ -1017,7 +1011,7 @@ const ULRIKA_NODES = [
       await api.title('17:05', 'På väg hem');
       await api.say('Jag försökte skapa lugn. Men vad hörde de andra egentligen?', { who: 'Ulrika', inner: true });
       await api.say(s.accident
-        ? 'Ett ”vi löser det” blev till att Emma löste det. Ensam.'
+        ? 'Ett ”vi löser det” blev till att Emma försökte lösa allt. Ensam. Nu är hon hemma.'
         : 'Ett tydligt besked om vad som får vänta. Det var det som behövdes.', { who: 'Ulrika', inner: true });
       await api.say('Ta en stund och tänk tillbaka på din dag.', { narrator: true });
       api.cinematic(false);
@@ -1032,12 +1026,10 @@ function buildUlrikaReflection(s) {
   const rewound = U_BAD.includes(s.firstA);
   const order = s.choices.C || [];
   const mailName = { patrik: 'Patriks statusrapport', emma: 'Emmas fråga', linn: 'Linns arbetsfördelning' };
-  // bokade Ulrika in Emma 09:05 dyker den tomma stolen aldrig upp – då är den signalen redan omhändertagen
-  const booked = s.choices.B === 'boka';
-  const possible = Object.keys(U_SIGNALS).filter((k) => !(booked && k === 's3'));
+  const possible = Object.keys(U_SIGNALS);
   const seen = possible.filter((k) => (s.signals || []).includes(k));
   const missed = possible.filter((k) => !seen.includes(k));
-  const seenTxt = `Du såg ${seen.length} av ${possible.length} signaler under dagen.${booked ? ' Den tomma stolen kl 15:00 uppstod aldrig – du hade redan bokat in Emma.' : ''}`;
+  const seenTxt = `Du såg ${seen.length} av ${possible.length} signaler under dagen.`;
   const list = (ks) => ks.map((k) => `${U_SIGNALS[k].text} (${U_SIGNALS[k].time})`).join(', ');
 
   /* 1. Din dag */
@@ -1048,12 +1040,12 @@ function buildUlrikaReflection(s) {
       rewound
         ? { time: '08:30', was: `Först: ${U_SAID[s.firstA]}`, text: `Andra gången: ${U_SAID[s.choices.A]}`, key: true }
         : { time: '08:30', text: `Du sa: ${U_SAID[s.choices.A]}`, key: true },
-      { time: '09:05', text: { stanna: 'Du stannade två minuter för Emma.', boka: 'Du bokade en tid med Emma kl 15:00.', sen: '”Vi tar det sen!” – mötet kändes mer akut.' }[s.choices.B] },
+      { time: '09:05', text: { stanna: 'Du stannade två minuter för Emma – men det blev aldrig mer än så.', sen: '”Vi tar det sen!” – mötet kändes mer akut.' }[s.choices.B] },
       order.length && { time: '13:30', text: `I inkorgen började du med ${mailName[order[0]]}.${order[order.length - 1] === 'emma' ? ' Emmas fråga fick vänta längst.' : ''}` },
       s.quickApprove && { time: '13:30', text: 'Du godkände den nya arbetsfördelningen direkt. Vem fick mer att göra i den?' },
-      { time: '15:00', text: s.choices.B === 'boka' ? 'Samtalet med Emma blev av.' : 'Emma var inte med på avstämningen.' },
+      { time: '15:00', text: 'Emma var inte med på avstämningen.' },
       rewound
-        ? { time: '16:10', was: 'Först: Emma visste inte längre vad som var viktigast.', text: 'Andra gången: Emma gick hem med en plan.', key: true }
+        ? { time: '16:10', was: 'Först: Emma åkte hem och blev sjukskriven. Leveransen hanns inte.', text: 'Andra gången: Emma gick hem med en plan.', key: true }
         : { time: '16:10', text: 'Emma gick hem med en plan.', key: true },
       { time: '★', text: seenTxt, key: true },
     ].filter(Boolean),
@@ -1084,7 +1076,7 @@ function buildUlrikaReflection(s) {
   steps.push({
     type: 'text', id: 'signal', eyebrow: 'Signalerna',
     question: !missed.length
-      ? `Du såg ${possible.length === 4 ? 'alla fyra signalerna' : 'alla signaler som dök upp'}. Vilken av dem hade du kunnat agera på tidigare – och hur?`
+      ? 'Du såg alla fyra signalerna. Vilken av dem hade du kunnat agera på tidigare – och hur?'
       : `Du såg ${seen.length} av ${possible.length} signaler. Det som gick förbi: ${list(missed)}. Vilken signal hade du kunnat uppmärksamma tidigare?`,
     placeholder: 'En signal, eller en tanke …',
     hint: 'Det du skriver stannar här, på din skärm.',
@@ -1203,7 +1195,7 @@ STORY.days = {
     ],
     agendaLine: 'Teammöte, ledningsgrupp, projektmöte… och en dubbelbokning klockan tre.',
     dev(state, qs, past) {
-      if (past('u0905')) state.choices.B = qs.get('b') || 'sen';
+      if (past('u0905')) state.choices.B = qs.get('b') === 'stanna' ? 'stanna' : 'sen';
       if (past('u1330')) state.choices.C = ['patrik', 'linn', 'emma'];
     },
   },
