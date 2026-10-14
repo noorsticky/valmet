@@ -1,7 +1,7 @@
 # Vår dag – Valmet
 
 Spelifierad kurs i form av en tidslinje genom Olas arbetsdag. Varje punkt på
-tidslinjen är en scen som användaren "hoppar in i". Kursen är en prototyp i ren
+tidslinjen är en scen som användaren "hoppar in i". Kursen är byggd i ren
 HTML/CSS/JS, så den behöver inget byggsteg.
 
 ## Kör lokalt
