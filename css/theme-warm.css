@@ -92,10 +92,11 @@
 /* plattformen: nästa punkt får en solstråle som faller uppifrån i stället för en grön ring */
 .node.is-next .node__disc { background: rgba(var(--sun-rgb),.12); box-shadow: 0 0 0 1.5px rgba(var(--sun-rgb),.75), 0 0 38px 6px rgba(var(--sun-rgb),.22); }
 .node.is-next .node__disc::after { box-shadow: 0 0 60px 14px rgba(var(--sun-rgb),.28); }
-.node.is-next .node__plat::before { content: ''; position: absolute; z-index: -1; left: 10px; width: 230px; bottom: -20px; height: 560px; pointer-events: none;
-  background: radial-gradient(60% 100% at 50% 100%, rgba(var(--sun-rgb),.26), rgba(var(--sun-rgb),.08) 55%, transparent 80%);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 30%, #000 70%, transparent), linear-gradient(to top, #000 40%, transparent);
-  -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent, #000 30%, #000 70%, transparent), linear-gradient(to top, #000 40%, transparent); mask-composite: intersect;
+/* strålen går ner till skivans underkant och tonas ut där, så att ljuset landar på skivan i stället för att klippas av */
+.node.is-next .node__plat::before { content: ''; position: absolute; z-index: -1; left: 10px; width: 230px; bottom: -62px; height: 600px; pointer-events: none;
+  background: radial-gradient(60% 100% at 50% 90%, rgba(var(--sun-rgb),.26), rgba(var(--sun-rgb),.08) 55%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 30%, #000 70%, transparent), linear-gradient(to top, transparent 0, #000 70px, #000 40%, transparent);
+  -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent, #000 30%, #000 70%, transparent), linear-gradient(to top, transparent 0, #000 70px, #000 40%, transparent); mask-composite: intersect;
   will-change: opacity; animation: beamIn 1.2s ease-out both, sunBeam 6s ease-in-out 1.2s infinite; }
 @keyframes sunBeam { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
 @keyframes beamIn { from { opacity: 0; } }
