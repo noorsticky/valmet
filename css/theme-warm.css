@@ -29,18 +29,18 @@
   var(--bg); }
 /* solstrålar som faller snett in genom ett fönster och rör sig långsamt */
 .intro__frame::before { content: ''; position: absolute; inset: -20% -10%; pointer-events: none;
-  background: repeating-linear-gradient(112deg, transparent 0 7%, rgba(var(--sun-rgb),.055) 7% 11%, transparent 11% 19%);
+  background: repeating-linear-gradient(112deg, transparent 0, rgba(var(--sun-rgb),.05) 4%, rgba(var(--sun-rgb),.07) 8%, rgba(var(--sun-rgb),.03) 12%, transparent 17%);
   -webkit-mask-image: radial-gradient(60% 70% at 82% 8%, #000, transparent 72%); mask-image: radial-gradient(60% 70% at 82% 8%, #000, transparent 72%);
-  filter: blur(14px); animation: sunDrift 18s ease-in-out infinite alternate; }
-@keyframes sunDrift { from { transform: translateX(-2%) rotate(-1deg); opacity: .75; } to { transform: translateX(2%) rotate(1deg); opacity: 1; } }
+  will-change: transform, opacity; animation: sunDrift 22s ease-in-out infinite alternate; }
+@keyframes sunDrift { from { transform: translate3d(-1.5%, 0, 0); opacity: .8; } to { transform: translate3d(1.5%, 0, 0); opacity: 1; } }
 .intro__frame i { background: rgba(244,236,222,.14); }
 .intro__meta { color: var(--muted); }
 .intro__title { font: 500 clamp(84px, 15vw, 220px)/.86 var(--font); letter-spacing: -.045em; color: var(--cream); }
 .intro__lead { color: var(--muted); font-size: clamp(18px, 1.5vw, 21px); line-height: 1.55; }
 /* rubriken och texten tonar fram ur oskärpa, långsamt – som när man vaknar */
-.intro__copy > * { animation: wake 1.6s var(--ease-out) both; }
-.intro__copy > :nth-child(1) { animation-delay: .3s; } .intro__copy > :nth-child(2) { animation-delay: .7s; } .intro__copy > :nth-child(3) { animation-delay: 1s; }
-@keyframes wake { from { opacity: 0; filter: blur(16px); transform: translateY(14px); } 60% { filter: blur(2px); } }
+.intro__copy > * { animation: wake 1.4s var(--ease-out) both; will-change: transform, opacity; }
+.intro__copy > :nth-child(1) { animation-delay: .25s; } .intro__copy > :nth-child(2) { animation-delay: .55s; } .intro__copy > :nth-child(3) { animation-delay: .8s; }
+@keyframes wake { from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.985); } }
 .intro__start { border-radius: 999px; padding: 16px 16px 16px 28px; background: var(--cream); color: #15130f; font: 500 18px/1 var(--font); box-shadow: 0 10px 40px rgba(var(--sun-rgb),.12); }
 @media (hover: hover) { .intro__start:hover { background: #fff; box-shadow: 0 14px 44px rgba(var(--sun-rgb),.22); } }
 .intro__arrow { width: 34px; height: 34px; border-radius: 50%; background: var(--sun); color: #2a1d08; }
@@ -92,12 +92,13 @@
 /* plattformen: nästa punkt får en solstråle som faller uppifrån i stället för en grön ring */
 .node.is-next .node__disc { background: rgba(var(--sun-rgb),.12); box-shadow: 0 0 0 1.5px rgba(var(--sun-rgb),.75), 0 0 38px 6px rgba(var(--sun-rgb),.22); }
 .node.is-next .node__disc::after { box-shadow: 0 0 60px 14px rgba(var(--sun-rgb),.28); }
-.node.is-next .node__plat::before { content: ''; position: absolute; z-index: -1; left: 0; width: 250px; bottom: 0; height: 560px; pointer-events: none;
-  background: linear-gradient(to top, rgba(var(--sun-rgb),.22), rgba(var(--sun-rgb),.06) 55%, transparent);
-  clip-path: polygon(34% 0, 66% 0, 100% 100%, 0 100%); filter: blur(10px); transform-origin: 50% 100%;
-  animation: sunBeam 5.5s ease-in-out infinite, beamIn 1.4s var(--ease-out) both; }
-@keyframes sunBeam { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
-@keyframes beamIn { from { transform: scaleY(.2); opacity: 0; } }
+.node.is-next .node__plat::before { content: ''; position: absolute; z-index: -1; left: 10px; width: 230px; bottom: -20px; height: 560px; pointer-events: none;
+  background: radial-gradient(60% 100% at 50% 100%, rgba(var(--sun-rgb),.26), rgba(var(--sun-rgb),.08) 55%, transparent 80%);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 30%, #000 70%, transparent), linear-gradient(to top, #000 40%, transparent);
+  -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent, #000 30%, #000 70%, transparent), linear-gradient(to top, #000 40%, transparent); mask-composite: intersect;
+  will-change: opacity; animation: beamIn 1.2s ease-out both, sunBeam 6s ease-in-out 1.2s infinite; }
+@keyframes sunBeam { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+@keyframes beamIn { from { opacity: 0; } }
 @media (hover: hover) { .node.is-next:hover .node__disc { background-color: rgba(var(--sun-rgb),.18); } }
 
 /* punkten som lyser efter olyckan / konsekvensen */
@@ -107,7 +108,7 @@
 .node.is-culprit .node__cta { color: #f1a85a; }
 
 /* ------------------------------------------------------------ banner, knappar, slutvy */
-.tl-banner { border-radius: 14px; background: rgba(21,19,15,.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(244,236,222,.14); font-family: var(--font); }
+.tl-banner { border-radius: 14px; background: rgba(21,19,15,.92); border: 1px solid rgba(244,236,222,.14); font-family: var(--font); }
 .tl-banner strong { font-weight: 500; }
 .tl-banner small { color: var(--muted); }
 .tl-banner__time { color: var(--sun); font-weight: 500; }
