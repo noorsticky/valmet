@@ -64,6 +64,7 @@ ett möte kl 15:30, som dyker upp både i kalendern kl 14:30 och som ett val kl 
 ```
 index.html        Skal + UI-lager (HUD, filmfält, repliker, val, paneler)
 css/style.css     All stil, inklusive de ritade miljöerna
+css/theme-warm.css Varmt tema för startskärm och tidslinje (Google Sans, solljus som accent, dämpad salvia)
 js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg – Olas dag och Ulrikas dag
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)

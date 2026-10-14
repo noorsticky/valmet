@@ -1,8 +1,8 @@
 /* =====================================================================
-   TEST-TEMA: varmare och mer mänsklig startskärm och tidslinje.
+   VARMT TEMA: varmare och mer mänsklig startskärm och tidslinje.
    Scenerna, människorna och replikerna påverkas inte.
    Grönt används bara som dämpad salvia; accenten är varmt solljus.
-   Laddas efter style.css (bara i testversionen).
+   Laddas efter style.css.
    ===================================================================== */
 .intro, .timeline {
   --font: 'Google Sans', 'Google Sans Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
