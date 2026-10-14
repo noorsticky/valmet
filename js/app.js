@@ -397,42 +397,37 @@
     banner('');
     SFX.unlock();
 
-    // 1. Kameran söker sig mot punkten
-    await camPlat(n.id, 1.35, 700, 'cubic-bezier(.5,0,.3,1)');
+    // 1. Kameran glider fram till plattformen
+    await camPlat(n.id, 1.3, 800, 'cubic-bezier(.45,0,.2,1)');
     const disc = $(`.node[data-id="${n.id}"] .node__disc`);
     const r = disc.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
     const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
-    const rad = rx;
 
-    // 2. Bygg scenen bakom portalen
+    // 2. Bygg scenen bakom öppningen (klockan visar rätt tid från början)
     prepareScene(n);
+    if (/^\d\d:\d\d$/.test(n.time)) el.hudClock.textContent = n.time;
     show(el.scene, true);
     el.scene.style.clipPath = `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`;
     $(`.node[data-id="${n.id}"]`).classList.add('is-diving');
 
-    // 3. Fall in
+    // 3. Scenen öppnar sig ur skivan – en enda form som växer – medan tidslinjen tonas bort
     SFX.play('whooshIn');
-    const ms = T(1150);
-    const portal = $('#portal');
-    portal.style.left = cx + 'px'; portal.style.top = cy + 'px'; portal.style.width = rx * 2 + 'px'; portal.style.height = ry * 2 + 'px';
-    portal.classList.add('is-on');
-    const scaleTo = (R / rad) * 1.02;
+    const ms = T(1100);
+    const ease = 'cubic-bezier(.65,0,.25,1)';
+    el.viewport.style.transformOrigin = `${cx}px ${cy}px`;
     const anims = [
       el.scene.animate([{ clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }],
-        { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1.6)', opacity: 0.6 }, { transform: 'scale(1.04)', opacity: 1, offset: 0.85 }, { transform: 'scale(1)', opacity: 1 }],
-        { duration: ms * 1.25, easing: 'cubic-bezier(.3,.6,.2,1)' }),
-      portal.animate([{ transform: 'translate(-50%,-50%) scale(1, 1)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${scaleTo}, ${scaleTo * rx / ry})`, opacity: 0.0 }],
-        { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
-      el.viewport.animate([{ opacity: 1 }, { opacity: 0.55 }], { duration: ms, fill: 'forwards' }),
+        { duration: ms, easing: ease, fill: 'forwards' }),
+      el.sceneWorld.animate([{ transform: 'scale(1.18)' }, { transform: 'scale(1)' }],
+        { duration: ms * 1.2, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' }),
+      el.viewport.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.12)' }],
+        { duration: ms, easing: ease, fill: 'forwards' }),
     ];
-    setCam(cam.x, cam.y, 4, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.8,0,.2,1)');
     if (rewind) el.rewind.classList.remove('is-on');
     await anims[0].finished;
     el.scene.style.clipPath = 'none';
     anims.forEach((a) => a.cancel());
-    portal.classList.remove('is-on');
     $$('.node.is-diving').forEach((x) => x.classList.remove('is-diving'));
     show(el.timeline, false);
     busy = false;
@@ -446,21 +441,20 @@
     SFX.play('whooshOut');
     show(el.timeline, true);
     renderTimeline();
-    // räkna ut var plattformen hamnar när kameran landat, och krymp scenen dit
-    await camPlat(n.id, 1, 0);
+    // räkna ut var plattformen hamnar, och låt scenen krympa tillbaka in i skivan – spegelbilden av vägen in
+    await camPlat(n.id, 1.3, 0);
     const r = $(`.node[data-id="${n.id}"] .node__disc`).getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
-    await camPlat(n.id, 4, 0);
-    const R = Math.hypot(innerWidth, innerHeight);
+    const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
     const ms = T(1000);
+    const ease = 'cubic-bezier(.65,0,.25,1)';
+    el.viewport.style.transformOrigin = `${cx}px ${cy}px`;
     const anims = [
-      el.scene.animate([{ clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.92 }, { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` }],
-        { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.4)', opacity: 0.7 }],
-        { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
-      el.viewport.animate([{ opacity: 0.55 }, { opacity: 1 }], { duration: ms, easing: 'ease-out' }),
+      el.scene.animate([{ clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.9 }, { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` }],
+        { duration: ms, easing: ease, fill: 'forwards' }),
+      el.sceneWorld.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }], { duration: ms, easing: ease, fill: 'forwards' }),
+      el.viewport.animate([{ opacity: 0, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }], { duration: ms, easing: ease }),
     ];
-    camPlat(n.id, 1, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.7,0,.3,1)');
     await anims[0].finished;
     show(el.scene, false);
     anims.forEach((a) => a.cancel());
