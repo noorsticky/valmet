@@ -294,7 +294,10 @@
     const g = c.getContext('2d');
     const pts = Array.from({ length: 46 }, () => ({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 1.8, v: 0.004 + Math.random() * 0.01, d: 0.2 + Math.random() * 0.8, a: Math.random() * 6.28 }));
     let w = 0, h = 0, last = performance.now();
-    const fit = () => { const dpr = Math.min(2, devicePixelRatio || 1); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); };
+    // färgen på ljuspartiklarna kan styras av temat (--mote-warm / --mote-cool som "r,g,b")
+    let warmRGB = '255,224,180', coolRGB = '210,245,200';
+    const readTheme = () => { const cs = getComputedStyle(el.timeline); warmRGB = cs.getPropertyValue('--mote-warm').trim() || warmRGB; coolRGB = cs.getPropertyValue('--mote-cool').trim() || coolRGB; };
+    const fit = () => { const dpr = Math.min(2, devicePixelRatio || 1); w = c.clientWidth; h = c.clientHeight; c.width = w * dpr; c.height = h * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); readTheme(); };
     new ResizeObserver(fit).observe(c); fit();
     const tick = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
@@ -307,7 +310,7 @@
           const px = (p.x + Math.sin(p.a) * 0.004) * w;
           const py = ((p.y - cam.y * 0.00012 * p.d) % 1 + 1) % 1 * h;
           g.beginPath(); g.arc(px, py, p.r, 0, 6.29);
-          g.fillStyle = warm ? `rgba(255,224,180,${0.12 + p.d * 0.22})` : `rgba(210,245,200,${0.1 + p.d * 0.2})`;
+          g.fillStyle = warm ? `rgba(${warmRGB},${0.12 + p.d * 0.22})` : `rgba(${coolRGB},${0.1 + p.d * 0.2})`;
           g.fill();
         });
       }

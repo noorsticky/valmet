@@ -1,0 +1,128 @@
+/* =====================================================================
+   TEST-TEMA: varmare och mer mänsklig startskärm och tidslinje.
+   Scenerna, människorna och replikerna påverkas inte.
+   Grönt används bara som dämpad salvia; accenten är varmt solljus.
+   Laddas efter style.css (bara i testversionen).
+   ===================================================================== */
+.intro, .timeline {
+  --font: 'Google Sans', 'Google Sans Text', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --bg: #15130f;            /* varm grafit, som ett rum i kvällsljus */
+  --surface: rgba(244,236,222,.06);
+  --cream: #f4efe7;
+  --muted: #b9b1a5;
+  --sun: #f1c27d;           /* solljus */
+  --sun-rgb: 241,194,125;
+  --sage: #a9bba2;          /* dämpad grön, som ikonerna */
+  --line: #d9d1c4;
+  --track: #2a261f;
+  --disc: rgba(244,236,222,.07);
+  --accent: var(--sun);
+  --mote-warm: 255,226,186;
+  --mote-cool: 236,226,210;
+  font-family: var(--font);
+}
+
+/* ------------------------------------------------------------ startskärmen */
+.intro { background:
+  radial-gradient(70% 80% at 88% -12%, rgba(var(--sun-rgb),.20), transparent 62%),
+  radial-gradient(55% 60% at 6% 112%, rgba(169,187,162,.09), transparent 70%),
+  var(--bg); }
+/* solstrålar som faller snett in genom ett fönster och rör sig långsamt */
+.intro__frame::before { content: ''; position: absolute; inset: -20% -10%; pointer-events: none;
+  background: repeating-linear-gradient(112deg, transparent 0 7%, rgba(var(--sun-rgb),.055) 7% 11%, transparent 11% 19%);
+  -webkit-mask-image: radial-gradient(60% 70% at 82% 8%, #000, transparent 72%); mask-image: radial-gradient(60% 70% at 82% 8%, #000, transparent 72%);
+  filter: blur(14px); animation: sunDrift 18s ease-in-out infinite alternate; }
+@keyframes sunDrift { from { transform: translateX(-2%) rotate(-1deg); opacity: .75; } to { transform: translateX(2%) rotate(1deg); opacity: 1; } }
+.intro__frame i { background: rgba(244,236,222,.14); }
+.intro__meta { color: var(--muted); }
+.intro__title { font: 500 clamp(84px, 15vw, 220px)/.86 var(--font); letter-spacing: -.045em; color: var(--cream); }
+.intro__lead { color: var(--muted); font-size: clamp(18px, 1.5vw, 21px); line-height: 1.55; }
+/* rubriken och texten tonar fram ur oskärpa, långsamt – som när man vaknar */
+.intro__copy > * { animation: wake 1.6s var(--ease-out) both; }
+.intro__copy > :nth-child(1) { animation-delay: .3s; } .intro__copy > :nth-child(2) { animation-delay: .7s; } .intro__copy > :nth-child(3) { animation-delay: 1s; }
+@keyframes wake { from { opacity: 0; filter: blur(16px); transform: translateY(14px); } 60% { filter: blur(2px); } }
+.intro__start { border-radius: 999px; padding: 16px 16px 16px 28px; background: var(--cream); color: #15130f; font: 500 18px/1 var(--font); box-shadow: 0 10px 40px rgba(var(--sun-rgb),.12); }
+@media (hover: hover) { .intro__start:hover { background: #fff; box-shadow: 0 14px 44px rgba(var(--sun-rgb),.22); } }
+.intro__arrow { width: 34px; height: 34px; border-radius: 50%; background: var(--sun); color: #2a1d08; }
+.pace-toggle { color: #ece5da; font-family: var(--font); }
+.pace-toggle__box { border-color: #cfc6b8; border-radius: 6px; }
+.pace-toggle.is-on .pace-toggle__box { background: var(--sun); border-color: var(--sun); }
+.pace-toggle.is-on .pace-toggle__box::after { color: #2a1d08; }
+.intro .pace-toggle__sub, .intro__sound { color: var(--muted); }
+.intro__clock { color: var(--sun); text-shadow: 0 0 12px rgba(var(--sun-rgb),.45); }
+
+/* ------------------------------------------------------------ tidslinjens himmel */
+.tl-sky__dawn { background:
+  radial-gradient(90% 55% at 72% -8%, rgba(255,214,170,.16), transparent 70%),
+  radial-gradient(60% 50% at 12% 6%, rgba(160,176,205,.10), transparent 70%),
+  linear-gradient(180deg, #1b1c20 0%, #18171a 45%, #15130f 100%); }
+.tl-sky__day { background:
+  radial-gradient(80% 60% at 55% -12%, rgba(255,236,204,.14), transparent 70%),
+  radial-gradient(70% 60% at 50% 112%, rgba(169,187,162,.07), transparent 70%),
+  linear-gradient(180deg, #1d1b16 0%, #191712 55%, #15130f 100%); }
+.tl-sky__dusk { background:
+  radial-gradient(90% 55% at 22% 108%, rgba(255,150,96,.18), transparent 70%),
+  radial-gradient(70% 50% at 86% -4%, rgba(190,130,150,.12), transparent 70%),
+  linear-gradient(180deg, #1f1a1c 0%, #1b1716 50%, #16130f 100%); }
+.tl-sky__glow { background: radial-gradient(34vmax 26vmax at 58% 50%, rgba(var(--sun-rgb),.07), transparent 70%); }
+.tl-sky__vignette { background: radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(8,6,4,.6)); }
+
+/* ------------------------------------------------------------ linjer */
+.track { stroke: var(--track); }
+.seg { stroke: var(--line); }
+.branch { stroke: var(--line); }
+.is-healed .seg, .timeline.is-done .seg.done { stroke: #c9d6c2; filter: drop-shadow(0 0 6px rgba(169,187,162,.55)); }
+.tl-pulse { background: #fff3dd; box-shadow: 0 0 20px 8px rgba(var(--sun-rgb),.85), 0 0 60px 24px rgba(var(--sun-rgb),.4); }
+
+/* ------------------------------------------------------------ punkterna */
+.node__dot { background: #8d867b; box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px rgba(244,236,222,.28); }
+.node.is-played .node__dot { background: #d6cec2; }
+.node.is-next .node__dot, .node.is-culprit .node__dot { background: var(--cream); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px var(--cream), 0 0 22px 4px rgba(var(--sun-rgb),.45); }
+.node__arm { background: rgba(244,236,222,.22); }
+
+/* tiden som ren typografi i en mjuk kapsel i stället för en grå låda */
+.node__pill { padding: 7px 13px; border-radius: 999px; background: rgba(244,236,222,.1); color: #efe8dd; border: 1px solid rgba(244,236,222,.16);
+  font: 500 17px/1 var(--font); letter-spacing: .01em; }
+.node.is-future .node__pill { background: transparent; color: rgba(239,232,221,.6); border-color: rgba(244,236,222,.12); }
+.node.is-next .node__pill { background: var(--cream); color: #15130f; border-color: var(--cream); box-shadow: 0 0 0 4px rgba(var(--sun-rgb),.14), 0 8px 26px rgba(var(--sun-rgb),.28); }
+.node__title { color: #d2cabe; font-family: var(--font); }
+.node.is-next .node__title { color: var(--cream); font-weight: 500; }
+.node__cta { color: var(--sun); font-family: var(--font); font-weight: 500; letter-spacing: .16em; }
+
+/* plattformen: nästa punkt får en solstråle som faller uppifrån i stället för en grön ring */
+.node.is-next .node__disc { background: rgba(var(--sun-rgb),.12); box-shadow: 0 0 0 1.5px rgba(var(--sun-rgb),.75), 0 0 38px 6px rgba(var(--sun-rgb),.22); }
+.node.is-next .node__disc::after { box-shadow: 0 0 60px 14px rgba(var(--sun-rgb),.28); }
+.node.is-next .node__plat::before { content: ''; position: absolute; z-index: -1; left: 0; width: 250px; bottom: 0; height: 560px; pointer-events: none;
+  background: linear-gradient(to top, rgba(var(--sun-rgb),.22), rgba(var(--sun-rgb),.06) 55%, transparent);
+  clip-path: polygon(34% 0, 66% 0, 100% 100%, 0 100%); filter: blur(10px); transform-origin: 50% 100%;
+  animation: sunBeam 5.5s ease-in-out infinite, beamIn 1.4s var(--ease-out) both; }
+@keyframes sunBeam { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+@keyframes beamIn { from { transform: scaleY(.2); opacity: 0; } }
+@media (hover: hover) { .node.is-next:hover .node__disc { background-color: rgba(var(--sun-rgb),.18); } }
+
+/* punkten som lyser efter olyckan / konsekvensen */
+.node.is-culprit .node__disc { background: rgba(241,168,90,.16); box-shadow: 0 0 0 2px #f1a85a, 0 0 30px 8px rgba(241,168,90,.45); }
+.node.is-culprit .node__disc::after { box-shadow: 0 0 0 2px #ffe4c2, 0 0 70px 24px rgba(241,168,90,.7); }
+.node.is-culprit .node__pill { background: #f1a85a; color: #2a1606; border-color: #f1a85a; }
+.node.is-culprit .node__cta { color: #f1a85a; }
+
+/* ------------------------------------------------------------ banner, knappar, slutvy */
+.tl-banner { border-radius: 14px; background: rgba(21,19,15,.82); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(244,236,222,.14); font-family: var(--font); }
+.tl-banner strong { font-weight: 500; }
+.tl-banner small { color: var(--muted); }
+.tl-banner__time { color: var(--sun); font-weight: 500; }
+.tl-banner--good { border-color: rgba(169,187,162,.6); } .tl-banner--good strong { color: #cfdcc8; }
+.timeline .icon-btn { background: rgba(21,19,15,.7); border-color: rgba(244,236,222,.18); }
+
+.tl-end { background: rgba(21,19,15,.8); border-color: rgba(244,236,222,.14); border-radius: 18px; font-family: var(--font); }
+.tl-end__eyebrow { color: var(--sun); font-weight: 500; }
+.tl-end__title { font: 500 clamp(28px, 3vw, 38px)/1.06 var(--font); letter-spacing: -.03em; color: var(--cream); }
+.tl-end__sum li { color: #d6cec2; }
+.tl-end__sum li::before { background: var(--sun); box-shadow: 0 0 0 3px rgba(var(--sun-rgb),.18); }
+.tl-end__pledge { border-left-color: var(--sun); }
+.tl-end__label, .tl-end__pledge span { color: var(--muted); }
+.dcard { font-family: var(--font); border-radius: 14px; }
+.dcard strong { font-weight: 500; }
+.dcard__cta { color: #7a5214; font-weight: 500; }
+.dcard__day b { color: #5d7a55; }
+.tl-end__link { color: #d6cec2; }
