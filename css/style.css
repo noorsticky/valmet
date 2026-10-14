@@ -295,8 +295,6 @@ button { font: inherit; color: inherit; }
 .scene { background: #000; z-index: 20; }
 .scene__world { position: absolute; inset: 0; overflow: hidden; transform-origin: 50% 50%; }
 .stage { position: absolute; left: 50%; top: 50%; width: max(100vw, 177.78vh); height: max(56.25vw, 100vh); transform: translate(-50%, -50%); }
-.is-cinematic .stage { animation: kenburns 30s linear both; }
-@keyframes kenburns { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.08); } }
 .env { position: absolute; inset: 0; overflow: hidden; background: #111; }
 .env__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .env__tone { position: absolute; inset: 0; pointer-events: none; }
@@ -938,5 +936,5 @@ button { font: inherit; color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fx--grain, .is-cinematic .stage, .korr, .bil, .person, .node__prop > * { animation: none !important; }
+  .fx--grain, .korr, .bil, .person, .node__prop > * { animation: none !important; }
 }

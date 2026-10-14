@@ -397,36 +397,44 @@
     banner('');
     SFX.unlock();
 
-    // 1. Kameran glider fram till plattformen
-    await camPlat(n.id, 1.3, 800, 'cubic-bezier(.45,0,.2,1)');
+    // 1. Kameran glider fram och centrerar skivan, och tar sedan ett litet andetag bakåt
+    const p0 = layout[n.id];
+    const S0 = 1.3;
+    await setCam(p0.px, p0.py, S0, 800, 'cubic-bezier(.45,0,.2,1)');
     const disc = $(`.node[data-id="${n.id}"] .node__disc`);
     const r = disc.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
     const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
+    const S1 = S0 * Math.max(4, (R * 1.15) / rx); // så djupt att skivan fyller skärmen
+    await setCam(p0.px, p0.py, S0 * 0.94, T(260), 'cubic-bezier(.2,.7,.3,1)');
 
     // 2. Bygg scenen bakom öppningen (klockan visar rätt tid från början)
     prepareScene(n);
     if (/^\d\d:\d\d$/.test(n.time)) el.hudClock.textContent = n.time;
     show(el.scene, true);
-    el.scene.style.clipPath = `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`;
+    el.scene.style.clipPath = `ellipse(${rx * 0.94}px ${ry * 0.94}px at ${cx}px ${cy}px)`;
     $(`.node[data-id="${n.id}"]`).classList.add('is-diving');
 
-    // 3. Scenen öppnar sig ur skivan – en enda form som växer – medan tidslinjen tonas bort
+    // 3. Dyket: kameran accelererar ner i skivan, öppningen växer i samma takt som skivan,
+    //    tidslinjen rusar förbi och tonas bort, och scenen kommer emot en inifrån
     SFX.play('whooshIn');
-    const ms = T(1100);
-    const ease = 'cubic-bezier(.65,0,.25,1)';
-    el.viewport.style.transformOrigin = `${cx}px ${cy}px`;
+    const ms = T(1250);
+    const dive = 'cubic-bezier(.55,0,.75,.35)';
+    const k = S1 / (S0 * 0.94);
+    setCam(p0.px, p0.py, S1, ms / (REDUCED ? 0.35 : 1), dive);
     const anims = [
-      el.scene.animate([{ clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }],
-        { duration: ms, easing: ease, fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1.18)' }, { transform: 'scale(1)' }],
-        { duration: ms * 1.2, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'forwards' }),
-      el.viewport.animate([{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.12)' }],
-        { duration: ms, easing: ease, fill: 'forwards' }),
+      el.scene.animate([
+        { clipPath: `ellipse(${rx * 0.94}px ${ry * 0.94}px at ${cx}px ${cy}px)` },
+        { clipPath: `ellipse(${Math.max(R * 1.1, rx * 0.94 * k)}px ${Math.max(R * 1.1, ry * 0.94 * k)}px at ${cx}px ${cy}px)` },
+      ], { duration: ms, easing: dive, fill: 'forwards' }),
+      el.sceneWorld.animate([{ transform: 'scale(.55)', opacity: 0.85 }, { transform: 'scale(1.04)', opacity: 1, offset: 0.88 }, { transform: 'scale(1)', opacity: 1 }],
+        { duration: ms * 1.2, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' }),
+      el.viewport.animate([{ opacity: 1 }, { opacity: 1, offset: 0.5 }, { opacity: 0 }], { duration: ms, fill: 'forwards' }),
     ];
     if (rewind) el.rewind.classList.remove('is-on');
     await anims[0].finished;
     el.scene.style.clipPath = 'none';
+    await sleep(T(160));
     anims.forEach((a) => a.cancel());
     $$('.node.is-diving').forEach((x) => x.classList.remove('is-diving'));
     show(el.timeline, false);
@@ -441,19 +449,26 @@
     SFX.play('whooshOut');
     show(el.timeline, true);
     renderTimeline();
-    // räkna ut var plattformen hamnar, och låt scenen krympa tillbaka in i skivan – spegelbilden av vägen in
-    await camPlat(n.id, 1.3, 0);
+    // vägen ut är dyket baklänges: man stiger upp ur scenen, den krymper in i skivan och tidslinjen zoomar ut runt en
+    const p0 = layout[n.id];
+    const S0 = 1.3;
+    await setCam(p0.px, p0.py, S0, 0);
     const r = $(`.node[data-id="${n.id}"] .node__disc`).getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
     const R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 20;
-    const ms = T(1000);
-    const ease = 'cubic-bezier(.65,0,.25,1)';
-    el.viewport.style.transformOrigin = `${cx}px ${cy}px`;
+    const S1 = S0 * Math.max(4, (R * 1.15) / rx);
+    await setCam(p0.px, p0.py, S1, 0);
+    const ms = T(1150);
+    const rise = 'cubic-bezier(.25,.65,.45,1)';
+    setCam(p0.px, p0.py, S0, ms / (REDUCED ? 0.35 : 1), rise);
     const anims = [
-      el.scene.animate([{ clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.9 }, { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` }],
-        { duration: ms, easing: ease, fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.15)' }], { duration: ms, easing: ease, fill: 'forwards' }),
-      el.viewport.animate([{ opacity: 0, transform: 'scale(1.12)' }, { opacity: 1, transform: 'scale(1)' }], { duration: ms, easing: ease }),
+      el.scene.animate([
+        { clipPath: `ellipse(${Math.max(R * 1.1, rx * S1 / S0)}px ${Math.max(R * 1.1, ry * S1 / S0)}px at ${cx}px ${cy}px)` },
+        { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.92 },
+        { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` },
+      ], { duration: ms, easing: rise, fill: 'forwards' }),
+      el.sceneWorld.animate([{ transform: 'scale(1)' }, { transform: 'scale(.6)' }], { duration: ms, easing: rise, fill: 'forwards' }),
+      el.viewport.animate([{ opacity: 0 }, { opacity: 1, offset: 0.45 }, { opacity: 1 }], { duration: ms }),
     ];
     await anims[0].finished;
     show(el.scene, false);
