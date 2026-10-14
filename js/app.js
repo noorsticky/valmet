@@ -72,6 +72,8 @@
   }
 
   const ENV_HTML = {
+    // tom, varm yta (t.ex. när notisen är hela scenen)
+    tom: () => '<div class="env-tom"></div>',
     bil: (v) => `
       <div class="bil ${v === 'dusk' ? 'bil--dusk' : ''}">
         <div class="bil__sky"></div><div class="bil__sun"></div>
@@ -479,7 +481,8 @@
     el.eyelids.style.setProperty('--open', 1);
     el.stage.style.filter = '';
     $$('.ov-clock, .ov-note, .ov-person', el.stage).forEach((o) => o.remove());
-    $$('.notif, .sighost', el.scene).forEach((o) => o.remove());
+    $$('.notif, .sighost, .phone', el.scene).forEach((o) => o.remove());
+    el.scene.classList.remove('is-phone');
     el.scene.classList.remove('is-cinematic', 'is-shake', 'is-reflect', 'is-dozing');
     $$('video', el.env).forEach((v) => v.pause());
   }
@@ -693,6 +696,42 @@
       return n;
     },
     unnotify() { $$('.notif', el.scene).forEach((n) => { n.classList.remove('is-on'); setTimeout(() => n.remove(), T(500)); }); },
+
+    /* Notisen som hela scenen: tom, lugn bakgrund där bara notisen animeras fram i mitten */
+    phone() {
+      api.unphone(true);
+      el.scene.classList.add('is-phone');
+      const ph = h('div', 'phone');
+      ph.innerHTML = '<div class="phone__notifs" role="log" aria-live="polite"></div>';
+      el.scene.appendChild(ph);
+      requestAnimationFrame(() => requestAnimationFrame(() => ph.classList.add('is-on')));
+      return ph;
+    },
+    phoneNotify({ app = 'Mejl', from, subject, text, stamp = 'nu', quiet = false, signal }) {
+      const list = $('.phone .phone__notifs', el.scene);
+      if (!list) return;
+      if (!quiet) SFX.play('notif');
+      const n = h('div', 'pnotif');
+      n.innerHTML = `<div class="pnotif__top"><span class="pnotif__app">${app}</span><span class="pnotif__stamp">${stamp}</span></div>
+        ${from ? `<b class="pnotif__from">${from}</b>` : ''}${subject ? `<strong class="pnotif__subj">${subject}</strong>` : ''}<p class="pnotif__text">${text}</p>`;
+      list.prepend(n);
+      if (signal && !state.signals.includes(signal.id)) {
+        const b = h('button', 'notif__sig pnotif__sig', '<span class="hotspot__pulse"></span>');
+        b.setAttribute('aria-label', 'Titta närmare på tidsstämpeln');
+        b.addEventListener('click', (e) => { e.stopPropagation(); b.remove(); api._foundSignal(signal.id, signal.line); });
+        $('.pnotif__stamp', n).appendChild(b);
+      }
+      requestAnimationFrame(() => requestAnimationFrame(() => n.classList.add('is-on')));
+      return n;
+    },
+    unphone(instant = false) {
+      $$('.phone', el.scene).forEach((ph) => {
+        if (instant) { ph.remove(); return; }
+        ph.classList.remove('is-on'); ph.classList.add('is-off');
+        setTimeout(() => ph.remove(), T(700));
+      });
+      el.scene.classList.remove('is-phone');
+    },
 
     overlay(kind, value) {
       // en person (utklippt bild) som står i scenen: { src, x, bottom, h } i procent av scenen

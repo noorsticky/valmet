@@ -610,26 +610,29 @@ const ULRIKA_NODES = [
   /* ------------------------------------------------------------ 07:05 */
   {
     id: 'u0705', prop: 'assets/props/mobil.webp', time: '07:05', title: 'Ett sent mejl', kind: 'film', lane: 'main',
-    env: 'kok', place: 'Köket', cinematic: true,
+    env: 'tom', place: 'Köket',
     async play(api) {
       api.clock('07:05');
       api.loop('room');
       await api.title('07:05', 'Köket');
-      await api.say('…och nu blir det lite musik för dig som är på väg till jobbet.', { who: 'Radion', small: true });
-      await api.wait(400);
-      api.notify({
+      // hela scenen är notisen: tom skärm, och bara mejlet från Emma glider fram
+      api.phone();
+      await api.wait(700);
+      api.phoneNotify({
         app: 'Mejl', from: 'Emma Lind', subject: 'Re: Leveransen', stamp: 'Skickat 23:48',
         text: 'Jag tror vi får ihop leveransen ändå. Jag tittar på resten i morgon bitti!',
         signal: { id: 's1', line: 'Skickat 23:48. Emma jobbade sent igår.' },
       });
-      await api.wait(1200);
+      await api.wait(1600);
       await api.say('Emma. Alltid på hugget.', { who: 'Ulrika', inner: true });
       await api.say('Den nya leveransen får vi ta på teammötet halv nio. Det löser sig.', { who: 'Ulrika', inner: true });
       await api.wait(1800);
-      api.unnotify();
+      api.unphone();
+      await api.wait(500);
       api.stopLoop('room');
     },
   },
+
 
   /* ------------------------------------------------------------ 07:45 */
   {
