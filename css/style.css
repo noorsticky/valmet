@@ -530,13 +530,22 @@ button { font: inherit; color: inherit; }
 .mirror__glass:active { cursor: grabbing; }
 .mirror__glass:focus-visible { outline: 3px solid var(--accent); outline-offset: 6px; }
 .mirror__track { --drag: 0px; position: absolute; inset: 0; }
-.mirror__slide { position: absolute; left: 50%; bottom: 3%; height: 92%; margin: 0; aspect-ratio: .42; transform-origin: 50% 100%;
-  transform: translateX(calc(-50% + var(--off) * 78% + var(--drag))) scale(calc(1 - .28 * var(--a)));
+.mirror__slide { position: absolute; left: 50%; top: 15%; height: 225%; margin: 0; aspect-ratio: .36; transform-origin: 50% 8%;
+  /* inzoomad i ögonhöjd: ögonen hamnar runt en tredjedel ner i glaset, grannarna skymtar vid kanterna */
+  transform: translateX(calc(-50% + var(--off) * 66% + var(--drag))) scale(calc(1 - .22 * var(--a)));
   opacity: calc(1 - .55 * var(--a)); filter: blur(calc(var(--a) * 3px)) brightness(calc(1 - .25 * var(--a)));
   transition: transform .55s var(--ease), opacity .55s, filter .55s; z-index: calc(2 - var(--a)); }
 .mirror__track.is-drag .mirror__slide { transition: none; }
 /* spegelbild: vänd och lätt kall ton */
-.mirror__slide img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; transform: scaleX(-1); filter: saturate(.92) contrast(1.02); pointer-events: none; user-select: none; }
+.mirror__slide img, .mirror__slide video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 0; transform: scaleX(-1); filter: saturate(.92) contrast(1.02); pointer-events: none; user-select: none; transition: opacity .4s ease; }
+.mirror__slide video { opacity: 0; }
+.mirror__slide.has-wave video { opacity: 1; } .mirror__slide.has-wave img { opacity: 0; }
+/* hälsning när personen kliver fram, sedan en lugn andning */
+.mirror__slide.is-center img { animation: mirrorBreath 5s ease-in-out infinite 1.4s; transform-origin: 50% 20%; }
+.mirror__slide.is-greet img { animation: mirrorGreet 1.3s var(--ease-out), mirrorBreath 5s ease-in-out infinite 1.4s; }
+@keyframes mirrorGreet { 0% { transform: scaleX(-1) translateY(1.2%) rotate(0); } 35% { transform: scaleX(-1) translateY(-.6%) rotate(-1.6deg); } 65% { transform: scaleX(-1) translateY(0) rotate(1deg); } 100% { transform: scaleX(-1) translateY(0) rotate(0); } }
+@keyframes mirrorBreath { 0%, 100% { transform: scaleX(-1) translateY(0) scale(1); } 50% { transform: scaleX(-1) translateY(-.25%) scale(1.006); } }
+@media (prefers-reduced-motion: reduce) { .mirror__slide img { animation: none !important; } }
 .mirror__slide:not(.is-center) { cursor: pointer; }
 .mirror__sheen { position: absolute; inset: 0; pointer-events: none; z-index: 5; transform: translateX(var(--sx, 0%));
   background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.16) 42%, transparent 50%, transparent 64%, rgba(255,255,255,.08) 70%, transparent 76%),

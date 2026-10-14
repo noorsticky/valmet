@@ -788,7 +788,7 @@
             <div class="mirror__frame">
               <div class="mirror__glass" tabindex="0" aria-label="Svep eller använd piltangenterna för att byta person">
                 <div class="mirror__track">${personas.map((x, k) => `
-                  <figure class="mirror__slide" data-i="${k}" aria-hidden="true"><img src="${x.img}" alt="" draggable="false"></figure>`).join('')}
+                  <figure class="mirror__slide" data-i="${k}" aria-hidden="true"><img src="${x.img}" alt="" draggable="false">${x.wave ? `<video src="${x.wave}" muted playsinline loop preload="auto" aria-hidden="true"></video>` : ''}</figure>`).join('')}
                 </div>
                 <canvas class="mirror__fog" aria-hidden="true"></canvas>
                 <p class="mirror__hint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3l-2.3-4a1.5 1.5 0 0 1 2.6-1.5L9 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Torka av spegeln</p>
@@ -815,7 +815,14 @@
             const off = ((k - cur + n + 1) % n) - 1; // -1, 0, 1 – runt om
             sl.style.setProperty('--off', off);
             sl.style.setProperty('--a', Math.abs(off));
+            const was = sl.classList.contains('is-center');
             sl.classList.toggle('is-center', off === 0);
+            // den som kliver fram i spegeln hälsar: en liten rörelse, eller vinkfilmen om den finns (persona.wave)
+            const v = $('video', sl);
+            if (off === 0 && !was) {
+              sl.classList.remove('is-greet'); void sl.offsetWidth; sl.classList.add('is-greet');
+              if (v) { v.currentTime = 0; v.play().then(() => sl.classList.add('has-wave')).catch(() => {}); }
+            } else if (off !== 0 && v) { v.pause(); sl.classList.remove('has-wave'); }
           });
           tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === cur)); t.tabIndex = k === cur ? 0 : -1; });
           const x = personas[cur];

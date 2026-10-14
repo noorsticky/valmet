@@ -98,6 +98,13 @@ De här filerna är platshållare. Byt ut filen med samma namn och storlek så s
 - Emma (utklippt helfigur, transparent webp, ca 600×1400 px): `assets/people/emma.webp`.
   Hon står i scenerna 09:05 och 16:10 (efter rätt val).
 
+### Vinkande personer i spegeln
+
+Varje person i `STORY.personas` kan få en vinkfilm: lägg till `wave: 'assets/people/<namn>-vinkar.webm'`.
+Den spelas upp när personen kliver fram i spegeln. Utan film gör personen en liten hälsningsrörelse.
+Filmen bör vara en kort loop (2–3 sekunder), en bröstbild i samma vinkel som bilden och ha transparent
+bakgrund (WebM med alfakanal).
+
 ### Redigera innehåll
 
 Allt manus finns i `js/story.js`. En scen är en `async play(api)`-funktion:
