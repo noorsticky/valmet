@@ -166,7 +166,8 @@
     vis.forEach((n, i) => {
       const side = n.lane === 'side';
       const alt = m++ % 2 === 0 ? 1 : -1;
-      const dir = side ? 1 : (branch && i >= from && i <= to ? -1 : alt);   // huvudlinjen växlar höger/vänster
+      // (själva valet behåller sin sida – annars hoppar plattformen just när scenen krymper in i den)
+      const dir = side ? 1 : (branch && i > from && i <= to ? -1 : alt);   // huvudlinjen växlar höger/vänster
       const x = side ? SIDE_X : 0;
       const y = i * ROW;
       layout[n.id] = { x, y, dir, px: x + dir * PLAT_X, py: y };
@@ -198,36 +199,48 @@
       const sig = [val(n.title, state), badge, val(n.prop, state), played, isNext, known, culprit, pos.dir].join('|');
 
       if (!e) {
-        e = h('button', 'node is-new');
+        // punkten byggs en gång; sedan uppdateras bara det som ändras, så att färg och glöd kan tonas
+        e = h('button', `node node--${n.kind} is-new`);
         e.dataset.id = n.id;
         e.type = 'button';
-        e.addEventListener('click', () => onNodeClick(n));
-        el.nodes.appendChild(e);
-        requestAnimationFrame(() => requestAnimationFrame(() => e.classList.remove('is-new')));
-      }
-      e.style.left = pos.x + 'px';
-      e.style.top = pos.y + 'px';
-      if (e.dataset.sig !== sig) {
-        if (e.dataset.dir && e.dataset.dir !== String(pos.dir)) { e.classList.remove('is-flip'); void e.offsetWidth; requestAnimationFrame(() => e.classList.add('is-flip')); }
-        e.dataset.dir = String(pos.dir);
-        e.dataset.sig = sig;
-        e.className = `node node--${n.kind} ${pos.dir < 0 ? 'node--left' : 'node--right'} ${n.lane === 'side' ? 'node--side' : ''} ${e.classList.contains('is-new') ? 'is-new' : ''}`;
-        e.classList.toggle('is-played', played);
-        e.classList.toggle('is-next', !!isNext);
-        e.classList.toggle('is-future', !known);
-        e.classList.toggle('is-culprit', culprit);
         e.innerHTML = `
           <span class="node__arm"></span>
           <span class="node__dot"></span>
           <span class="node__label">
             <span class="node__pill">kl ${n.time.replace('Dagens slut', '17:00')}</span>
-            <span class="node__title">${known ? val(n.title, state) : ''}</span>
-            ${isNext || culprit ? `<span class="node__cta">${culprit ? 'Hoppa tillbaka' : 'Hoppa in'}</span>` : ''}
+            <span class="node__title"></span>
+            <span class="node__cta"></span>
           </span>
           <span class="node__plat">
             <span class="node__disc"></span>
-            <span class="node__prop">${PROPS.html(val(n.prop, state))}</span>
+            <span class="node__prop"></span>
           </span>`;
+        e.addEventListener('click', () => onNodeClick(n));
+        e.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+        el.nodes.appendChild(e);
+        requestAnimationFrame(() => requestAnimationFrame(() => e.classList.remove('is-new')));
+      }
+      // läget flyttas med transform (billigt) i stället för left/top
+      e.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
+      if (e.dataset.sig !== sig) {
+        if (e.dataset.dir && e.dataset.dir !== String(pos.dir)) { e.classList.remove('is-flip'); void e.offsetWidth; e.classList.add('is-flip'); }
+        e.dataset.dir = String(pos.dir);
+        e.dataset.sig = sig;
+        e.classList.toggle('node--left', pos.dir < 0);
+        e.classList.toggle('node--right', pos.dir >= 0);
+        e.classList.toggle('node--side', n.lane === 'side');
+        e.classList.toggle('is-played', played);
+        e.classList.toggle('is-next', !!isNext);
+        e.classList.toggle('is-future', !known);
+        e.classList.toggle('is-culprit', culprit);
+        $('.node__title', e).textContent = known ? val(n.title, state) : '';
+        const cta = $('.node__cta', e);
+        cta.textContent = culprit ? 'Hoppa tillbaka' : isNext ? 'Hoppa in' : '';
+        cta.hidden = !(isNext || culprit);
+        // bilden byts bara om den faktiskt är en annan (annars blinkar den när den laddas om)
+        const src = val(n.prop, state);
+        const prop = $('.node__prop', e);
+        if (prop.dataset.src !== src) { prop.dataset.src = src; prop.innerHTML = PROPS.html(src); }
         e.setAttribute('aria-label', `kl ${n.time} ${known ? val(n.title, state) : 'okänd händelse'}`);
         e.disabled = !(isNext || culprit);
       }
@@ -244,6 +257,19 @@
     if (lastPlayed) segs += `<line class="seg done" x1="0" y1="${first.y}" x2="0" y2="${layout[lastPlayed.id].y}"/>`;
     if (!el.lines.firstChild) el.lines.innerHTML = '<g id="segs"></g><g id="branch"></g>';
     $('#segs', el.lines).innerHTML = segs;
+    // den spelade linjen växer fram till nästa punkt i stället för att hoppa dit
+    const doneY = lastPlayed ? layout[lastPlayed.id].y : first.y;
+    const prevY = el.lines.dataset.doneY != null ? +el.lines.dataset.doneY : doneY;
+    el.lines.dataset.doneY = doneY;
+    const seg = $('.seg.done', el.lines);
+    if (seg && doneY > prevY && !REDUCED) {
+      const len = doneY - first.y;
+      seg.style.strokeDasharray = `${len} ${len + 40}`;
+      seg.style.strokeDashoffset = `${doneY - prevY}`;
+      void seg.getBoundingClientRect();
+      seg.style.transition = `stroke-dashoffset ${T(1200)}ms cubic-bezier(.45,0,.2,1)`;
+      seg.style.strokeDashoffset = '0';
+    }
 
     const side = visibleNodes().filter((n) => n.lane === 'side');
     const g = $('#branch', el.lines);
@@ -305,12 +331,16 @@
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       if (el.timeline.classList.contains('is-active') && !REDUCED) {
         g.clearRect(0, 0, w, h);
+        // världens faktiska läge just nu (mitt i en övergång), så att partiklarna glider med i stället för att hoppa
+        let camY = cam.y;
+        const m = new DOMMatrixReadOnly(getComputedStyle(el.world).transform);
+        if (m.a) camY = (focusPoint().cy - m.f) / m.a;
         const warm = skyT < 0.3 || skyT > 0.7;
         pts.forEach((p) => {
           p.y -= p.v * dt * p.d; p.a += dt * 0.6;
           if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
           const px = (p.x + Math.sin(p.a) * 0.004) * w;
-          const py = ((p.y - cam.y * 0.00012 * p.d) % 1 + 1) % 1 * h;
+          const py = ((p.y - camY * 0.00012 * p.d) % 1 + 1) % 1 * h;
           g.beginPath(); g.arc(px, py, p.r, 0, 6.29);
           g.fillStyle = warm ? `rgba(${warmRGB},${0.12 + p.d * 0.22})` : `rgba(${coolRGB},${0.1 + p.d * 0.2})`;
           g.fill();
@@ -391,11 +421,11 @@
     const anims = [
       el.scene.animate([{ clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }],
         { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1.9)', filter: 'blur(10px) brightness(1.4) saturate(1.3)' }, { transform: 'scale(1.06)', filter: 'blur(0) brightness(1) saturate(1)', offset: 0.85 }, { transform: 'scale(1)', filter: 'none' }],
+      el.sceneWorld.animate([{ transform: 'scale(1.6)', opacity: 0.6 }, { transform: 'scale(1.04)', opacity: 1, offset: 0.85 }, { transform: 'scale(1)', opacity: 1 }],
         { duration: ms * 1.25, easing: 'cubic-bezier(.3,.6,.2,1)' }),
       portal.animate([{ transform: 'translate(-50%,-50%) scale(1, 1)', opacity: 1 }, { transform: `translate(-50%,-50%) scale(${scaleTo}, ${scaleTo * rx / ry})`, opacity: 0.0 }],
         { duration: ms, easing: 'cubic-bezier(.8,0,.2,1)', fill: 'forwards' }),
-      el.viewport.animate([{ filter: 'blur(0)' }, { filter: 'blur(6px)' }], { duration: ms, fill: 'forwards' }),
+      el.viewport.animate([{ opacity: 1 }, { opacity: 0.55 }], { duration: ms, fill: 'forwards' }),
     ];
     setCam(cam.x, cam.y, 4, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.8,0,.2,1)');
     if (rewind) el.rewind.classList.remove('is-on');
@@ -426,9 +456,9 @@
     const anims = [
       el.scene.animate([{ clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.92 }, { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` }],
         { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.5)', filter: 'blur(6px) brightness(1.3)' }],
+      el.sceneWorld.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.4)', opacity: 0.7 }],
         { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
-      el.viewport.animate([{ filter: 'blur(6px)' }, { filter: 'blur(0)' }], { duration: ms }),
+      el.viewport.animate([{ opacity: 0.55 }, { opacity: 1 }], { duration: ms, easing: 'ease-out' }),
     ];
     camPlat(n.id, 1, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.7,0,.3,1)');
     await anims[0].finished;
@@ -1256,15 +1286,9 @@
     renderTimeline();
     const nx = nextNode();
     if (!nx) return;
-    await camTo(nx.id, 1, 1100);
-    const auto = val(nx.cinematic, state) || nx.kind === 'film' || nx.kind === 'side';
-    if (auto) {
-      banner(`<span class="tl-banner__time">${nx.time}</span> ${val(nx.title, state)}<small>Filmen startar…</small>`);
-      await sleep(T(1500));
-      if (!busy && nextNode() === nx) enterNode(nx);
-    } else {
-      banner('');
-    }
+    // ingen scen startar av sig själv – deltagaren hoppar in när den är redo
+    banner('');
+    await camTo(nx.id, 1, 1300, 'cubic-bezier(.45,0,.2,1)');
   }
 
   function onNodeClick(n) {

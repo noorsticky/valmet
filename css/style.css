@@ -151,7 +151,7 @@ button { font: inherit; color: inherit; }
 .tl-pulse { position: absolute; left: 0; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; background: #d6ffd8; box-shadow: 0 0 20px 8px rgba(92,201,95,.9), 0 0 60px 24px rgba(92,201,95,.5); z-index: 3; }
 
 /* ------------------------------------------------------------ punkt */
-.node { position: absolute; width: 0; height: 0; padding: 0; border: 0; background: none; cursor: default; transition: left .9s var(--ease), top .9s var(--ease), opacity .6s, filter .8s; --dir: 1; }
+.node { position: absolute; left: 0; top: 0; width: 0; height: 0; padding: 0; border: 0; background: none; cursor: default; transition: transform .9s var(--ease), opacity .6s, filter .8s; --dir: 1; }
 .node--left { --dir: -1; }
 .node.is-new { opacity: 0; }
 .node.is-flip .node__plat, .node.is-flip .node__label, .node.is-flip .node__arm { animation: nodeFlip .7s var(--ease-out) both; }
