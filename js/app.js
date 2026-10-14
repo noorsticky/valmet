@@ -156,9 +156,15 @@
   function computeLayout() {
     layout = {};
     let m = 0;
-    visibleNodes().forEach((n, i) => {
+    const vis = visibleNodes();
+    // när sidospåret syns går grenen ut till höger mellan det kritiska valet och konsekvensen –
+    // då ligger huvudlinjens plattformar på den sträckan till vänster så att grenen aldrig korsar dem
+    const branch = vis.some((n) => n.lane === 'side');
+    const from = vis.findIndex((n) => n.id === DAY.critical), to = vis.findIndex((n) => n.id === DAY.consequence);
+    vis.forEach((n, i) => {
       const side = n.lane === 'side';
-      const dir = side ? 1 : (m++ % 2 === 0 ? 1 : -1);   // huvudlinjen växlar höger/vänster
+      const alt = m++ % 2 === 0 ? 1 : -1;
+      const dir = side ? 1 : (branch && i >= from && i <= to ? -1 : alt);   // huvudlinjen växlar höger/vänster
       const x = side ? SIDE_X : 0;
       const y = i * ROW;
       layout[n.id] = { x, y, dir, px: x + dir * PLAT_X, py: y };
@@ -200,6 +206,8 @@
       e.style.left = pos.x + 'px';
       e.style.top = pos.y + 'px';
       if (e.dataset.sig !== sig) {
+        if (e.dataset.dir && e.dataset.dir !== String(pos.dir)) { e.classList.remove('is-flip'); void e.offsetWidth; requestAnimationFrame(() => e.classList.add('is-flip')); }
+        e.dataset.dir = String(pos.dir);
         e.dataset.sig = sig;
         e.className = `node node--${n.kind} ${pos.dir < 0 ? 'node--left' : 'node--right'} ${n.lane === 'side' ? 'node--side' : ''} ${e.classList.contains('is-new') ? 'is-new' : ''}`;
         e.classList.toggle('is-played', played);
@@ -239,9 +247,11 @@
     const g = $('#branch', el.lines);
     if (!side.length) { g.innerHTML = ''; return; }
     const s0 = layout[DAY.critical], e0 = layout[DAY.consequence];
-    const f = layout[side[0].id], l = layout[side[side.length - 1].id];
     const X = SIDE_X;
-    const d = `M 0 ${s0.y} C 0 ${s0.y + ROW * 0.7}, ${X} ${f.y - ROW * 1.1}, ${X} ${f.y - ROW * 0.35} L ${X} ${l.y + ROW * 0.35} C ${X} ${l.y + ROW * 1.1}, 0 ${e0.y - ROW * 0.7}, 0 ${e0.y}`;
+    // grenen viker av i luckan mellan två rader: rakt ner en bit under punkten, en mjuk S-kurva ut till
+    // sidospåret, rakt ner förbi sidohändelserna och tillbaka in på samma sätt strax ovanför konsekvensen
+    const a0 = s0.y + ROW * 0.2, a1 = s0.y + ROW * 0.9, b0 = e0.y - ROW * 0.9, b1 = e0.y - ROW * 0.2, k = ROW * 0.42;
+    const d = `M 0 ${s0.y} L 0 ${a0} C 0 ${a0 + k}, ${X} ${a1 - k}, ${X} ${a1} L ${X} ${b0} C ${X} ${b0 + k}, 0 ${b1 - k}, 0 ${b1} L 0 ${e0.y}`;
     let bp = $('#branchPath', g);
     if (bp && bp.getAttribute('d') === d) return;
     g.innerHTML = `<path class="branch" id="branchPath" d="${d}"/>`;
@@ -321,7 +331,10 @@
   // kameran: följ punkten lodrätt, håll linjen (och ev. sidospår) i bild
   const camTo = (id, s = 1, ms, ease) => {
     const p = layout[id];
-    return setCam(hasSide() ? SIDE_X * 0.5 : 0, p.y + 30, s, ms, ease);
+    // smal skärm med sidospår: båda spåren ryms inte, så följ den aktiva punkten och dess plattform
+    const narrow = hasSide() && (SIDE_X + PLAT_X * 2 + 260) * baseScale() * s > innerWidth;
+    const x = narrow ? p.x + p.dir * PLAT_X * 0.5 : hasSide() ? SIDE_X * 0.5 : 0;
+    return setCam(x, p.y + 30, s, ms, ease);
   };
   // kameran centrerad på en plattform (används vid hopp in/ut)
   const camPlat = (id, s, ms, ease) => { const p = layout[id]; return setCam(p.px, p.py - 40, s, ms, ease); };
@@ -1137,13 +1150,8 @@
             body.innerHTML = `${head}<h2 class="refl__q refl__q--big">${st.title}</h2><p class="refl__lead">${st.text}</p>
               ${mine.length ? `<div class="pledge"><p class="refl__eyebrow">Mitt åtagande</p>${mine.map((m) => `<blockquote>${m}</blockquote>`).join('')}<span class="pledge__stamp" aria-hidden="true">Signerat</span></div>` : ''}
               <p class="done-msg">Kursen är genomförd ✓</p>
-              <div class="refl__foot"><button class="btn btn--ghost js-again">Spela igen</button><button class="btn btn--primary js-tl">Se din tidslinje</button></div>`;
-            $('.js-again', body).addEventListener('click', () => restart());
-            $('.js-tl', body).addEventListener('click', async () => {
-              await exitScene(byId[DAY.end]);
-              await setCam(0, layout[DAY.overview].y, 0.32, 1400);
-              banner(`<strong>${DAY.endBanner}</strong><small>Tack för att du spelade.</small>`, 'tl-banner--good');
-            });
+              <div class="refl__foot"><button class="btn btn--primary js-finish">Avsluta dagen</button></div>`;
+            $('.js-finish', body).addEventListener('click', () => finishDay(answers));
             dots.forEach((d) => d.classList.add('is-done'));
             resolve(answers);
             return;
@@ -1299,6 +1307,105 @@
     dot.remove();
   }
 
+  /* ===================================================================
+     DAGEN ÄR KLAR – hela tidslinjen i bild, en sammanfattning och de andra dagarna
+     =================================================================== */
+  const completed = new Set();
+  async function finishDay(answers) {
+    if (busy) return;
+    completed.add(state.persona);
+    await exitScene(byId[DAY.end]);
+    busy = true;
+    banner('');
+    const panel = showEndPanel(answers || {});
+    // hela dagen i bild, i ytan bredvid (bred skärm) eller ovanför (smal skärm) panelen
+    const wide = innerWidth >= 900;
+    const ys = Object.values(layout).map((v) => v.y);
+    const y0 = Math.min(...ys) - ROW * 0.75, y1 = Math.max(...ys) + ROW * 0.35;
+    const region = wide
+      ? { x0: 0, x1: innerWidth - panel.offsetWidth - 40, y0: 90, y1: innerHeight - 24 }
+      : { x0: 0, x1: innerWidth, y0: 84, y1: innerHeight - panel.offsetHeight - 28 };
+    const base = baseScale();
+    const K = Math.min(0.5 * base, (region.y1 - region.y0) / (y1 - y0), (region.x1 - region.x0) / (PLAT_X * 2 + 300));
+    const sx = (region.x0 + region.x1) / 2, sy = (region.y0 + region.y1) / 2;
+    await setCam((innerWidth / 2 - sx) / K, (y0 + y1) / 2 + (innerHeight / 2 - sy) / K, K / base, 1600);
+    el.timeline.classList.add('is-done');
+    panel.classList.add('is-on');
+    busy = false;
+  }
+
+  function showEndPanel(answers) {
+    const me = STORY.personas.find((x) => x.id === state.persona) || STORY.personas[1];
+    const sum = DAY.summary ? DAY.summary(state) : [];
+    const pledge = (answers.atagande || [])[0];
+    const card = (x) => {
+      const own = !!STORY.days[x.id];
+      const done = completed.has(x.id);
+      return `<button class="dcard ${x.id === me.id ? 'is-me' : ''}" data-id="${x.id}" ${own ? '' : 'disabled'}>
+        <span class="dcard__img" style="background-image:url(${x.img})"></span>
+        <span class="dcard__body">
+          <span class="dcard__day">Dag ${x.day}${done ? ' · <b>Spelad</b>' : ''}</span>
+          <strong>${x.name}</strong>
+          <small>${x.role} · ${x.theme}</small>
+          <span class="dcard__cta">${!own ? 'Kommer snart' : x.id === me.id ? 'Spela igen' : `Spela ${x.name}s dag`}</span>
+        </span>
+      </button>`;
+    };
+    const others = STORY.personas.filter((x) => x.id !== me.id);
+    const p = h('aside', 'tl-end');
+    p.setAttribute('aria-label', 'Dagen är klar');
+    p.innerHTML = `
+      <p class="tl-end__eyebrow">Vår dag · Dag ${me.day} klar</p>
+      <h2 class="tl-end__title">${me.name}s dag är klar.</h2>
+      ${sum.length ? `<ul class="tl-end__sum">${sum.map((t) => `<li>${t}</li>`).join('')}</ul>` : ''}
+      ${pledge ? `<blockquote class="tl-end__pledge"><span>Ditt åtagande</span>${pledge}</blockquote>` : ''}
+      <p class="tl-end__label">Spela en annan dag</p>
+      <div class="tl-end__cards">${others.map(card).join('')}</div>
+      <div class="tl-end__foot">
+        <button class="tl-end__link js-same">Spela ${me.name}s dag igen</button>
+        <button class="tl-end__link js-restart">Börja om från start</button>
+      </div>`;
+    el.timeline.appendChild(p);
+    $$('.dcard:not([disabled])', p).forEach((b) => {
+      b.addEventListener('mouseenter', () => SFX.play('hover'));
+      b.addEventListener('click', () => { SFX.play('select'); playDay(b.dataset.id); });
+    });
+    $('.js-same', p).addEventListener('click', () => { SFX.play('click'); playDay(me.id); });
+    $('.js-restart', p).addEventListener('click', () => restart());
+    setTimeout(() => { const f = $('.dcard:not([disabled])', p); f && f.focus({ preventScroll: true }); }, T(2400));
+    return p;
+  }
+
+  /* Spela en dag direkt efter spegeln: 06:00 och 06:20 räknas som gjorda */
+  async function playDay(personaId) {
+    if (busy) return;
+    busy = true;
+    const p = $('.tl-end', el.timeline);
+    if (p) { p.classList.remove('is-on'); setTimeout(() => p.remove(), T(600)); }
+    SFX.stopAll();
+    SFX.play('whooshIn');
+    // tona ut den gamla dagen
+    el.world.animate([{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(8px)' }], { duration: T(700), easing: 'ease-in', fill: 'forwards' });
+    await sleep(T(720));
+    state = freshState();
+    const who = STORY.personas.find((x) => x.id === personaId);
+    state.persona = who.id;
+    api.setPersona(who);
+    state.played = nodes.slice(0, 2).map((n) => n.id);
+    el.nodes.innerHTML = '';
+    el.lines.innerHTML = '';
+    el.timeline.classList.remove('is-alarm', 'is-healed', 'is-done');
+    delete el.timeline.dataset.branchShown;
+    renderTimeline();
+    await setCam(0, layout[nodes[1].id].y + 30, 0.7, 0);
+    el.world.getAnimations().forEach((a) => a.cancel());
+    el.world.animate([{ opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: T(900), easing: 'ease-out' });
+    banner(`<strong>${who.name}s dag</strong><small>${who.theme}. ${who.role}, ${who.age} år.</small>`);
+    await sleep(T(2200));
+    busy = false;
+    await goNext();
+  }
+
   function restart() {
     SFX.stopAll();
     state = freshState();
@@ -1384,5 +1491,5 @@
   // fokus på element utanför bild får aldrig scrolla upplevelsen
   $$('#app, .layer, #tlViewport, #sceneWorld').forEach((x) => x.addEventListener('scroll', () => { x.scrollTop = 0; x.scrollLeft = 0; }));
 
-  window.__pp = { state: () => state, busy: () => busy, enterNode, nodes: () => nodes, day: () => DAY, api };
+  window.__pp = { state: () => state, busy: () => busy, enterNode, nodes: () => nodes, day: () => DAY, api, setCam, layout: () => layout, render: () => renderTimeline() };
 })();

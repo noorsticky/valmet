@@ -1173,6 +1173,11 @@ STORY.days = {
       { t: '14:30', d: 45, title: 'Avstämning underhåll', color: 'green', clash: true },
     ],
     agendaLine: 'Fullbokat. Som vanligt.',
+    // korta rader till slutvyn
+    summary: (s) => [
+      BAD_A.includes(s.firstA) ? `Kl 07:30 blev det först ${SAID[s.firstA]} Andra gången: ${SAID[s.choices.A]}` : `Kl 07:30 sa du ${SAID[s.choices.A]}`,
+      'Den nyanställde hann till förskolan.',
+    ],
     dev(state, qs, past) {
       if (past('n0803')) state.choices.B = qs.get('b') || 'motet';
       if (past('n1324')) state.choices.C = ['rapport', 'kim', 'aw'];
@@ -1194,6 +1199,11 @@ STORY.days = {
       { t: '15:00', d: 30, title: 'Leverantörssamtal', color: 'green', clash: true },
     ],
     agendaLine: 'Teammöte, ledningsgrupp, projektmöte… och en dubbelbokning klockan tre.',
+    summary: (s) => [
+      U_BAD.includes(s.firstA) ? `Kl 08:30 blev det först ${U_SAID[s.firstA]} Andra gången: ${U_SAID[s.choices.A]}` : `Kl 08:30 sa du ${U_SAID[s.choices.A]}`,
+      `Du såg ${(s.signals || []).length} av 4 signaler under dagen.`,
+      'Emma gick hem med en plan.',
+    ],
     dev(state, qs, past) {
       if (past('u0905')) state.choices.B = qs.get('b') === 'stanna' ? 'stanna' : 'sen';
       if (past('u1330')) state.choices.C = ['patrik', 'linn', 'emma'];
