@@ -82,7 +82,8 @@ const STORY = {
         await api.say(t === 0 ? 'Upp direkt. Ett försprång på dagen.' :
                       t === 1 ? 'Tio minuter till. Det var värt det. Kanske.' :
                                 'Tjugo minuter senare än tänkt. Dagen har redan börjat ikapp.',
-                      { who: 'Ola', inner: true });
+                      // ingen person är vald än (det sker i spegeln 06:20) – därför en namnlös tanke
+                      { inner: true });
       },
     },
 
