@@ -17,6 +17,23 @@
     <!-- ===== Startskärm ===== -->
     <section id="intro" class="layer intro is-active" aria-label="Start">
       <div class="intro__frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <!-- dekorativ tidslinje i bakgrunden (abstrakt – inga tider eller bilder ur kursen) -->
+      <svg class="intro__deco" viewBox="0 0 400 1800" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <g class="deco__drift">
+          <line class="deco__track" x1="200" y1="0" x2="200" y2="1800"/>
+          <path class="deco__branch" d="M200 610 L200 650 C200 760 330 700 330 820 L330 1100 C330 1220 200 1160 200 1270 L200 1310"/>
+          <line class="deco__done" x1="200" y1="0" x2="200" y2="610"/>
+          <g class="deco__dots">
+            <circle cx="200" cy="90" r="9" class="is-done"/><circle cx="200" cy="270" r="9" class="is-done"/>
+            <circle cx="200" cy="450" r="9" class="is-done"/><circle cx="200" cy="610" r="11" class="is-next"/>
+            <circle cx="200" cy="790" r="9"/><circle cx="330" cy="900" r="8"/><circle cx="200" cy="970" r="9"/>
+            <circle cx="330" cy="1040" r="8"/><circle cx="200" cy="1150" r="9"/><circle cx="200" cy="1310" r="9"/>
+            <circle cx="200" cy="1490" r="9"/><circle cx="200" cy="1670" r="9"/>
+          </g>
+          <circle class="deco__halo" cx="200" cy="610" r="34"/>
+          <circle class="deco__light" r="5"/>
+        </g>
+      </svg>
       <header class="intro__top">
         <img class="intro__logo" src="assets/img/valmet-logo-white.svg" alt="Valmet" onerror="this.remove()">
         <span class="intro__meta">Arbetsmiljö &amp; ledarskap</span>
