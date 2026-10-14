@@ -75,11 +75,9 @@
 .tl-pulse { background: #fff3dd; box-shadow: 0 0 20px 8px rgba(var(--sun-rgb),.85), 0 0 60px 24px rgba(var(--sun-rgb),.4); }
 
 /* ------------------------------------------------------------ punkterna */
-/* punkten: en enda ren cirkel med mjuk kant som ligger ovanpå linjen (ingen mörk ring emellan) */
-.node__dot { left: -13px; top: -13px; width: 26px; height: 26px; background: #6f695f; border: 2px solid rgba(244,236,222,.5); box-shadow: 0 2px 6px rgba(0,0,0,.35); }
-.node.is-future .node__dot { background: #2a261f; border-color: rgba(244,236,222,.3); }
-.node.is-played .node__dot { background: #d6cec2; border-color: #efe8dd; }
-.node.is-next .node__dot, .node.is-culprit .node__dot { background: var(--cream); border-color: var(--cream); box-shadow: 0 0 0 6px rgba(var(--sun-rgb),.16), 0 0 24px 4px rgba(var(--sun-rgb),.42); }
+.node__dot { background: #8d867b; box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px rgba(244,236,222,.28); }
+.node.is-played .node__dot { background: #d6cec2; }
+.node.is-next .node__dot, .node.is-culprit .node__dot { background: var(--cream); box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px var(--cream), 0 0 22px 4px rgba(var(--sun-rgb),.45); }
 .node__arm { background: rgba(244,236,222,.22); }
 
 /* tiden som ren typografi i en mjuk kapsel i stället för en grå låda */
