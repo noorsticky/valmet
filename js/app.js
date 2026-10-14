@@ -1482,10 +1482,6 @@
   /* ------------------------------------------------------------ start */
   async function start() {
     SFX.unlock();
-    // klockan slår om till 06:00 och väckarklockan ringer – sedan börjar dagen
-    clearInterval(introTimer);
-    $('#introClock').textContent = '06:00:00';
-    el.intro.classList.add('is-ringing');
     SFX.play('tick');
     await sleep(T(650));
     SFX.play('whooshIn');
@@ -1500,12 +1496,6 @@
     await goNext();
   }
 
-  // startsidans klocka tickar mot 06:00 utan att nå dit
-  let introSec = 48;
-  const introTimer = setInterval(() => {
-    introSec = introSec >= 58 ? 48 : introSec + 1;
-    const c = $('#introClock'); if (c) c.textContent = `05:59:${String(introSec).padStart(2, '0')}`;
-  }, 1000);
   let started = false;
   $('#startBtn').addEventListener('click', () => { if (!started) { started = true; start(); } });
 
