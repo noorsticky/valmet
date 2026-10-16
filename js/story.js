@@ -603,7 +603,7 @@ const U_SIGNALS = {
   s4: { time: '15:40', text: 'att Emma satt kvar sent igen' },
 };
 // sidohändelsernas repliker beror på vad Ulrika svarade först kl 08:30
-// Emma (platshållare tills en riktig bild finns – byt assets/people/emma.webp)
+// Emma
 const EMMA = 'assets/people/emma.webp';
 const uSide = (s, vilosa, nasta) => (s.choices.A === 'nasta' ? nasta : vilosa);
 
@@ -611,12 +611,12 @@ const ULRIKA_NODES = [
   /* ------------------------------------------------------------ 07:05 */
   {
     id: 'u0705', prop: 'assets/props/mobil.webp', time: '07:05', title: 'Ett sent mejl', kind: 'film', lane: 'main',
-    env: 'tom', place: 'Köket',
+    env: 'kok', place: 'Köket',
     async play(api) {
       api.clock('07:05');
       api.loop('room');
       await api.title('07:05', 'Köket');
-      // hela scenen är notisen: tom skärm, och bara mejlet från Emma glider fram
+      // köket i bakgrunden tonas ner, och mejlet från Emma glider fram som hela scenen
       api.phone();
       await api.wait(700);
       api.phoneNotify({

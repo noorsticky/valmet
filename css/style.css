@@ -465,11 +465,9 @@ button { font: inherit; color: inherit; }
 .notif__sig .hotspot__pulse::after { border-color: #e0a100; }
 
 .env-tom { position: absolute; inset: 0; background: radial-gradient(60% 50% at 50% 42%, rgba(241,194,125,.10), transparent 70%), #15130f; }
-/* notisen som hela scenen (07:05): tom, varm bakgrund – bara notisen tonar och glider fram */
-.scene.is-phone .stage { opacity: 0; transition: opacity .8s ease; }
-.scene.is-phone .fx--vignette, .scene.is-phone .fx--grain { opacity: 0; }
+/* notisen som hela scenen (07:05): köket tonas ner bakom, bara notisen glider fram */
 .phone { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; padding: 16px; pointer-events: none;
-  background: radial-gradient(60% 50% at 50% 42%, rgba(241,194,125,.10), transparent 70%), #15130f; opacity: 0; transition: opacity .8s ease; }
+  background: radial-gradient(60% 55% at 50% 42%, rgba(21,19,15,.35), rgba(21,19,15,.62) 75%); opacity: 0; transition: opacity .8s ease; }
 .phone.is-on { opacity: 1; } .phone.is-off { opacity: 0; transition-duration: .6s; }
 .phone__notifs { width: min(560px, 100%); margin-top: -6vh; display: flex; flex-direction: column; gap: 12px; }
 .pnotif { position: relative; padding: 22px 26px 24px; border-radius: 26px; pointer-events: auto;
