@@ -51,7 +51,8 @@ const STORY = {
       env: 'sovrum', place: 'Sovrummet',
       async play(api) {
         api.clock('06:00');
-        api.overlay('alarmclock', '06:00');
+        // väckarklockan finns i filmen; vid snooze byts filmen till en som visar 06:10 / 06:20
+        api.prefetch(['assets/video/sovrum-0610.mp4', 'assets/video/sovrum-0620.mp4']);
         // scenen börjar med slutna ögon (eyesClosed) – larmet väcker en
         api.loop('alarm');
         await api.wait(900);
@@ -73,7 +74,7 @@ const STORY = {
           await api.eyes(true);
           await api.wait(1200);
           const time = t === 1 ? '06:10' : '06:20';
-          api.overlay('alarmclock', time);
+          api.envVideo(t === 1 ? 'assets/video/sovrum-0610.mp4' : 'assets/video/sovrum-0620.mp4');
           api.clock(time);
           await api.eyes(false);
           api.loop('alarm');

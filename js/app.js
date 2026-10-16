@@ -797,6 +797,18 @@
       el.scene.classList.remove('is-phone');
     },
 
+    // ladda filmer i förväg så att ett byte inte blinkar svart
+    prefetch(srcs) { srcs.forEach((u) => { try { fetch(u).catch(() => {}); } catch (e) { /* ignore */ } }); },
+
+    // byt filmen i scenen (t.ex. väckarklockan som visar en ny tid) utan att bygga om miljön
+    envVideo(src) {
+      const v = $('video.env__video', el.env);
+      if (!v || v.getAttribute('src') === src) return;
+      v.poster = src.replace('assets/video/', 'assets/img/').replace(/\.mp4$/, '.jpg'); // stillbild med samma tid medan filmen laddar
+      v.src = src;
+      v.play().catch(() => {});
+    },
+
     overlay(kind, value) {
       // en person (utklippt bild) som står i scenen: { src, x, bottom, h } i procent av scenen
       if (kind === 'person') {
