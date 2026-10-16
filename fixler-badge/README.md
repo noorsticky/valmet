@@ -13,5 +13,5 @@ Statisk badge, grön med vit text.
 - **Färg:** grönt är `#17673a` (fill på den stora cirkeln).
 - **Siffra:** texten `5 000`.
 - **Typsnitt:** SVG:n använder Red Hat Display om sidan har det, annars DM Sans, Inter
-  eller systemets typsnitt. Byt namnet i `font:`-raderna om sajten har ett eget.
+  eller systemets typsnitt. Byt namnet om sajten har ett eget (i `font-family`-raden).
   PNG:n är renderad med Inter.
