@@ -10,8 +10,7 @@ Statisk badge, grön med vit text.
 ```
 
 ## Ändra
-- **Färg:** grönt är `#17673a` (fill på den stora cirkeln).
-- **Siffra:** texten `5 000`.
-- **Typsnitt:** SVG:n använder Red Hat Display om sidan har det, annars DM Sans, Inter
-  eller systemets typsnitt. Byt namnet om sajten har ett eget (i `font-family`-raden).
-  PNG:n är renderad med Inter.
+- **Färg:** grönt är `#17673a` (fill på den stora cirkeln). Texten och ringen är `#ffffff`.
+- **Text:** all text är omgjord till vektorformer (typsnitt Inter ExtraBold), så filen ser
+  likadan ut i alla program och kräver inget typsnitt. Det betyder också att texten inte
+  kan redigeras direkt i filen – säg till om siffran eller orden behöver ändras.
