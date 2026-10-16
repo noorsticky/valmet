@@ -470,29 +470,19 @@
     busy = true;
     SFX.stopAll();
     SFX.play('whooshOut');
-    show(el.timeline, true);
-    renderTimeline();
-    // räkna ut var plattformen hamnar när kameran landat, och krymp scenen dit
-    await camPlat(n.id, 1, 0);
-    const r = $(`.node[data-id="${n.id}"] .node__disc`).getBoundingClientRect();
-    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, rx = r.width / 2, ry = r.height / 2;
-    await camPlat(n.id, 4, 0);
-    const R = Math.hypot(innerWidth, innerHeight);
-    const ms = T(1000);
-    const anims = [
-      el.scene.animate([{ clipPath: `ellipse(${R}px ${R}px at ${cx}px ${cy}px)` }, { clipPath: `ellipse(${rx}px ${ry}px at ${cx}px ${cy}px)`, offset: 0.92 }, { clipPath: `ellipse(0px 0px at ${cx}px ${cy}px)` }],
-        { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
-      el.sceneWorld.animate([{ transform: 'scale(1)', filter: 'none' }, { transform: 'scale(1.5)', filter: 'blur(6px) brightness(1.3)' }],
-        { duration: ms, easing: 'cubic-bezier(.7,0,.3,1)', fill: 'forwards' }),
-      el.viewport.animate([{ filter: 'blur(6px)' }, { filter: 'blur(0)' }], { duration: ms }),
-    ];
-    camPlat(n.id, 1, ms / (REDUCED ? 0.35 : 1), 'cubic-bezier(.7,0,.3,1)');
-    await anims[0].finished;
+    // tona scenen till svart, byt till tidslinjen bakom svärtan och tona upp igen
+    const black = document.createElement('div');
+    black.style.cssText = 'position:fixed;inset:0;z-index:35;background:#000;pointer-events:none;opacity:0';
+    document.body.appendChild(black);
+    await black.animate([{ opacity: 0 }, { opacity: 1 }], { duration: T(600), easing: 'ease-in', fill: 'forwards' }).finished;
     show(el.scene, false);
-    anims.forEach((a) => a.cancel());
-    el.scene.style.clipPath = '';
     cleanupScene();
     current = null;
+    show(el.timeline, true);
+    renderTimeline();
+    await camPlat(n.id, 1, 0);
+    await black.animate([{ opacity: 1 }, { opacity: 0 }], { duration: T(800), easing: 'ease-out', fill: 'forwards' }).finished;
+    black.remove();
     busy = false;
   }
 
