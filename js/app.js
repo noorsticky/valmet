@@ -472,6 +472,9 @@
     SFX.play('whooshOut');
     show(el.timeline, true);
     renderTimeline();
+    // ikonen göms medan scenen krymper in i skivan (annars ligger den stor över öppningen), och tonas sedan fram
+    const nodeEl = $(`.node[data-id="${n.id}"]`);
+    nodeEl.classList.add('is-surfacing');
     // vägen ut är dyket baklänges: man stiger upp ur scenen, den krymper in i skivan och tidslinjen zoomar ut runt en
     const p0 = layout[n.id];
     const S0 = 1.3;
@@ -482,8 +485,8 @@
     el.sceneWorld.style.transformOrigin = `${cx}px ${cy}px`;
     const S1 = S0 * coverScale(rx, ry);
     await setCam(p0.px, p0.py, S1, 0);
-    const ms = T(1150);
-    const rise = 'cubic-bezier(.25,.65,.45,1)';
+    const ms = T(1300);
+    const rise = 'cubic-bezier(.3,.1,.2,1)';
     setCam(p0.px, p0.py, S0, ms / (REDUCED ? 0.35 : 1), rise);
     const anims = [
       el.sceneWorld.animate([{ transform: 'scale(1)' }, { transform: 'scale(.6)' }], { duration: ms, easing: rise, fill: 'forwards' }),
@@ -499,6 +502,8 @@
     anims.forEach((a) => a.cancel());
     el.scene.style.clipPath = '';
     el.sceneWorld.style.transformOrigin = '';
+    nodeEl.classList.remove('is-surfacing');
+    await sleep(T(450)); // landa en stund innan kameran glider vidare
     cleanupScene();
     current = null;
     busy = false;

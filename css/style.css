@@ -216,6 +216,7 @@ button { font: inherit; color: inherit; }
 .node.is-culprit .node__cta { color: #ffb020; }
 .node.is-culprit .node__prop > * { animation: floaty 2.4s ease-in-out infinite; }
 .node.is-diving .node__prop { opacity: 0; transition-duration: .3s; }
+.node.is-surfacing .node__prop { opacity: 0; transition: none; }
 
 .node.is-dissolving { opacity: 0 !important; filter: blur(12px); transition-duration: 1.2s; }
 .node.is-dissolving .node__plat { transform: translateY(-40px) scale(.8); transition: transform 1.2s; }
