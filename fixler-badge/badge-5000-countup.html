@@ -32,6 +32,7 @@
       <circle cx="400" cy="400" r="322" fill="none" stroke="#fff" stroke-width="12"/>
       <circle cx="400" cy="400" r="296" fill="none" stroke="#fff" stroke-width="2"/>
     </mask>
+    <filter id="soft" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="9"/></filter>
   </defs>
   <style>
     .b{--green:#17673a;--soft:#b5cdc1;--ease:cubic-bezier(.22,1,.36,1);--pop:cubic-bezier(.34,1.56,.64,1)}
@@ -49,6 +50,11 @@
     .num-g{animation:num .9s var(--pop) 1.05s both}
     .sheen{animation:sheen 9s cubic-bezier(.45,0,.2,1) 2.2s infinite both}
     .glint{animation:glint 9s cubic-bezier(.45,0,.25,1) 2.2s infinite both}
+    .float{animation:float 6s ease-in-out 2.2s infinite both}
+    .shadow{transform-origin:400px 758px;animation:fadeIn 1.2s ease 1s both,shadow 6s ease-in-out 2.2s infinite both}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    @keyframes shadow{0%,100%{opacity:.2;transform:scaleX(1)}50%{opacity:.11;transform:scaleX(.88)}}
+    @keyframes fadeIn{from{opacity:0}}
     @keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
     @keyframes drawRev{from{stroke-dashoffset:-1}to{stroke-dashoffset:0}}
     @keyframes grow{from{opacity:0;transform:scale(.6)}}
@@ -61,7 +67,9 @@
     .arn-badge:not(.is-visible) .b *{animation-play-state:paused}
     @media (prefers-reduced-motion:reduce){.b *{animation:none!important}}
   </style>
-  <g class="b"><g>
+  <g class="b">
+    <g class="shadow"><ellipse cx="400" cy="758" rx="230" ry="14" fill="#0d3a20" filter="url(#soft)"/></g>
+    <g class="float">
     <circle cx="400" cy="400" r="328" fill="#fff"/>
     <circle class="ring draw" cx="400" cy="400" r="322" stroke-width="12" pathLength="1"/>
     <circle class="ring draw ring-thin" cx="400" cy="400" r="296" stroke-width="2" pathLength="1"/>

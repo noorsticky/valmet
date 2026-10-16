@@ -24,4 +24,7 @@ Ge badgen en storlek med CSS, till exempel `.arn-badge { width: 320px; height: a
 - **Typsnitt:** badgen använder Red Hat Display om sidan har det, annars DM Sans,
   Inter eller systemets typsnitt. Byt namnet i `font:`-raderna om sajten har ett eget.
 
+Efter introt svävar badgen sakta upp och ner med en mjuk skugga under sig.
+Skuggan ligger inom SVG:ns ruta, så lämna lite luft under badgen.
+
 Besökare som valt minskad rörelse i sina inställningar ser badgen direkt, utan animation.
