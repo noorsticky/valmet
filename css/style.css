@@ -643,11 +643,16 @@ button { font: inherit; color: inherit; }
 .dcal__ev.is-clash { box-shadow: 0 0 0 2px #b3261e; }
 .dcal__ev.half-l { right: calc(50% + 2px); } .dcal__ev.half-r { left: calc(50% + 2px); }
 .dcal__ev.half-l, .dcal__ev.half-r { min-height: 54px; font-size: 12.5px; overflow-wrap: normal; }
+@media (max-width: 480px) { .dcal__ev.half-l, .dcal__ev.half-r { font-size: 11.5px; padding-inline: 6px; hyphens: auto; } }
 .dcal__clash { position: absolute; right: 2px; z-index: 3; padding: 3px 8px; border-radius: 999px; background: #b3261e; color: #fff; font-size: 12px; font-weight: 700; transform: translateY(-50%); animation: rise .45s var(--ease) both 1s; }
 .dcal__now { position: absolute; left: -6px; right: 0; height: 2px; background: #b3261e; z-index: 2; }
 .dcal__now::before { content: ''; position: absolute; left: -4px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: #b3261e; }
-.is-tight .dcal__ev:not(.half-l):not(.half-r) time { display: inline; margin-right: 6px; }
+.is-tight .dcal__ev:not(.half-l):not(.half-r) time { display: inline; margin-right: 8px; }
 .is-tight .dcal__ev { padding-block: 2px; }
+/* korta möten (30–40 min): tid och titel på samma rad så att titeln inte klipps */
+.dcal__ev.is-short { display: flex; align-items: center; gap: 8px; white-space: nowrap; padding-block: 0; }
+.dcal__ev.is-short time { display: inline; margin: 0; }
+.dcal__ev.is-short b { overflow: hidden; text-overflow: ellipsis; }
 .dcal__foot { padding: 12px 16px 16px; border-top: 1px solid #e3e6e2; }
 .dcal__foot .btn { width: 100%; background: #1d2b1d; color: #fff; border-radius: 8px; }
 

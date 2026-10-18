@@ -1063,7 +1063,7 @@
                 ${items.map((x, k) => {
                   const pair = items.some((y) => y !== x && y.t === x.t);
                   const side = pair ? (items.findIndex((y) => y.t === x.t) === k ? 'half-l' : 'half-r') : '';
-                  return `<div class="dcal__ev dcal__ev--${x.color || 'blue'} ${pair ? 'is-clash' : ''} ${side}" style="--i:${k};top:${top(x.t)};height:calc(${(x.d || 60) / 60} * var(--hh) - 3px)"><time>${x.t}</time><b>${x.title}</b></div>`;
+                  return `<div class="dcal__ev dcal__ev--${x.color || 'blue'} ${pair ? 'is-clash' : ''} ${side} ${!pair && (x.d || 60) <= 40 ? 'is-short' : ''}" style="--i:${k};top:${top(x.t)};height:calc(${(x.d || 60) / 60} * var(--hh) - 3px)"><time>${x.t}</time><b>${x.title}</b></div>`;
                 }).join('')}
                 ${clashAt.map((t) => `<span class="dcal__clash" style="top:${top(t)}">Krock!</span>`).join('')}
               </div>
