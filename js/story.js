@@ -1006,12 +1006,12 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ Hemfärden */
   {
-    id: 'uend', prop: 'assets/props/hus.webp', time: 'Dagens slut', title: 'På väg hem', kind: 'green', lane: 'main',
-    env: 'bil', envVariant: 'dusk', place: 'På väg hem',
+    id: 'uend', prop: 'assets/props/hus.webp', time: 'Dagens slut', title: 'Cykelturen hem', kind: 'green', lane: 'main',
+    env: 'cykel', place: 'På väg hem',
     async play(api) {
       const s = api.state;
       api.clock('17:05');
-      api.loop('car');
+      api.loop('bike');
       api.cinematic(true);
       await api.title('17:05', 'På väg hem');
       await api.say('Jag försökte skapa lugn. Men vad hörde de andra egentligen?', { who: 'Ulrika', inner: true });
@@ -1021,7 +1021,7 @@ const ULRIKA_NODES = [
       await api.say('Ta en stund och tänk tillbaka på din dag.', { narrator: true });
       api.cinematic(false);
       s.reflection = await api.reflect(buildUlrikaReflection(s));
-      api.stopLoop('car');
+      api.stopLoop('bike');
     },
   },
 ];

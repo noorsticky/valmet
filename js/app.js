@@ -26,10 +26,10 @@
   const ROW = 290;        // lodrätt avstånd mellan punkterna (px i världen)
   const PLAT_X = 270;     // plattformens avstånd från linjen
   const SIDE_X = 600;     // sidospårets linje (till höger om huvudlinjen)
-  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4', bil: 'assets/video/bil.mp4', kok: 'assets/video/kok.mp4', 'motesrum-kvall': 'assets/video/motesrum-kvall.mp4' };
+  const VIDEO_ENVS = { sovrum: 'assets/video/sovrum.mp4', kontor: 'assets/video/kontor.mp4', fika: 'assets/video/fika.mp4', lunch: 'assets/video/lunch.mp4', korridor: 'assets/video/korridor.mp4', larm: 'assets/video/larm.mp4', mote: 'assets/video/mote.mp4', bil: 'assets/video/bil.mp4', kok: 'assets/video/kok.mp4', 'motesrum-kvall': 'assets/video/motesrum-kvall.mp4', cykel: 'assets/video/cykel.mp4' };
   // stillbildsmiljöer (t.ex. platshållare tills en film finns) – byt bilden, eller flytta namnet till VIDEO_ENVS när filmen är klar
   const IMAGE_ENVS = { kok: 'assets/img/kok.jpg', 'motesrum-kvall': 'assets/img/motesrum-kvall.jpg' };
-  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', bil: 'assets/img/bil.jpg', kok: 'assets/img/kok.jpg', 'motesrum-kvall': 'assets/img/motesrum-kvall.jpg', spegel: 'assets/img/sovrum.jpg' };
+  const POSTERS = { sovrum: 'assets/img/sovrum.jpg', kontor: 'assets/img/kontor.jpg', fika: 'assets/img/fika.jpg', lunch: 'assets/img/lunch.jpg', korridor: 'assets/img/korridor.jpg', larm: 'assets/img/larm.jpg', mote: 'assets/img/mote.jpg', bil: 'assets/img/bil.jpg', kok: 'assets/img/kok.jpg', 'motesrum-kvall': 'assets/img/motesrum-kvall.jpg', cykel: 'assets/img/cykel.jpg', spegel: 'assets/img/sovrum.jpg' };
 
   /* ------------------------------------------------------------ state */
   const freshState = () => ({

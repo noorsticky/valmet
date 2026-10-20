@@ -129,6 +129,25 @@
       s.start();
       stopFlag.node = { s, g, lfo };
     },
+    // cykeln: mjukt fartvindsbrus som andas lite
+    bike: (stopFlag) => {
+      const s = ctx.createBufferSource();
+      s.buffer = noiseBuffer(4);
+      s.loop = true;
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 0.5;
+      const g = ctx.createGain();
+      g.gain.value = 0.0001;
+      g.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 1.5);
+      const lfo = ctx.createOscillator();
+      const lg = ctx.createGain();
+      lfo.frequency.value = 0.25; lg.gain.value = 0.02;
+      lfo.connect(lg).connect(g.gain);
+      lfo.start();
+      s.connect(f).connect(g).connect(master);
+      s.start();
+      stopFlag.node = { s, g, lfo };
+    },
     car: (stopFlag) => {
       const o = ctx.createOscillator();
       o.type = 'sawtooth'; o.frequency.value = 48;
