@@ -592,8 +592,12 @@
 
     say(text, o = {}) {
       const isPlayer = o.who === 'Ola' || (persona && o.who === persona.name);
+      const raw = text, rawWho = o.who;
       text = personalize(text);
       o = { ...o, who: personalize(o.who) };
+      // inspelad röst: bara när raden står som i manuset (inte när namnen byts ut för en annan person)
+      const voSrc = window.VO && current && !fast && !SFX.isMuted() && text === raw && o.who === rawWho
+        ? VO.src(current.id, raw, { ...o, who: rawWho }) : null;
       return new Promise((resolve) => {
         // talare placeras vänster/höger i turordning per scen; Ola (spelaren), tankar och berättare i mitten
         let pos = 'center';
@@ -609,8 +613,20 @@
         el.captions.appendChild(c);
         const t = $('.cap__text', c);
         let i = 0, typing = true, timer;
+        // rösten spelas medan texten skrivs ut; repliken ligger kvar tills rösten är klar
+        let voice = null, voiceDone = !voSrc;
+        const afterVoice = [];
+        if (voSrc) {
+          voice = new Audio(voSrc);
+          voice.volume = VO.volume;
+          const done = () => { if (voiceDone) return; voiceDone = true; afterVoice.splice(0).forEach((f) => f()); };
+          voice.addEventListener('ended', done);
+          voice.addEventListener('error', done);
+          voice.play().catch(done);
+        }
         const finish = () => {
           clearTimeout(timer);
+          if (voice) { voice.pause(); voiceDone = true; }
           advance = null;
           c.classList.add('is-out');
           setTimeout(() => { c.remove(); resolve(); }, fast ? 0 : T(260));
@@ -625,8 +641,9 @@
         };
         // i egen takt ligger repliken kvar tills man klickar
         const waitOrGo = (ms) => {
+          if (!voiceDone) { afterVoice.push(() => waitOrGo(500)); return; }
           if (selfPaced && !fast) { c.classList.add('is-waiting'); return; }
-          timer = setTimeout(finish, T(ms || Math.max(1700, 900 + text.length * 42)));
+          timer = setTimeout(finish, T(ms || (voice ? 500 : Math.max(1700, 900 + text.length * 42))));
         };
         advance = () => {
           if (typing) { clearTimeout(timer); typing = false; t.textContent = text; waitOrGo(1100); }

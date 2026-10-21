@@ -157,3 +157,15 @@ ritade i CSS som platshållare. När en riktig film finns:
   (`vilosa`, `nasta`, `flytta`, `vidare`) och `b` är valet 09:05 (`stanna`, `sen`).
 - På tangentbordet väljer siffrorna 1–4 alternativ, och mellanslag går vidare
   i repliker.
+
+### Voice over
+
+Alla repliker, tankar och berättarrader kan få inspelad röst. Kursen fungerar som vanligt utan filerna.
+
+1. `node tools/vo-manus.js` skriver inspelningsmanuset `voiceover/manus.csv` (öppnas i Excel). Det har en rad per text, med filnamn, scen, vem som talar och om raden redan är inspelad.
+2. Spela in varje rad och spara den som mp3 i `assets/vo/` med filnamnet från manuset, t.ex. `u0830_29453a.mp3`.
+3. Kör `node tools/vo-manus.js` igen. Då uppdateras `js/vo-files.js`, och kursen spelar de filer som finns.
+
+Ändras en text i `js/story.js` får raden ett nytt filnamn, eftersom den gamla inspelningen inte stämmer längre. Skriptet listar inspelningar som inte längre hör till någon rad.
+
+När rösten spelas ligger repliken kvar tills rösten är klar. Ett klick hoppar vidare. Med ljudet avstängt visas bara texten. Tomas spelar Olas dag med sitt eget namn, så rader där namnet byts ut spelas inte upp för honom.
