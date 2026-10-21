@@ -21,7 +21,7 @@
   }
 
   // inspelade ljud (loopar) – laddas i förväg och avkodas en gång
-  const FILES = { alarm: 'assets/audio/sovrum-larm.mp3' };
+  const FILES = { alarm: 'assets/audio/sovrum-larm.mp3?v=2' };
   const buffers = {};
   function loadFile(name) {
     if (buffers[name] || !FILES[name] || !ctx) return buffers[name];
