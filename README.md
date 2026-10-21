@@ -69,7 +69,7 @@ js/story.js       ALLT INNEHÅLL: noder, repliker, val, reflektionens steg – O
 js/app.js         Motor: tidslinje, kamera, portal, scen-API, spola tillbaka
 js/props.js       Föremålen på tidslinjens plattformar (low-poly-SVG)
 js/audio.js       Ljudmotor (WebAudio). Inspelade ljud läggs i FILES, resten är syntljud
-assets/audio/     sovrum-larm.mp3 (väckarklockan 06:00, loopas)
+assets/audio/     sovrum-larm.mp3 (väckarklockan 06:00), bilfard.mp3 (bilfärderna) – loopas
 assets/video/     sovrum, kontor, fika, lunch, mote, korridor, larm, bil (.mp4) (omkodade, utan ljudspår)
 assets/props/     Renderade ikoner för tidslinjen (klocka, bil, kopp, whiteboard, laptop, hjälm, skrivbord, fika, kalender, mobil, larm, vinka, hus, prat, mikro)
 assets/people/    Tomas, Ola och Ulrika (transparenta bilder för spegeln, tidslinjen och HUD)

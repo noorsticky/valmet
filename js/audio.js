@@ -1,4 +1,4 @@
-/* Enkel syntljudmotor (WebAudio). Väckarklockan i sovrummet är en inspelad fil (FILES), resten syntljud.
+/* Enkel syntljudmotor (WebAudio). Väckarklockan och bilfärden är inspelade filer (FILES), resten syntljud.
    Byt gärna ut mot riktiga ljud senare: anropen i story.js/app.js går via SFX.play(namn). */
 (function () {
   let ctx = null;
@@ -21,7 +21,7 @@
   }
 
   // inspelade ljud (loopar) – laddas i förväg och avkodas en gång
-  const FILES = { alarm: 'assets/audio/sovrum-larm.mp3?v=2' };
+  const FILES = { alarm: 'assets/audio/sovrum-larm.mp3?v=2', car: 'assets/audio/bilfard.mp3' };
   const buffers = {};
   function loadFile(name) {
     if (buffers[name] || !FILES[name] || !ctx) return buffers[name];
@@ -31,7 +31,7 @@
     return buffers[name];
   }
   // spela en inspelad loop; faller tillbaka på syntljudet om filen inte går att ladda
-  function fileLoop(name, stopFlag, vol, fallback) {
+  function fileLoop(name, stopFlag, vol, fallback, fade = 0.15) {
     loadFile(name).then((buf) => {
       if (stopFlag.stop) return;
       if (!buf) { fallback(stopFlag); return; }
@@ -39,7 +39,7 @@
       s.buffer = buf; s.loop = true;
       const g = ctx.createGain();
       g.gain.value = 0.0001;
-      g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + 0.15);
+      g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + fade);
       s.connect(g).connect(master);
       s.start();
       stopFlag.node = { s, g };
@@ -176,7 +176,8 @@
       s.start();
       stopFlag.node = { s, g, lfo };
     },
-    car: (stopFlag) => {
+    car: (stopFlag) => fileLoop('car', stopFlag, 0.35, loopDefs.carSynth, 1.2),
+    carSynth: (stopFlag) => {
       const o = ctx.createOscillator();
       o.type = 'sawtooth'; o.frequency.value = 48;
       const f = ctx.createBiquadFilter();
