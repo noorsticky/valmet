@@ -1,4 +1,4 @@
-/* Enkel syntljudmotor (WebAudio) – inga ljudfiler behövs.
+/* Enkel syntljudmotor (WebAudio). Väckarklockan i sovrummet är en inspelad fil (FILES), resten syntljud.
    Byt gärna ut mot riktiga ljud senare: anropen i story.js/app.js går via SFX.play(namn). */
 (function () {
   let ctx = null;
@@ -16,7 +16,34 @@
     master = ctx.createGain();
     master.gain.value = muted ? 0 : 0.6;
     master.connect(ctx.destination);
+    Object.keys(FILES).forEach(loadFile);
     return ctx;
+  }
+
+  // inspelade ljud (loopar) – laddas i förväg och avkodas en gång
+  const FILES = { alarm: 'assets/audio/sovrum-larm.mp3' };
+  const buffers = {};
+  function loadFile(name) {
+    if (buffers[name] || !FILES[name] || !ctx) return buffers[name];
+    buffers[name] = fetch(FILES[name]).then((r) => r.arrayBuffer())
+      .then((a) => new Promise((ok, no) => ctx.decodeAudioData(a, ok, no)))
+      .catch(() => null);
+    return buffers[name];
+  }
+  // spela en inspelad loop; faller tillbaka på syntljudet om filen inte går att ladda
+  function fileLoop(name, stopFlag, vol, fallback) {
+    loadFile(name).then((buf) => {
+      if (stopFlag.stop) return;
+      if (!buf) { fallback(stopFlag); return; }
+      const s = ctx.createBufferSource();
+      s.buffer = buf; s.loop = true;
+      const g = ctx.createGain();
+      g.gain.value = 0.0001;
+      g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + 0.15);
+      s.connect(g).connect(master);
+      s.start();
+      stopFlag.node = { s, g };
+    });
   }
 
   function noiseBuffer(sec) {
@@ -81,7 +108,8 @@
 
   /* Loopar: väckarklocka, sirener, rumston */
   const loopDefs = {
-    alarm: (stopFlag) => {
+    alarm: (stopFlag) => fileLoop('alarm', stopFlag, 2, loopDefs.alarmSynth),
+    alarmSynth: (stopFlag) => {
       const beep = () => {
         if (stopFlag.stop) return;
         for (let i = 0; i < 4; i++) tone({ freq: 2093, type: 'square', dur: 0.08, vol: 0.06, when: i * 0.13 });
