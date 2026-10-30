@@ -598,6 +598,61 @@ button { font: inherit; color: inherit; }
 .mirror__pick.opt { flex: none; min-height: 52px; padding: 12px 28px; align-self: flex-start; text-shadow: none; }
 .panel--mirror.is-picked .mirror__slide.is-center { transform: translateX(-50%) scale(1.04); filter: brightness(1.15); }
 .panel--mirror.is-picked .mirror__sheen { animation: sheenFlash .9s ease; }
+/* ---- badrumsbilden: spegeln är ett genomskinligt hål i bilden (x 40,1–59,9 %, y 19,8–68,7 %).
+   Glaset ligger bakom bilden, så kakel och spegelkant ramar in personerna. Bilden täcker skärmen
+   precis som scenens .stage, så positionen räknas ut i CSS utan JS. */
+.panel--mirror { --sw: max(100vw, 177.78vh); --sh: max(56.25vw, 100vh);
+  --mx: calc(50vw - var(--sw) / 2 + var(--sw) * .401 - 4px); --my: calc(50vh - var(--sh) / 2 + var(--sh) * .1982 - 4px);
+  --mw: calc(var(--sw) * .198 + 8px); --mh: calc(var(--sh) * .4889 + 8px);
+  display: block; padding: 0; }
+.panel--mirror > * { transform: none !important; }
+.mirror__room { position: absolute; left: 50%; top: 50%; z-index: 2; width: var(--sw); height: var(--sh); translate: -50% -50%; pointer-events: none; user-select: none; filter: brightness(.58) saturate(.9);
+  /* bara ramen runt spegeln behövs – resten av bilden finns redan i scenen bakom (och HUD:en ska synas) */
+  --il: calc(var(--mx) - 40px - (50vw - var(--sw) / 2)); --it: calc(var(--my) - 40px - (50vh - var(--sh) / 2));
+  clip-path: inset(var(--it) calc(var(--sw) - var(--il) - var(--mw) - 80px) calc(var(--sh) - var(--it) - var(--mh) - 80px) var(--il)); }
+.mirror__wrap { position: absolute; inset: 0; display: block; }
+.panel--mirror .mirror { position: absolute; z-index: auto; left: var(--mx); top: var(--my); width: var(--mw); height: var(--mh); perspective: none; transform: none !important; }
+.panel--mirror .mirror__frame { width: 100%; height: 100%; padding: 0; border-radius: 0; background: none; box-shadow: none; transform: none; }
+.panel--mirror .mirror__glass { z-index: 0; border-radius: 0; background: linear-gradient(#7d858b, #5d656b); box-shadow: inset 0 0 60px rgba(20,26,30,.35); }
+/* spegeln visar rummet bakom en – samma kakel, vänt och lite oskarpt */
+.mirror__refl { position: absolute; inset: -6%; background: url(../assets/img/badrum.webp) 8% 30% / 320% auto no-repeat; transform: scaleX(-1); filter: blur(5px) brightness(.6) saturate(.85); opacity: .9; }
+.panel--mirror .mirror__fog { z-index: 4; }
+.panel--mirror .mirror__nav { z-index: 3; }
+.panel--mirror .mirror__nav--prev { left: -72px; } .panel--mirror .mirror__nav--next { right: -72px; }
+.panel--mirror .mirror__tabs { position: absolute; z-index: 3; left: calc(var(--mx) + var(--mw) / 2); top: calc(var(--my) + var(--mh) + 18px); translate: -50% 0; transform: none; }
+.panel--mirror.is-fogged .mirror__tabs { transform: translateY(10px); }
+/* texten står till höger om spegeln, som förut: vit text med skugga mot den dämpade bilden */
+.mirror__side { position: absolute; z-index: 3; left: calc(var(--mx) + var(--mw) + 88px); top: 50%; translate: 0 -50%;
+  width: min(400px, calc(100vw - var(--mx) - var(--mw) - 112px)); max-height: calc(100vh - 32px);
+  display: flex; flex-direction: column; gap: 26px; text-shadow: 0 1px 14px rgba(0,0,0,.6); }
+.panel--mirror .mirror__head { align-items: flex-start; text-align: left; gap: 6px; }
+.panel--mirror .mirror__prompt { padding: 0; background: none; font-size: clamp(24px, 2.2vw, 30px); }
+.panel--mirror .mirror__sub { padding: 0; background: none; font-size: 15px; color: #cfd6cc; }
+.panel--mirror .mirror__info { width: auto; }
+.panel--mirror .mirror__theme { font-size: clamp(26px, 2.3vw, 34px); }
+.panel--mirror .mirror__who { margin-bottom: 14px; padding-bottom: 14px; }
+.panel--mirror .mirror__desc { min-height: 0; font-size: 15.5px; line-height: 1.55; margin-bottom: 18px; }
+.panel--mirror.is-fogged .mirror__info { display: none; }
+.panel--mirror.is-picked .mirror__side { opacity: 0; transition: opacity .4s; }
+
+/* smalt/stående: frågan ovanför spegeln, texten nederst över en mjuk mörk toning; flikarna göms (pilar och svep finns kvar) */
+@media (max-aspect-ratio: 5/4) {
+  .mirror__side { left: 0; right: 0; top: 0; bottom: 0; width: auto; max-height: none; translate: none; gap: 0; justify-content: space-between; padding: 64px 18px 18px; pointer-events: none; }
+  .mirror__side > * { pointer-events: auto; }
+  .mirror__side::after { content: ''; position: absolute; z-index: -1; left: 0; right: 0; bottom: 0; height: 52%; background: linear-gradient(transparent, rgba(8,10,8,.82) 38%); pointer-events: none; }
+  .panel--mirror .mirror__head { align-items: center; text-align: center; }
+  .panel--mirror .mirror__prompt { font-size: 22px; }
+  .panel--mirror .mirror__sub { display: none; }
+  .panel--mirror .mirror__tabs { display: none; }
+  .panel--mirror .mirror__nav { width: 44px; height: 44px; margin-top: -22px; }
+  .panel--mirror .mirror__nav--prev { left: -22px; } .panel--mirror .mirror__nav--next { right: -22px; }
+  .panel--mirror .mirror__theme { font-size: 24px; margin-bottom: 6px; }
+  .panel--mirror .mirror__who { margin-bottom: 10px; padding-bottom: 10px; font-size: 14px; }
+  .panel--mirror .mirror__desc { font-size: 14px; line-height: 1.45; margin-bottom: 12px; }
+  .panel--mirror .mirror__info { padding: 0; }
+  .panel--mirror .mirror__pick.opt { min-height: 46px; padding-block: 10px; align-self: stretch; }
+}
+
 @keyframes sheenFlash { 40% { background-color: rgba(255,255,255,.25); } }
 @media (max-width: 720px) {
   .panel--mirror { padding-top: 64px; }
