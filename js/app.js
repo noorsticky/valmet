@@ -898,12 +898,12 @@
         let cur = Math.max(0, personas.findIndex((x) => x.id === 'ola'));
         const n = personas.length;
         const p = api.panel('panel--mirror', `
-          <img class="mirror__room" src="assets/img/badrum.webp" alt="" aria-hidden="true" draggable="false">
           <div class="mirror__wrap">
+          <div class="mirror__head"><h2 class="mirror__prompt" id="mirrorQ">${prompt}</h2>${sub ? `<p class="mirror__sub">${sub}</p>` : ''}</div>
+          <div class="mirror__stage">
           <div class="mirror" role="group" aria-roledescription="karusell" aria-labelledby="mirrorQ">
             <div class="mirror__frame">
               <div class="mirror__glass" tabindex="0" aria-label="Svep eller använd piltangenterna för att byta person">
-                <div class="mirror__refl" aria-hidden="true"></div>
                 <div class="mirror__track">${personas.map((x, k) => `
                   <figure class="mirror__slide" data-i="${k}" aria-hidden="true"><img src="${x.img}" alt="" draggable="false">${x.wave ? `<video src="${x.wave}" muted playsinline loop preload="auto" aria-hidden="true"></video>` : ''}</figure>`).join('')}
                 </div>
@@ -918,8 +918,6 @@
           <div class="mirror__tabs" role="tablist" aria-label="Personer">${personas.map((x, k) => `
             <button class="mirror__tab" role="tab" data-i="${k}"><span class="mirror__face" style="background-image:url(${x.img})"></span><span><small>Dag ${x.day}</small>${x.name}</span></button>`).join('')}
           </div>
-          <div class="mirror__side">
-          <div class="mirror__head"><h2 class="mirror__prompt" id="mirrorQ">${prompt}</h2>${sub ? `<p class="mirror__sub">${sub}</p>` : ''}</div>
           <article class="mirror__info" aria-live="polite">
             <h3 class="mirror__theme"></h3>
             <p class="mirror__who"></p>
@@ -1002,6 +1000,26 @@
         glassEl.addEventListener('pointerup', () => { lastWipe = null; });
         glassEl.addEventListener('keydown', (e) => { if (fogged && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); clearFog(); } });
 
+        /* spegeln lutar lite mot pekaren och reflexen följer med */
+        const frameEl = $('.mirror__frame', p);
+        if (!REDUCED) {
+          // målet sätts av pekaren, lutningen glider dit en gång per bildruta (ingen CSS-övergång som startas om)
+          const tilt = { x: 0, y: 0, tx: 0, ty: 0, raf: 0, last: 0 };
+          const step = (now) => {
+            const dt = Math.min(0.05, (now - tilt.last) / 1000 || 0.016); tilt.last = now;
+            const f = 1 - Math.exp(-dt * 7);
+            tilt.x += (tilt.tx - tilt.x) * f; tilt.y += (tilt.ty - tilt.y) * f;
+            frameEl.style.setProperty('--rx', `${(-tilt.y * 5).toFixed(2)}deg`); frameEl.style.setProperty('--ry', `${(tilt.x * 7).toFixed(2)}deg`);
+            frameEl.style.setProperty('--sx', `${(tilt.x * 30).toFixed(2)}%`);
+            tilt.raf = Math.abs(tilt.tx - tilt.x) + Math.abs(tilt.ty - tilt.y) > 0.002 && p.isConnected ? requestAnimationFrame(step) : 0;
+          };
+          p.addEventListener('pointermove', (e) => {
+            const r = frameEl.getBoundingClientRect();
+            tilt.tx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (innerWidth / 2)));
+            tilt.ty = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight / 2)));
+            if (!tilt.raf) { tilt.last = performance.now(); tilt.raf = requestAnimationFrame(step); }
+          });
+        }
         $('.mirror__nav--prev', p).addEventListener('click', () => go(cur - 1));
         $('.mirror__nav--next', p).addEventListener('click', () => go(cur + 1));
         tabs.forEach((t) => t.addEventListener('click', () => go(+t.dataset.i)));
@@ -1038,9 +1056,9 @@
           await api.closePanel(p);
           resolve(personas[cur].id);
         });
-        // spegeln sitter fast i badrumsbilden (CSS räknar ut var), så panelen skalas inte om
-        const refit = null;
+        let refit = null;
         sync();
+        refit = api.fit($('.mirror__wrap', p), p);
       });
     },
 
