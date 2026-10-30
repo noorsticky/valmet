@@ -598,6 +598,56 @@ button { font: inherit; color: inherit; }
 .mirror__pick.opt { flex: none; min-height: 52px; padding: 12px 28px; align-self: flex-start; text-shadow: none; }
 .panel--mirror.is-picked .mirror__slide.is-center { transform: translateX(-50%) scale(1.04); filter: brightness(1.15); }
 .panel--mirror.is-picked .mirror__sheen { animation: sheenFlash .9s ease; }
+/* ---- badrumsbilden: spegeln är ett genomskinligt hål i bilden (x 40,1–59,9 %, y 19,8–68,7 %).
+   Glaset ligger bakom bilden, så kakel och spegelkant ramar in personerna. Bilden täcker skärmen
+   precis som scenens .stage, så positionen räknas ut i CSS utan JS. */
+.panel--mirror { --sw: max(100vw, 177.78vh); --sh: max(56.25vw, 100vh);
+  --mx: calc(50vw - var(--sw) / 2 + var(--sw) * .401 - 4px); --my: calc(50vh - var(--sh) / 2 + var(--sh) * .1982 - 4px);
+  --mw: calc(var(--sw) * .198 + 8px); --mh: calc(var(--sh) * .4889 + 8px);
+  display: block; padding: 0; }
+.panel--mirror > * { transform: none !important; }
+.mirror__room { position: absolute; left: 50%; top: 50%; z-index: 2; width: var(--sw); height: var(--sh); translate: -50% -50%; pointer-events: none; user-select: none; }
+.mirror__wrap { position: absolute; inset: 0; display: block; }
+.panel--mirror .mirror { position: absolute; z-index: auto; left: var(--mx); top: var(--my); width: var(--mw); height: var(--mh); perspective: none; transform: none !important; }
+.panel--mirror .mirror__frame { width: 100%; height: 100%; padding: 0; border-radius: 0; background: none; box-shadow: none; transform: none; }
+.panel--mirror .mirror__glass { z-index: 0; border-radius: 0; background: linear-gradient(#d9dfe3, #b7c0c6); box-shadow: inset 0 0 60px rgba(40,50,60,.25); }
+/* spegeln visar rummet bakom en – samma kakel, vänt och lite oskarpt */
+.mirror__refl { position: absolute; inset: -6%; background: url(../assets/img/badrum.webp) 8% 30% / 320% auto no-repeat; transform: scaleX(-1); filter: blur(5px) brightness(.92) saturate(.85); opacity: .9; }
+.panel--mirror .mirror__fog { z-index: 4; }
+.panel--mirror .mirror__nav { z-index: 3; }
+.panel--mirror .mirror__nav--prev { left: -72px; } .panel--mirror .mirror__nav--next { right: -72px; }
+.panel--mirror .mirror__tabs { position: absolute; z-index: 3; left: calc(var(--mx) + var(--mw) / 2); top: calc(var(--my) + var(--mh) + 18px); translate: -50% 0; transform: none; }
+.panel--mirror.is-fogged .mirror__tabs { transform: translateY(10px); }
+/* texten står till höger om spegeln på ett mörkt kort, så den syns mot det ljusa kaklet */
+.mirror__side { position: absolute; z-index: 3; left: calc(var(--mx) + var(--mw) + 88px); top: 50%; translate: 0 -50%;
+  width: min(380px, calc(100vw - var(--mx) - var(--mw) - 112px)); max-height: calc(100vh - 32px); overflow: auto;
+  display: flex; flex-direction: column; gap: 18px; padding: 26px 28px 28px;
+  border-radius: 18px; background: rgba(16,18,16,.8); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+.panel--mirror .mirror__head { align-items: flex-start; text-align: left; gap: 6px; }
+.panel--mirror .mirror__prompt { padding: 0; background: none; font-size: clamp(24px, 2.2vw, 30px); }
+.panel--mirror .mirror__sub { padding: 0; background: none; font-size: 15px; color: #cfd6cc; }
+.panel--mirror .mirror__info { width: auto; text-shadow: none; }
+.panel--mirror .mirror__theme { font-size: clamp(26px, 2.3vw, 34px); }
+.panel--mirror .mirror__who { margin-bottom: 14px; padding-bottom: 14px; }
+.panel--mirror .mirror__desc { min-height: 0; font-size: 15.5px; line-height: 1.55; margin-bottom: 18px; }
+.panel--mirror.is-fogged .mirror__info { display: none; }
+.panel--mirror.is-picked .mirror__side { opacity: 0; transition: opacity .4s; }
+
+/* smalt/stående: frågan och texten som ett kort i nederkant, flikarna göms (pilar och svep finns kvar) */
+@media (max-aspect-ratio: 5/4) {
+  .mirror__side { left: 12px; right: 12px; top: auto; bottom: 12px; width: auto; translate: none; gap: 12px; padding: 18px 18px 20px; max-height: calc(100vh - var(--my) - var(--mh) * .45); overflow: auto; }
+  .panel--mirror .mirror__prompt { font-size: 20px; }
+  .panel--mirror .mirror__sub { font-size: 13.5px; }
+  .panel--mirror .mirror__tabs { display: none; }
+  .panel--mirror .mirror__nav { width: 44px; height: 44px; margin-top: -22px; }
+  .panel--mirror .mirror__nav--prev { left: -22px; } .panel--mirror .mirror__nav--next { right: -22px; }
+  .panel--mirror .mirror__theme { font-size: 24px; margin-bottom: 6px; }
+  .panel--mirror .mirror__who { margin-bottom: 10px; padding-bottom: 10px; font-size: 14px; }
+  .panel--mirror .mirror__desc { font-size: 14px; line-height: 1.45; margin-bottom: 12px; }
+  .panel--mirror .mirror__info { padding: 0; }
+  .panel--mirror .mirror__pick.opt { min-height: 46px; padding-block: 10px; }
+}
+
 @keyframes sheenFlash { 40% { background-color: rgba(255,255,255,.25); } }
 @media (max-width: 720px) {
   .panel--mirror { padding-top: 64px; }
@@ -901,6 +951,8 @@ button { font: inherit; color: inherit; }
 
 /* ---- spegel: badrum med kakel, varm lampa, handfat och ånga */
 .spegel { position: absolute; inset: 0; overflow: hidden; background: #18242a; }
+/* spegelhålet i badrumsbilden innan spegelpanelen tonat in */
+.env--spegel { background: linear-gradient(#d9dfe3, #b7c0c6); }
 .spegel__tiles { position: absolute; inset: 0; background:
   linear-gradient(rgba(10,16,20,.35), rgba(10,16,20,.65)),
   repeating-linear-gradient(0deg, rgba(0,0,0,.35) 0 2px, transparent 2px 54px),
