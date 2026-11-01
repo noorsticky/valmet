@@ -87,14 +87,17 @@ noder dagen har och vilket val som är det kritiska (`critical`), var konsekvens
 - **Ulrikas dag** (dag A, spår 2 ”Vi löser det”): kritiskt val 08:30, konsekvens 16:10.
   Den har också fyra signaler som deltagaren kan upptäcka (`api.signal`, `api.notify`).
   Skiftrapporten visar hur många man såg.
-- **Tomas** har ingen egen dag än. Han spelar Olas dag med sitt namn.
+- **Tomas dag** (dag C, ”Det påverkar inte er”): arbete inne i en kokare när en annan entreprenör lyfter ovanför.
+  Kritiskt val 07:30, konsekvens 11:50, fyra signaler. Bygger på kundens scenario ”Arbete inne i kokaren”.
 
-### Platshållare i Ulrikas dag
+### Platshållare i Ulrikas och Tomas dagar
 
 De här filerna är platshållare. Byt ut filen med samma namn och storlek så syns den riktiga bilden direkt:
 
 - Ikoner (420×420 px, transparent webp): `assets/props/projektmote.webp` (10:20), `inkorg.webp` (13:30),
   `motesbord.webp` (14:20), `tom-stol.webp` (15:00), `stangd-laptop.webp` (16:10).
+- Ikoner i Tomas dag: `assets/props/lyft.webp` (09:50), `kokare.webp` (11:10).
+- Tomas scener vid och inne i kokaren använder fabriksscenen (`fabrik`) och larmfilmen tills det finns riktiga bilder eller filmer från en kokare.
 
 ### Vinkande personer i spegeln
 
@@ -168,4 +171,4 @@ Alla repliker, tankar och berättarrader kan få inspelad röst. Kursen fungerar
 
 Ändras en text i `js/story.js` får raden ett nytt filnamn, eftersom den gamla inspelningen inte stämmer längre. Skriptet listar inspelningar som inte längre hör till någon rad.
 
-När rösten spelas ligger repliken kvar tills rösten är klar. Ett klick hoppar vidare. Med ljudet avstängt visas bara texten. Tomas spelar Olas dag med sitt eget namn, så rader där namnet byts ut spelas inte upp för honom.
+När rösten spelas ligger repliken kvar tills rösten är klar. Ett klick hoppar vidare. Med ljudet avstängt visas bara texten.

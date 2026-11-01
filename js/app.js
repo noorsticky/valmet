@@ -14,10 +14,12 @@
   let persona = null;
   function personalize(t) {
     if (typeof t !== 'string' || !persona || persona.id === 'ola' || (DAY && DAY.own)) return t;
-    let out = t.replace(/\bOlas\b/g, persona.name + 's').replace(/\bOla\b/g, persona.name);
+    let out = t.replace(/\bOlas\b/g, gen(persona.name)).replace(/\bOla\b/g, persona.name);
     if (persona.pronoun === 'hon') out = out.replace(/\bhan\b/g, 'hon').replace(/\bHan\b/g, 'Hon').replace(/\bhonom\b/g, 'henne').replace(/\bhans\b/g, 'hennes');
     return out;
   }
+  // genitiv: Ola → Olas, Tomas → Tomas
+  const gen = (name) => (/[sxz]$/i.test(name) ? name : name + 's');
   const esc = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1447,7 +1449,7 @@
           <span class="dcard__day">Dag ${x.day}${done ? ' · <b>Spelad</b>' : ''}</span>
           <strong>${x.name}</strong>
           <small>${x.role} · ${x.theme}</small>
-          <span class="dcard__cta">${!own ? 'Kommer snart' : x.id === me.id ? 'Spela igen' : `Spela ${x.name}s dag`}</span>
+          <span class="dcard__cta">${!own ? 'Kommer snart' : x.id === me.id ? 'Spela igen' : `Spela ${gen(x.name)} dag`}</span>
         </span>
       </button>`;
     };
@@ -1456,13 +1458,13 @@
     p.setAttribute('aria-label', 'Dagen är klar');
     p.innerHTML = `
       <p class="tl-end__eyebrow">Vår dag · Dag ${me.day} klar</p>
-      <h2 class="tl-end__title">${me.name}s dag är klar.</h2>
+      <h2 class="tl-end__title">${gen(me.name)} dag är klar.</h2>
       ${sum.length ? `<ul class="tl-end__sum">${sum.map((t) => `<li>${t}</li>`).join('')}</ul>` : ''}
       ${pledge ? `<blockquote class="tl-end__pledge"><span>Ditt åtagande</span>${pledge}</blockquote>` : ''}
       <p class="tl-end__label">Spela en annan dag</p>
       <div class="tl-end__cards">${others.map(card).join('')}</div>
       <div class="tl-end__foot">
-        <button class="tl-end__link js-same">Spela ${me.name}s dag igen</button>
+        <button class="tl-end__link js-same">Spela ${gen(me.name)} dag igen</button>
         <button class="tl-end__link js-restart">Börja om från start</button>
       </div>`;
     el.timeline.appendChild(p);
@@ -1500,7 +1502,7 @@
     await setCam(0, layout[nodes[1].id].y + 30, 0.7, 0);
     el.world.getAnimations().forEach((a) => a.cancel());
     el.world.animate([{ opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: T(900), easing: 'ease-out' });
-    banner(`<strong>${who.name}s dag</strong><small>${who.theme}. ${who.role}, ${who.age} år.</small>`);
+    banner(`<strong>${gen(who.name)} dag</strong><small>${who.theme}. ${who.role}, ${who.age} år.</small>`);
     await sleep(T(2200));
     busy = false;
     await goNext();

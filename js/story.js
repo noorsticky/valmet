@@ -1160,6 +1160,490 @@ function buildUlrikaReflection(s) {
 }
 
 /* =====================================================================
+   TOMAS DAG – spår 3 ”Det påverkar inte er”
+   Arbete inne i en kokare under ett produktionsstopp. En annan entreprenör
+   lyfter material ovanför. Lyftvägen ändras under förmiddagen utan att
+   Valmet får veta det. Kritiskt val kl 07:30, konsekvens kl 11:50.
+   Signaler som i Ulrikas dag: sådant som borde ha fått arbetet att stoppas.
+   ===================================================================== */
+const T_BAD = ['parallellt', 'ertlyft'];
+const T_GOOD = ['skiss', 'klartecken'];
+const T_OPTIONS = [
+  { id: 'parallellt', label: '”Bra, då kör vi parallellt. Säg till om något ändras.”' },
+  { id: 'ertlyft',    label: '”Ni har koll på ert lyft, vi har koll på vårt.”' },
+  { id: 'skiss',      label: '”Vi ritar in lyftvägen tillsammans och spärrar av hela vägen, inte bara toppen.”' },
+  { id: 'klartecken', label: '”Inget lyft nära kokaren utan gemensamt klartecken. Ändras något stannar vi.”' },
+];
+const T_SAID = Object.fromEntries(T_OPTIONS.map((o) => [o.id, o.label]));
+const T_SIGNALS = {
+  s1: { time: '08:15', text: 'avspärrningen som slutade vid trappan' },
+  s2: { time: '09:50', text: 'att lyftet flyttades närmare kokaren' },
+  s3: { time: '10:15', text: 'lyftgängets prat om en ny väg' },
+  s4: { time: '11:10', text: 'skrapet ovanför öppningen' },
+};
+// sidohändelsernas repliker beror på vad Tomas sa först kl 07:30
+const tSide = (s, parallellt, ertlyft) => (s.choices.A === 'ertlyft' ? ertlyft : parallellt);
+
+const TOMAS_NODES = [
+  /* ------------------------------------------------------------ 06:50 */
+  {
+    id: 't0650', prop: 'assets/props/bil.webp', time: '06:50', title: 'Mot bruket', kind: 'film', lane: 'main',
+    env: 'bil', place: 'På väg till bruket', cinematic: true,
+    async play(api) {
+      api.clock('06:50');
+      api.loop('car');
+      await api.title('06:50', 'På väg till bruket');
+      await api.say('Dag två av stoppet. Kokaren ska vara stängd på torsdag.', { who: 'Tomas', inner: true });
+      await api.say('Fyra dagar. Tre företag. En kokare.', { who: 'Tomas', inner: true });
+      await api.say('Det brukar gå. Om alla vet vad de andra gör.', { who: 'Tomas', inner: true });
+      api.stopLoop('car');
+    },
+  },
+
+  /* ------------------------------------------------------------ 07:15 */
+  {
+    id: 't0715', prop: 'assets/props/kopp.webp', time: '07:15', title: 'I boden', kind: 'pink', lane: 'main',
+    env: 'fika', place: 'Byggboden',
+    async play(api) {
+      api.clock('07:15');
+      api.loop('room');
+      await api.title('07:15', 'Byggboden');
+      const pick = await api.choose({
+        prompt: 'Vad blir det innan mötet?',
+        options: [{ id: 'termos', label: 'Kaffe ur termosen' }, { id: 'automat', label: 'Automatkaffe' }, { id: 'inget', label: 'Inget, mötet först' }],
+        kind: 'pink',
+        hotspot: { x: 27, y: 52, w: 12, h: 18, id: 'termos', label: 'Ta koppen' },
+      });
+      api.state.coffee = pick;
+      await api.say({
+        termos: 'Hemkokt. Det enda som är som vanligt under ett stopp.',
+        automat: 'Automaten piper. Kaffet smakar plast. Det duger.',
+        inget: 'Kaffet får vänta. Det gör det alltid under stopp.',
+      }[pick], { who: 'Tomas', inner: true });
+      api.stopLoop('room');
+    },
+  },
+
+  /* ------------------------------------------------------------ 07:30 */
+  {
+    id: 't0730', prop: 'assets/props/whiteboard.webp', time: '07:30', title: 'Samordningsmötet', kind: 'blue', badge: 'A', lane: 'main', critical: true,
+    env: 'mote', place: 'Kundens mötesrum',
+    async play(api) {
+      const replay = !!api.state.rewound;
+      api.clock('07:30');
+      api.loop('room');
+      api.cinematic(true);
+      await api.title('07:30', replay ? 'Samordningsmötet – igen' : 'Samordningsmötet');
+      await api.say('Valmet går in i kokaren nio. Vi har ingen tid att tappa.', { who: 'Karin, kundens projektledare' });
+      await api.say('Vi ska flytta lite material under dagen. Ett kort lyft. Det påverkar inte er.', { who: 'Mikael, lyftledare' });
+      await api.say('Var går lyftvägen?', { who: 'Jens, arbetsledare' });
+      await api.say('Vid sidan av. Vi spärrar av där uppe.', { who: 'Mikael, lyftledare' });
+      await api.say('Ingen skiss. Ingen tid satt. Alla tittar på dig.', { narrator: true });
+      api.cinematic(false);
+
+      let pick;
+      if (!replay) {
+        pick = await api.choose({
+          prompt: 'Vad säger Tomas?',
+          // första gången finns bara de två svaren som känns rimliga i stunden
+          options: T_OPTIONS.filter((o) => T_BAD.includes(o.id)), kind: 'key', badge: 'A',
+          timer: 14, timeoutId: 'parallellt', timerLabel: 'Karin tittar på klockan…',
+        });
+        if (api.lastTimedOut) await api.say('Mötet ska vidare, och Tomas säger det som känns smidigast: ”Då kör vi parallellt.”', { narrator: true });
+      } else {
+        const tried = new Set(api.state.triedA || []);
+        while (true) {
+          pick = await api.choose({
+            prompt: 'Nu vet du vad som hände strax före lunch. Vad säger Tomas den här gången?',
+            options: T_OPTIONS.map((o) => ({
+              ...o,
+              tag: tried.has(o.id) ? 'Ditt första svar' : T_GOOD.includes(o.id) ? 'Nytt' : '',
+              fresh: T_GOOD.includes(o.id),
+            })),
+            kind: 'key', badge: 'A',
+          });
+          if (T_GOOD.includes(pick)) break;
+          tried.add(pick);
+          api.sfx('memory');
+          await api.say('Samma som i morse. Vem vet då att lyftet flyttas?', { who: 'Tomas', inner: true });
+        }
+      }
+      api.state.choices.A = pick;
+      api.state.triedA = [...new Set([...(api.state.triedA || []), pick])];
+      if (!api.state.firstA) api.state.firstA = pick;
+
+      const replies = {
+        parallellt: ['Mikael nickar. Karin skriver något och bläddrar vidare.', 'Bra. Då är vi överens.', 'Karin, kundens projektledare'],
+        ertlyft: ['Mikael ler lite.', 'Exakt. Vi håller oss ur vägen för varandra.', 'Mikael, lyftledare'],
+        skiss: ['Det blir tyst. Sedan tar Mikael pennan och ritar på tavlan.', 'Här går vi. Okej, vi drar bandet hela vägen runt.', 'Mikael, lyftledare'],
+        klartecken: ['Karin suckar, men nickar.', 'Rimligt. Jag ringer dig innan vi lyfter.', 'Mikael, lyftledare'],
+      }[pick];
+      await api.say(replies[0], { narrator: true });
+      await api.say(replies[1], { who: replies[2] });
+      await api.memory('Det här valet följer med resten av dagen.', 'A');
+      api.stopLoop('room');
+    },
+  },
+
+  /* ------------------------------------------------------------ 08:15 */
+  {
+    id: 't0815', prop: 'assets/props/hjalm.webp', time: '08:15', title: 'Innan inträdet', kind: 'blue', badge: 'B', lane: 'main',
+    env: 'fabrik', place: 'Vid kokaren',
+    async play(api) {
+      api.clock('08:15');
+      api.loop('factory');
+      await api.title('08:15', 'Vid kokaren');
+      api.signal({ id: 's1', x: 70, y: 30, w: 14, h: 16, line: 'Avspärrningsbandet slutar vid trappan. Lyftvägen fortsätter förbi.' });
+      await api.say('Genomgången innan inträdet börjar om fem minuter. Karin har bokat dig samtidigt.', { narrator: true });
+      await api.say('Tomas, är du med på genomgången innan vi går in?', { who: 'Jens, arbetsledare' });
+      const pick = await api.choose({
+        prompt: 'Vad gör Tomas?',
+        options: [
+          { id: 'genomgang', label: 'Går med på genomgången', sub: 'Karin får vänta tio minuter' },
+          { id: 'kund', label: 'Går till Karin', sub: '”Du har koll, Jens”' },
+        ],
+        kind: 'key', badge: 'B',
+      });
+      api.state.choices.B = pick;
+      if (pick === 'genomgang') {
+        await api.say('Tomas står med när laget går igenom tillträde, ventilation och radio.', { narrator: true });
+        await api.say('Radio på kanal två. Ropar ni, svarar jag.', { who: 'Tomas' });
+        await api.say('Skönt. Då vet vi vem vi når.', { who: 'Jens, arbetsledare' });
+      } else {
+        await api.say('Du har koll, Jens. Jag måste till Karin.', { who: 'Tomas' });
+        await api.say('Visst. Vi kör.', { who: 'Jens, arbetsledare', small: true });
+      }
+      await api.memory('Jens kommer ihåg det här – på ett eller annat sätt.', 'B');
+      api.stopLoop('factory');
+    },
+  },
+
+  /* ------------------------------------------------------------ 09:20 */
+  {
+    id: 't0920', prop: 'assets/props/kalender.webp', time: '09:20', title: 'Tidplanen', kind: 'film', lane: 'main',
+    env: 'mote', envVariant: 'dark', place: 'Platskontoret', cinematic: true,
+    async play(api) {
+      api.clock('09:20');
+      await api.title('09:20', 'Platskontoret');
+      await api.say('Linjen behöver komma i gång tidigare. Kan ni stänga kokaren på onsdag i stället?', { who: 'Karin, kundens projektledare' });
+      await api.say(api.state.choices.B === 'kund'
+        ? 'Du var ju här i stället för på genomgången, så jag antar att ni ligger bra till.'
+        : 'Jag vet att det är tajt. Men allt som går att köra samtidigt måste köras samtidigt.', { who: 'Karin, kundens projektledare' });
+      await api.say('En dag kortare. Samma kokare. Samma antal händer.', { who: 'Tomas', inner: true });
+    },
+  },
+
+  /* ------------------------------------------------------------ 09:50 (A) */
+  {
+    id: 't0950', prop: 'assets/props/lyft.webp', time: '09:50', title: 'Lyftvägen ändras', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+    env: 'fabrik', envVariant: 'dim', place: 'Ovanför kokaren', cinematic: true,
+    async play(api) {
+      api.clock('09:50');
+      api.loop('factory');
+      await api.title('09:50', 'Ovanför kokaren');
+      api.signal({ id: 's2', x: 30, y: 40, w: 16, h: 18, line: 'Pallarna står i lyftvägen. Lasten ska gå närmare kokaren nu.' });
+      await api.say('Pallarna står i vägen. Vi får ta den andra sidan, närmare kokaren.', { who: 'Mikael, lyftledare' });
+      await api.say('Ska vi inte säga till Valmet?', { who: 'Lyftare' });
+      await api.say(tSide(api.state,
+        'Tomas sa ju att det kör parallellt. Det är ett kort lyft.',
+        'Tomas sa ju att vi har koll på vårt. Vi kör.'), { who: 'Mikael, lyftledare' });
+      await api.say('Ändringen stannar i deras lag.', { narrator: true });
+      api.stopLoop('factory');
+    },
+  },
+
+  /* ------------------------------------------------------------ 10:15 */
+  {
+    id: 't1015', prop: 'assets/props/fika.webp', time: '10:15', title: 'En kvart över', kind: 'pink', lane: 'main',
+    env: 'fika', place: 'Byggboden',
+    async play(api) {
+      api.clock('10:15');
+      api.loop('room');
+      await api.title('10:15', 'Byggboden');
+      const pick = await api.choose({
+        prompt: 'Tomas får en kvart över. Vad gör han?',
+        options: [
+          { id: 'mejl', label: 'Svarar på mejl' },
+          { id: 'hem', label: 'Ringer hem' },
+          { id: 'smaprat', label: 'Småpratar med lyftgänget' },
+        ],
+        kind: 'pink',
+      });
+      api.state.break = pick;
+      if (pick === 'smaprat') {
+        await api.say('Hur går det där uppe?', { who: 'Tomas' });
+        await api.say('Det rullar. Vi fick byta väg, pallarna stod i vägen. Inget märkvärdigt.', { who: 'Lyftare' });
+        api._foundSignal('s3', '”Vi fick byta väg.” Ingen har sagt något till Valmet.');
+        await api.wait(1600);
+      } else {
+        await api.say(pick === 'mejl' ? 'Tolv olästa. Elva handlar om tidplanen.' : 'Allt bra hemma. Han lovar att vara hemma till middag.', { who: 'Tomas', inner: true });
+      }
+      api.stopLoop('room');
+    },
+  },
+
+  /* ------------------------------------------------------------ 10:40 */
+  {
+    id: 't1040', prop: 'assets/props/mobil.webp', time: '10:40', title: 'Tre samtal', kind: 'blue', badge: 'C', lane: 'main',
+    env: 'kontor', place: 'Platskontoret',
+    async play(api) {
+      api.clock('10:40');
+      await api.title('10:40', 'Tre samtal');
+      await api.say('Telefonen och radion går samtidigt. I vilken ordning tar Tomas dem?', { narrator: true });
+      await api.hotspot({ x: 38.5, y: 68, w: 5, h: 6.5, label: 'Se vem som söker dig' });
+      const order = await api.mailSort([
+        { id: 'karin', from: 'Karin (kunden)', subject: 'Missat samtal', preview: 'Ring mig om onsdag. Linjen vill ha besked före lunch.' },
+        { id: 'inkop', from: 'Inköp', subject: 'Packningarna är försenade', preview: 'Leveransen kommer i morgon eftermiddag i stället.' },
+        { id: 'jens', from: 'Jens (radio)', subject: 'Kanal två', preview: 'Det rör sig mycket ovanför oss. Vet du något?' },
+      ]);
+      api.state.choices.C = order;
+      if (order[0] === 'jens') {
+        await api.say('Vad hör ni, Jens?', { who: 'Tomas' });
+        await api.say('Skrap och röster. Lyftgänget, antar jag.', { who: 'Jens, arbetsledare' });
+        await api.say(api.state.track === 'A'
+          ? 'De sa att det inte påverkar oss. Jag hör med Mikael efter lunch.'
+          : 'Mikael ringer innan de lyfter. Så har vi bestämt.', { who: 'Tomas' });
+      } else if (order[order.length - 1] === 'jens') {
+        await api.say('Jens anrop ligger kvar sist. Radion är tyst igen.', { narrator: true });
+      }
+      await api.memory('Samtalen är sorterade. Vi får se vad som hinner ikapp.', 'C');
+    },
+  },
+
+  /* ------------------------------------------------------------ 11:10 (A) */
+  {
+    id: 't1110', prop: 'assets/props/kokare.webp', time: '11:10', title: 'Inne i kokaren', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+    env: 'fabrik', envVariant: 'dim', place: 'Inne i kokaren', cinematic: true,
+    async play(api) {
+      api.clock('11:10');
+      api.loop('factory');
+      await api.title('11:10', 'Inne i kokaren');
+      api.signal({ id: 's4', x: 48, y: 18, w: 14, h: 14, line: 'Skrap ovanför öppningen. Någon lyfter nära.' });
+      await api.say('Hör ni? Det skrapar ovanför öppningen.', { who: 'Ali, montör' });
+      await api.say(api.state.choices.B === 'genomgang'
+        ? 'Det är lyftgänget. Tomas sa att det inte påverkar oss.'
+        : 'Det är lyftgänget. Tomas är upptagen med kunden. Vi jobbar på.', { who: 'Jens, arbetsledare' });
+      await api.say('Ingen går upp och tittar.', { narrator: true });
+      api.stopLoop('factory');
+    },
+  },
+
+  /* ------------------------------------------------------------ 11:50 */
+  {
+    id: 't1150', prop: (s) => (s.track === 'A' ? 'assets/props/larm.webp' : 'assets/props/vinka.webp'), time: '11:50', kind: 'blue', lane: 'main',
+    badge: (s) => (s.track === 'A' ? 'A' : 'A2'),
+    title: (s) => (s.track === 'A' ? 'Lasten faller' : 'Lyftet väntar'),
+    env: (s) => (s.track === 'A' ? 'larm' : 'fabrik'),
+    envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
+    place: (s) => (s.track === 'A' ? 'Kokaren' : 'Vid kokaren'),
+    cinematic: (s) => s.track === 'A',
+    async play(api) {
+      const s = api.state;
+      api.clock('11:50');
+      if (s.track === 'A') {
+        api.loop('siren');
+        api.tint('alarm');
+        await api.title('11:50', 'Kokaren');
+        await api.say('Strax före lunch lyfter lyftgänget en tung komponent förbi kokaren.', { narrator: true });
+        await api.say('Lasten förskjuts. En del av den faller genom öppningen.', { narrator: true });
+        api.sfx('heartbeat');
+        await api.say('Ali har fått den över benet! Larma!', { who: 'Jens, arbetsledare, i radion' });
+        await api.say('Benet är krossat. Arbetskamraterna stoppar allt och börjar räddningen.', { narrator: true, big: true });
+        await api.wait(600);
+        api.stopLoop('siren');
+        api.tint(null);
+        const first = await api.choose({
+          prompt: 'Ambulansen är på väg. Vad gör Tomas först?',
+          options: [
+            { id: 'teamet', label: 'Samlar sitt lag', sub: 'Ser till att alla är omhändertagna' },
+            { id: 'kunden', label: 'Ringer Karin', sub: 'Tidplanen måste ändras' },
+            { id: 'skyldig', label: 'Letar upp Mikael', sub: '”Vem ändrade lyftet?”' },
+          ],
+          kind: 'key',
+        });
+        s.meet = first;
+        if (first === 'teamet') {
+          await api.say('Alla ut ur kokaren. Vi ses vid boden. Ingen är ensam nu.', { who: 'Tomas' });
+          await api.say('Jens nickar. Händerna skakar när han räknar in laget.', { narrator: true });
+        } else if (first === 'kunden') {
+          await api.say('Karin, vi har en olycka. Stoppet står still.', { who: 'Tomas' });
+          await api.say('Bakom honom står laget kvar vid kokaren. Ingen har sagt vart de ska ta vägen.', { narrator: true });
+        } else {
+          await api.say('Vem ändrade lyftvägen?', { who: 'Tomas' });
+          await api.say('Pallarna stod i vägen. Ni sa ju att det inte påverkade er.', { who: 'Mikael, lyftledare' });
+          await api.say('Frågan om vem kan vänta. Laget kan inte det.', { narrator: true });
+        }
+        await api.say('Två arbeten, bedömda var för sig. En ändring som ingen gick igenom tillsammans. Inget klartecken.', { narrator: true });
+        await api.say(s.choices.A === 'ertlyft' ? '”Ni har koll på ert lyft, vi har koll på vårt.”' : '”Då kör vi parallellt. Säg till om något ändras.”', { who: 'Tomas, i morse', small: true });
+        await api.bigQuestion('Vad hade kunnat stoppa lyftet i tid?');
+        s.accident = true;
+      } else {
+        api.loop('factory');
+        await api.title('11:50', 'Vid kokaren');
+        await api.say(s.choices.A === 'skiss'
+          ? 'Tomas, pallarna står i vägen. Vi måste gå närmare kokaren än vi ritade.'
+          : 'Tomas, vi behöver ändra lyftvägen. Den går närmare kokaren nu. Klartecken?', { who: 'Mikael, lyftledare, i telefon' });
+        await api.say('Då stannar vi. Ingen lyfter förrän kokaren är tom.', { who: 'Tomas' });
+        await api.say('Jens, ta ut laget. Vi tar lunch nu i stället.', { who: 'Tomas, i radion' });
+        await api.say('Uppfattat. Alla ut.', { who: 'Jens, arbetsledare' });
+        await api.say('Laget klättrar ut. Mikael drar bandet runt den nya vägen och lyfter när öppningen är tom.', { narrator: true });
+        await api.say(s.choices.B === 'genomgang'
+          ? 'Bra att vi hade radion. Därinne hör man ingenting.'
+          : 'Bra att du ringde. Därinne hör man ingenting.', { who: 'Ali, montör' });
+        await api.say('Lyftet tog tjugo minuter extra. Ingen var under det.', { narrator: true });
+        api.stopLoop('factory');
+      }
+    },
+  },
+
+  /* ------------------------------------------------------------ Hemfärden */
+  {
+    id: 'tend', prop: 'assets/props/hus.webp', time: 'Dagens slut', title: 'På väg hem', kind: 'green', lane: 'main',
+    env: 'bil', envVariant: 'dusk', place: 'På väg hem',
+    async play(api) {
+      const s = api.state;
+      api.clock('17:20');
+      api.loop('car');
+      api.cinematic(true);
+      await api.title('17:20', 'På väg hem');
+      await api.say('Jag behöver inte kunna varje lyft. Men jag måste märka när något har ändrats.', { who: 'Tomas', inner: true });
+      await api.say(s.accident
+        ? 'Det var ett kort lyft, sa de. Och jag nöjde mig med det.'
+        : 'Tjugo minuter. Det var vad det kostade att stanna.', { who: 'Tomas', inner: true });
+      await api.say('Ta en stund och tänk tillbaka på din dag.', { narrator: true });
+      api.cinematic(false);
+      s.reflection = await api.reflect(buildTomasReflection(s));
+      api.stopLoop('car');
+    },
+  },
+];
+
+function buildTomasReflection(s) {
+  const steps = [];
+  const rewound = T_BAD.includes(s.firstA);
+  const order = s.choices.C || [];
+  const callName = { karin: 'Karins samtal', inkop: 'inköps mejl', jens: 'Jens anrop' };
+  const possible = Object.keys(T_SIGNALS);
+  const seen = possible.filter((k) => (s.signals || []).includes(k));
+  const missed = possible.filter((k) => !seen.includes(k));
+  const list = (ks) => ks.map((k) => `${T_SIGNALS[k].text} (${T_SIGNALS[k].time})`).join(', ');
+
+  /* 1. Din dag */
+  steps.push({
+    type: 'recap', eyebrow: 'Din dag', title: 'Så här blev dagen',
+    items: [
+      { time: '06:00', text: s.snooze ? `Du snoozade ${s.snooze} ${s.snooze === 1 ? 'gång' : 'gånger'}.` : 'Du gick upp direkt.' },
+      rewound
+        ? { time: '07:30', was: `Först: ${T_SAID[s.firstA]}`, text: `Andra gången: ${T_SAID[s.choices.A]}`, key: true }
+        : { time: '07:30', text: `Du sa: ${T_SAID[s.choices.A]}`, key: true },
+      { time: '08:15', text: { genomgang: 'Du gick med på genomgången innan inträdet.', kund: '”Du har koll, Jens.” Kunden fick gå först.' }[s.choices.B] },
+      order.length && { time: '10:40', text: `Du tog ${callName[order[0]]} först.${order[order.length - 1] === 'jens' ? ' Jens anrop fick vänta längst.' : ''}` },
+      rewound
+        ? { time: '11:50', was: 'Först: lasten föll genom öppningen och Ali fick benet krossat.', text: 'Andra gången: lyftet väntade tills kokaren var tom.', key: true }
+        : { time: '11:50', text: 'Lyftet väntade tills kokaren var tom.', key: true },
+      { time: '★', text: `Du såg ${seen.length} av ${possible.length} signaler under dagen.`, key: true },
+    ].filter(Boolean),
+  });
+
+  /* 2. Varför kändes det rätt? */
+  if (rewound) {
+    steps.push({
+      type: 'choice', id: 'orsak', eyebrow: 'Kl 07:30',
+      question: `Första gången sa du ${T_SAID[s.firstA]} Vad tror du gör att det känns rimligt i stunden?`,
+      hint: 'Det finns inga rätt eller fel svar här. Välj det som känns närmast.',
+      options: [
+        { id: 'kort', label: 'Det var ju bara ett kort lyft' },
+        { id: 'deras', label: 'Lyftet var deras ansvar' },
+        { id: 'tid', label: 'Tidplanen var pressad' },
+        { id: 'bedomt', label: 'Vårt arbete var ju riskbedömt' },
+      ],
+      respond: (id) => ({
+        kort: 'Ett lyft är kort tills planen ändras. Det är ändringen som behöver bedömas, inte bara lyftet som det beskrevs i morse.',
+        deras: 'Lyftet var deras. Men personerna under det var dina. När arbeten möts finns ansvaret i mötet mellan dem.',
+        tid: 'Tidspress gör att parallellt arbete känns som enda vägen. Ett gemensamt klartecken tar några minuter, och det är de minuterna som skyddar.',
+        bedomt: 'Båda arbetena var bedömda, var för sig. Risken uppstod där de möttes, och den hade ingen bedömt.',
+      }[id]),
+    });
+  }
+
+  /* 3. Signalerna */
+  steps.push({
+    type: 'text', id: 'signal', eyebrow: 'Signalerna',
+    question: !missed.length
+      ? 'Du såg alla fyra signalerna. Vid vilken av dem borde arbetet ha stoppats, och vem borde ha gjort det?'
+      : `Du såg ${seen.length} av ${possible.length} signaler. Det som gick förbi: ${list(missed)}. Vid vilken signal borde arbetet ha stoppats?`,
+    placeholder: 'En signal, eller en tanke …',
+    hint: 'Det du skriver stannar här, på din skärm.',
+    respond: (t) => (t ? 'Bra. En ändrad förutsättning är en signal i sig. Den behöver inte vara farlig för att vara skäl att stanna.' : 'Helt okej. Frågan får följa med dig ändå.'),
+  });
+
+  /* 4. I din vardag */
+  steps.push({
+    type: 'scale', id: 'igenkanning', eyebrow: 'I din vardag',
+    question: 'Hur ofta arbetar flera företag i samma område där du leder arbete?',
+    labels: ['Nästan aldrig', 'Varje dag'],
+    respond: (v) => (v <= 2
+      ? 'Då kan det vara lätt att missa när det väl händer. Fråga dig: vem mer jobbar här i dag, och vet de var mitt lag är?'
+      : v === 3
+        ? 'Då vet du hur snabbt planer glider isär. En gemensam skiss och ett klartecken räcker långt.'
+        : 'Då behövs en fast rutin: gemensam genomgång, en karta över riskzoner och en person som ger klartecken innan lyft.'),
+  });
+
+  /* 5. Mandatet */
+  steps.push({
+    type: 'choice', id: 'mandat', eyebrow: 'Mandatet',
+    question: 'Vem skulle ha haft mandat att stoppa arbetet när lyftvägen ändrades?',
+    hint: 'Välj det som ligger närmast hur det fungerar hos er.',
+    options: [
+      { id: 'alla', label: 'Alla som ser risken' },
+      { id: 'jag', label: 'Jag som site manager' },
+      { id: 'kund', label: 'Kundens representant' },
+      { id: 'vet', label: 'Jag är inte säker' },
+    ],
+    respond: (id) => ({
+      alla: 'Ja. Och det behöver sägas högt innan arbetet börjar, så att en montör vet att den får stoppa ett lyft från ett annat företag.',
+      jag: 'Ja, du har det mandatet. Men du var inte där. Därför behövs också ett klartecken som inte hänger på att du råkar se lyftet.',
+      kund: 'Kunden äger samordningen på sin anläggning. Men det fråntar ingen av er ansvaret att stoppa när ni ser en ändring.',
+      vet: 'Det är vanligt, och just därför farligt. Bestäm det på samordningsmötet: vem ger klartecken och vem får stoppa.',
+    }[id]),
+  });
+
+  /* 6. Att ta med sig */
+  steps.push({
+    type: 'takeaways', eyebrow: 'Att ta med sig', title: 'När arbeten möts',
+    items: [
+      { lead: 'Bedömt var för sig är inte bedömt tillsammans.', text: 'Risken uppstår där arbetena möts.' },
+      { lead: 'En ändring är en ny situation.', text: 'Ny lyftväg betyder ny bedömning, även om lyftet är kort.' },
+      { lead: 'Klartecken före lyft.', text: 'Ingen last rör sig förrän alla vet att riskzonen är tom.' },
+    ],
+  });
+
+  /* 7. Mitt åtagande */
+  steps.push({
+    type: 'commit', id: 'atagande', eyebrow: 'Mitt åtagande',
+    question: 'Vad gör du nästa gång flera företag jobbar på samma plats?',
+    hint: 'Välj ett eller flera – eller skriv med egna ord.',
+    options: [
+      'Jag ser till att samtidiga arbeten ritas in på en gemensam skiss.',
+      'Jag kräver ett gemensamt klartecken innan lyft nära mitt lag.',
+      'Jag stoppar arbetet när förutsättningarna ändras, och hör sedan med rätt personer.',
+      'Jag ser till att alla i laget vet att de får säga stopp.',
+    ],
+    ownPlaceholder: 'Mitt eget åtagande …',
+  });
+
+  /* 8. Avslut */
+  steps.push({
+    type: 'closing', eyebrow: '17:42',
+    title: 'Alla i Jens lag gick hem på egna ben i dag.',
+    text: rewound
+      ? 'Här kunde du spola tillbaka till 07:30. I verkligheten finns ingen tillbakaspolning, men det finns ett samordningsmöte varje morgon.'
+      : 'Det berodde på ett besked kl 07:30. I morgon är det du som sitter på samordningsmötet.',
+  });
+  return steps;
+}
+
+/* =====================================================================
    DAGARNA – inställningar som motorn läser (vilket val som är kritiskt,
    var konsekvensen ligger, vad som spolas tillbaka osv.)
    ===================================================================== */
@@ -1215,7 +1699,33 @@ STORY.days = {
     },
   },
 };
-// personer utan egen dag (Tomas än så länge) spelar Olas dag med sitt eget namn
+STORY.days.tomas = {
+  id: 'tomas', own: true, nodes: [STORY.nodes[0], STORY.nodes[1], ...TOMAS_NODES],
+  critical: 't0730', consequence: 't1150', end: 'tend', overview: 't1040', sideFocus: 't0950',
+  bad: T_BAD, chain: ['t1150', 't1110', 't0950', 't0730'],
+  healedText: 'Lyftet väntade tills kokaren var tom.', endBanner: 'Din dag – samordnad och skadefri.', reportHead: 'Dagrapport · Kokaren',
+  agenda: [
+    { t: '07:30', d: 30, title: 'Samordningsmöte – kokaren', color: 'blue' },
+    { t: '08:15', d: 30, title: 'Genomgång före inträde', color: 'green' },
+    { t: '08:15', d: 30, title: 'Avstämning med kunden', color: 'purple', clash: true },
+    { t: '10:00', d: 30, title: 'Fika', color: 'grey' },
+    { t: '11:30', d: 60, title: 'Lunch', color: 'grey' },
+    { t: '13:00', d: 60, title: 'Tidplan med Karin', color: 'purple' },
+    { t: '15:00', d: 30, title: 'Dagsavslut med laget', color: 'blue' },
+  ],
+  agendaLine: 'Samordning, inträde, kunden… och två saker samtidigt kvart över åtta.',
+  summary: (s) => [
+    T_BAD.includes(s.firstA) ? `Kl 07:30 blev det först ${T_SAID[s.firstA]} Andra gången: ${T_SAID[s.choices.A]}` : `Kl 07:30 sa du ${T_SAID[s.choices.A]}`,
+    `Du såg ${(s.signals || []).length} av 4 signaler under dagen.`,
+    'Lyftet väntade tills kokaren var tom.',
+  ],
+  dev(state, qs, past) {
+    if (past('t0815')) state.choices.B = qs.get('b') === 'genomgang' ? 'genomgang' : 'kund';
+    if (past('t1040')) state.choices.C = ['karin', 'inkop', 'jens'];
+  },
+};
+// alla personer har nu en egen dag; Olas dag är reserv
+
 STORY.dayFor = (personaId) => STORY.days[personaId] || STORY.days.ola;
 
 window.STORY = STORY;

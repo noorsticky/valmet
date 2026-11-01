@@ -27,6 +27,7 @@ const shuffle = (a) => a.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[
 const STATES = {
   ola: () => ({ A: ['lugnt', 'avvakta', 'rapport', 'skylt'], B: ['lisa', 'motet'], C: ['kim', 'rapport', 'aw'] }),
   ulrika: () => ({ A: ['vilosa', 'nasta', 'flytta', 'vidare'], B: ['stanna', 'sen'], C: ['patrik', 'emma', 'linn'] }),
+  tomas: () => ({ A: ['parallellt', 'ertlyft', 'skiss', 'klartecken'], B: ['genomgang', 'kund'], C: ['karin', 'inkop', 'jens'] }),
 };
 function randomState(dayId) {
   const o = STATES[dayId]();
@@ -66,7 +67,7 @@ const val = (v, s) => (typeof v === 'function' ? v(s) : v);
           if (typeof text !== 'string') continue;
           const id = VO.id(n.id, text, o);
           if (!rows.has(id)) {
-            rows.set(id, { id, day: n.id.startsWith('u') ? 'Ulrika' : n.id === 'n0600' || n.id === 'n0620' ? 'Gemensam' : 'Ola',
+            rows.set(id, { id, day: n.id.startsWith('u') ? 'Ulrika' : n.id.startsWith('t') ? 'Tomas' : n.id === 'n0600' || n.id === 'n0620' ? 'Gemensam' : 'Ola',
               time: n.time, title: val(n.title, state), who: o.who || (o.narrator ? 'Berättare' : ''), kind: VO.kind(o), text, order: rows.size });
           }
         }
