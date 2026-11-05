@@ -44,6 +44,7 @@
       <div><label for="key">ElevenLabs API-nyckel</label><input id="key" type="password" autocomplete="off" placeholder="sk_…"></div>
       <button id="load">Hämta röster</button>
     </div>
+    <label style="font-weight:400;margin-top:10px"><input type="checkbox" id="remember"> Kom ihåg nyckeln på den här datorn</label>
     <p id="keymsg" style="margin-top:10px"></p>
   </section>
 
@@ -51,6 +52,8 @@
     <h2>2. Röster</h2>
     <p>Rösterna visas per dag, så att du ser vilka som hörs i samma flöde. Inom en dag bör alla ha olika röster. Mellan dagarna går det bra att återanvända. Samma person har samma röst i alla dagar den är med i, och i både repliker och tankar. Valen sparas i webbläsaren till nästa gång.</p>
     <p id="need"></p>
+    <p><b>Lagt till röster i ElevenLabs?</b> Ladda inte om sidan – klicka på <b>Hämta röster igen</b> ovan, så kommer de nya med och dina val ligger kvar.</p>
+    <div class="row" style="margin-bottom:6px"><button class="ghost" id="saveSel">Spara röstval till fil</button><button class="ghost" id="loadSel">Läs in röstval från fil</button><input type="file" id="selFile" accept=".json,application/json" hidden></div>
     <div id="voices"></div>
   </section>
 
@@ -78,6 +81,9 @@ let voices = [], files = new Map();
 let saved = {}; try { saved = JSON.parse(localStorage.getItem('vardag_voices') || '{}'); } catch (e) {}
 const log = (t, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = t; $('#log').prepend(d); };
 const key = () => $('#key').value.trim();
+// nyckeln sparas bara om man själv kryssar i det
+try { const k = localStorage.getItem('vardag_key'); if (k) { $('#key').value = k; $('#remember').checked = true; } } catch (e) {}
+const persist = () => { try { localStorage.setItem('vardag_voices', JSON.stringify(saved)); } catch (e) {} };
 
 async function tts(r) {
   const voice = (saved[r.who] || saved['Berättare'] || '');
@@ -124,7 +130,7 @@ function renderVoices() {
     // samma person i flera dagar: alla dess rutor följer med
     s.onchange = () => {
       saved[w] = s.value;
-      try { localStorage.setItem('vardag_voices', JSON.stringify(saved)); } catch (e) {}
+      persist();
       document.querySelectorAll('#voices tr[data-who="' + CSS.escape(w) + '"] select').forEach((o) => { o.value = s.value; });
       checkDups();
     };
@@ -147,10 +153,31 @@ $('#load').onclick = async () => {
     if (!res.ok) throw new Error(res.status + ' ' + (await res.text()).slice(0, 200));
     voices = (await res.json()).voices;
     $('#keymsg').innerHTML = '<span class="ok">Nyckeln fungerar. ' + voices.length + ' röster hittades.</span>';
+    $('#load').textContent = 'Hämta röster igen';
+    try { if ($('#remember').checked) localStorage.setItem('vardag_key', key()); else localStorage.removeItem('vardag_key'); } catch (e) {}
     renderVoices(); $('#run').disabled = false; $('#status').textContent = 'Välj röster och klicka på Skapa ljudfiler.';
   } catch (e) {
     $('#keymsg').innerHTML = '<span class="err">Kunde inte hämta röster: ' + e.message + '</span>';
   }
+};
+
+$('#remember').onchange = () => { try { if (!$('#remember').checked) localStorage.removeItem('vardag_key'); else if (key()) localStorage.setItem('vardag_key', key()); } catch (e) {} };
+// röstvalen kan sparas som fil, om webbläsaren inte minns dem mellan gångerna
+$('#saveSel').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(saved, null, 2)], { type: 'application/json' }));
+  a.download = 'vardag-rostval.json'; a.click();
+};
+$('#loadSel').onclick = () => $('#selFile').click();
+$('#selFile').onchange = async () => {
+  const f = $('#selFile').files[0]; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    saved = { ...saved, ...(j.voices || j) }; persist();
+    if (voices.length) renderVoices();
+    log('Röstval inlästa från ' + f.name, 'ok');
+  } catch (e) { log('Kunde inte läsa filen: ' + e.message, 'err'); }
+  $('#selFile').value = '';
 };
 
 $('#run').onclick = async () => {
