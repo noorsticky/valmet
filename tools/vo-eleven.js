@@ -67,7 +67,6 @@ for (const r of todo) {
   const body = {
     text: r.Text,
     model_id: cfg.model_id,
-    language_code: cfg.language_code,
     voice_settings: r.Typ === 'Tanke' ? cfg.thought_settings : cfg.settings,
   };
   const tmp = out + '.part';
