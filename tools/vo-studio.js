@@ -48,6 +48,8 @@ const html = `<!doctype html>
   .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
   #log { font: 12.5px/1.45 ui-monospace, monospace; max-height: 220px; overflow: auto; background: #faf9f6; border: 1px solid var(--line); border-radius: 8px; padding: 10px; white-space: pre-wrap; }
   .err { color: var(--bad); } .ok { color: var(--accent); }
+  .flow { margin-top: 22px; } .flow h3 { margin: 0 0 4px; font-size: 16px; } .flow > p { margin: 0 0 8px; font-size: 13.5px; }
+  .dup td { background: #fbebeb; } .warn { color: var(--bad); font-size: 13px; display: block; margin-top: 4px; }
   .steps { margin: 0; padding-left: 20px; color: var(--mute); } .steps li { margin: 4px 0; }
 </style>
 </head>
@@ -68,8 +70,9 @@ const html = `<!doctype html>
 
   <section>
     <h2>2. Röster</h2>
-    <p>Samma person har samma röst i både repliker och tankar. Valen sparas i webbläsaren till nästa gång.</p>
-    <table><thead><tr><th>Person</th><th>Rader</th><th>Röst</th><th></th></tr></thead><tbody id="voices"></tbody></table>
+    <p>Rösterna visas per dag, så att du ser vilka som hörs i samma flöde. Inom en dag bör alla ha olika röster. Mellan dagarna går det bra att återanvända. Samma person har samma röst i alla dagar den är med i, och i både repliker och tankar. Valen sparas i webbläsaren till nästa gång.</p>
+    <p id="need"></p>
+    <div id="voices"></div>
   </section>
 
   <section>
@@ -77,7 +80,7 @@ const html = `<!doctype html>
     <div class="row">
       <div><label for="only">Vilka rader</label>
         <select id="only"><option value="">Alla (${rows.length} rader, ${rows.reduce((n, r) => n + r.text.length, 0)} tecken)</option>
-        <option value="n">Gemensamma och Olas dag</option><option value="u">Ulrikas dag</option><option value="t">Tomas dag</option></select></div>
+        <option value="n">Olas dag (och de gemensamma scenerna)</option><option value="u">Ulrikas dag</option><option value="t">Tomas dag</option></select></div>
       <button id="run" disabled>Skapa ljudfiler</button>
       <button id="dl" class="ghost" disabled>Ladda ner zip</button>
     </div>
@@ -109,22 +112,52 @@ async function tts(r) {
   return res.blob();
 }
 
+// vilka dagar en rad hörs i: gemensamma rader (06:00, 06:20) hörs i alla, utom personens egen tanke vid kalendern
+const FLOWS = ['Ola', 'Ulrika', 'Tomas'];
+const flowsOf = (r) => (r.day !== 'Gemensam' ? [r.day] : FLOWS.includes(r.who) ? [r.who] : FLOWS);
+const inFlow = (f) => rows.filter((r) => flowsOf(r).includes(f));
+const flowSpeakers = (f) => { const c = {}; inFlow(f).forEach((r) => { c[r.who] = (c[r.who] || 0) + 1; }); return Object.entries(c).sort((a, b) => (a[0] === 'Berättare' ? -1 : b[0] === 'Berättare' ? 1 : b[1] - a[1])); };
+const voiceName = (id) => (voices.find((v) => v.voice_id === id) || {}).name || '';
+const flowTitle = { Ola: 'Olas dag – Produktion och press', Ulrika: 'Ulrikas dag – Människor och möten', Tomas: 'Tomas dag – Arbete i kokaren' };
+
+function checkDups() {
+  document.querySelectorAll('#voices tr[data-who]').forEach((tr) => {
+    const f = tr.dataset.flow, w = tr.dataset.who, v = saved[w];
+    const same = v ? flowSpeakers(f).map((x) => x[0]).filter((o) => o !== w && saved[o] === v) : [];
+    tr.classList.toggle('dup', same.length > 0);
+    tr.querySelector('.warn').textContent = same.length ? 'Samma röst som ' + (same.length > 3 ? same.slice(0, 3).join(', ') + ' och ' + (same.length - 3) + ' till' : same.join(', ')) + ' i den här dagen' : '';
+  });
+}
+
 function renderVoices() {
   const opts = '<option value="">– välj röst –</option>' + voices.map((v) => '<option value="' + v.voice_id + '">' + v.name + (v.labels ? ' · ' + Object.values(v.labels).join(', ') : '') + '</option>').join('');
-  $('#voices').innerHTML = speakers.map((w, i) => '<tr><td><b>' + w + '</b></td><td class="n">' + count(w) + '</td><td><select data-w="' + i + '">' + opts + '</select></td><td><button class="ghost" data-play="' + i + '">Provlyssna</button></td></tr>').join('');
-  document.querySelectorAll('#voices select').forEach((s) => {
-    const w = speakers[+s.dataset.w];
+  const most = Math.max(...FLOWS.map((f) => flowSpeakers(f).length));
+  $('#need').innerHTML = 'Du har <b>' + voices.length + '</b> röster. Den dag med flest talare har <b>' + most + '</b>. Har du färre röster än så: ge samma röst till personer som har få rader och aldrig hörs i samma scen.';
+  $('#voices').innerHTML = FLOWS.map((f) => {
+    const sp = flowSpeakers(f);
+    return '<div class="flow"><h3>' + flowTitle[f] + '</h3><p>' + sp.length + ' röster i den här dagen, ' + inFlow(f).length + ' rader.</p><table><thead><tr><th>Person</th><th>Rader</th><th>Röst</th><th></th></tr></thead><tbody>' +
+      sp.map(([w, n]) => '<tr data-flow="' + f + '" data-who="' + w + '"><td><b>' + w + '</b></td><td class="n">' + n + '</td><td><select>' + opts + '</select><span class="warn"></span></td><td><button class="ghost" data-play>Provlyssna</button></td></tr>').join('') +
+      '</tbody></table></div>';
+  }).join('');
+  document.querySelectorAll('#voices tr[data-who]').forEach((tr) => {
+    const w = tr.dataset.who, s = tr.querySelector('select'), b = tr.querySelector('[data-play]');
     s.value = saved[w] || '';
-    s.onchange = () => { saved[w] = s.value; try { localStorage.setItem('vardag_voices', JSON.stringify(saved)); } catch (e) {} };
+    // samma person i flera dagar: alla dess rutor följer med
+    s.onchange = () => {
+      saved[w] = s.value;
+      try { localStorage.setItem('vardag_voices', JSON.stringify(saved)); } catch (e) {}
+      document.querySelectorAll('#voices tr[data-who="' + CSS.escape(w) + '"] select').forEach((o) => { o.value = s.value; });
+      checkDups();
+    };
+    b.onclick = async () => {
+      const r = rows.find((x) => x.who === w && flowsOf(x).includes(tr.dataset.flow)) || rows.find((x) => x.who === w);
+      b.disabled = true; b.textContent = 'Skapar…';
+      try { const blob = await tts(r); new Audio(URL.createObjectURL(blob)).play(); log('Provlyssnade ' + w + ': ' + r.text); }
+      catch (e) { log('Provlyssning misslyckades: ' + e.message, 'err'); }
+      b.disabled = false; b.textContent = 'Provlyssna';
+    };
   });
-  document.querySelectorAll('[data-play]').forEach((b) => b.onclick = async () => {
-    const w = speakers[+b.dataset.play];
-    const r = rows.find((x) => x.who === w);
-    b.disabled = true; b.textContent = 'Skapar…';
-    try { const blob = await tts(r); new Audio(URL.createObjectURL(blob)).play(); log('Provlyssnade ' + w + ': ' + r.text); }
-    catch (e) { log('Provlyssning misslyckades: ' + e.message, 'err'); }
-    b.disabled = false; b.textContent = 'Provlyssna';
-  });
+  checkDups();
 }
 
 $('#load').onclick = async () => {
