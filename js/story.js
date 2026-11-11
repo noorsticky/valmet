@@ -752,7 +752,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 10:20 */
   {
-    id: 'u1020', prop: 'assets/props/projektmote.webp', time: '10:20', title: 'Projektmötet', kind: 'film', lane: 'main',
+    id: 'u1020', prop: 'assets/props/laptop.webp', time: '10:20', title: 'Projektmötet', kind: 'film', lane: 'main',
     env: 'mote', envVariant: 'dark', place: 'Projektrummet', cinematic: true,
     async play(api) {
       api.clock('10:20');
@@ -828,7 +828,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 13:30 */
   {
-    id: 'u1330', prop: 'assets/props/inkorg.webp', time: '13:30', title: 'Inkorgen', kind: 'blue', badge: 'C', lane: 'main',
+    id: 'u1330', prop: 'assets/props/skrivbord.webp', time: '13:30', title: 'Inkorgen', kind: 'blue', badge: 'C', lane: 'main',
     env: 'kontor', place: 'Ulrikas kontor',
     async play(api) {
       api.clock('13:30');
@@ -857,7 +857,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 14:20 (A) */
   {
-    id: 'u1420', prop: 'assets/props/motesbord.webp', time: '14:20', title: 'Risken som inte lyfts', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+    id: 'u1420', prop: 'gnall', time: '14:20', title: 'Risken som inte lyfts', kind: 'side', badge: 'A', lane: 'side', track: 'A',
     env: 'mote', envVariant: 'dim', place: 'Mötesrummet', cinematic: true,
     async play(api) {
       api.clock('14:20');
@@ -874,7 +874,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 15:00 */
   {
-    id: 'u1500', prop: 'assets/props/tom-stol.webp', time: '15:00', title: 'Avstämningen', kind: 'film', lane: 'main',
+    id: 'u1500', prop: 'assets/props/kalender.webp', time: '15:00', title: 'Avstämningen', kind: 'film', lane: 'main',
     env: 'mote', place: 'Mötesrummet', cinematic: true,
     async play(api) {
       api.clock('15:00');
@@ -932,7 +932,7 @@ const ULRIKA_NODES = [
 
   /* ------------------------------------------------------------ 16:10 */
   {
-    id: 'u1610', prop: (s) => (s.track === 'A' ? 'assets/props/stangd-laptop.webp' : 'assets/props/vinka.webp'), time: '16:10', kind: 'blue', lane: 'main',
+    id: 'u1610', prop: (s) => (s.track === 'A' ? 'assets/props/larm.webp' : 'assets/props/vinka.webp'), time: '16:10', kind: 'blue', lane: 'main',
     badge: (s) => (s.track === 'A' ? 'A' : 'A2'),
     title: (s) => (s.track === 'A' ? 'Emma har åkt hem' : 'Emma på väg hem'),
     env: (s) => (s.track === 'A' ? 'motesrum-kvall' : 'korridor'),
@@ -1335,7 +1335,7 @@ const TOMAS_NODES = [
 
   /* ------------------------------------------------------------ 09:50 (A) */
   {
-    id: 't0950', prop: 'assets/props/lyft.webp', time: '09:50', title: 'Lyftvägen ändras', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+    id: 't0950', prop: 'gnall', time: '09:50', title: 'Lyftvägen ändras', kind: 'side', badge: 'A', lane: 'side', track: 'A',
     env: 'kokare', envVariant: 'dim', place: 'Ovanför kokaren', cinematic: true,
     async play(api) {
       api.clock('09:50');
@@ -1412,7 +1412,7 @@ const TOMAS_NODES = [
 
   /* ------------------------------------------------------------ 11:10 (A) */
   {
-    id: 't1110', prop: 'assets/props/kokare.webp', time: '11:10', title: 'Inne i kokaren', kind: 'side', badge: 'A', lane: 'side', track: 'A',
+    id: 't1110', prop: 'assets/props/prat.webp', time: '11:10', title: 'Inne i kokaren', kind: 'side', badge: 'A', lane: 'side', track: 'A',
     env: 'kokare-inne', place: 'Inne i kokaren', cinematic: true,
     async play(api) {
       api.clock('11:10');

@@ -90,14 +90,9 @@ noder dagen har och vilket val som är det kritiska (`critical`), var konsekvens
 - **Tomas dag** (dag C, ”Det påverkar inte er”): arbete inne i en kokare när en annan entreprenör lyfter ovanför.
   Kritiskt val 07:30, konsekvens 11:50, fyra signaler. Bygger på kundens scenario ”Arbete inne i kokaren”.
 
-### Platshållare i Ulrikas och Tomas dagar
+### Ikoner i Ulrikas och Tomas dagar
 
-De här filerna är platshållare. Byt ut filen med samma namn och storlek så syns den riktiga bilden direkt:
-
-- Ikoner (420×420 px, transparent webp): `assets/props/projektmote.webp` (10:20), `inkorg.webp` (13:30),
-  `motesbord.webp` (14:20), `tom-stol.webp` (15:00), `stangd-laptop.webp` (16:10).
-- Ikoner i Tomas dag: `assets/props/lyft.webp` (09:50), `kokare.webp` (11:10).
-- Tomas scen ovanför kokaren (09:50) lånar filmen från kokaren tills det finns en egen med lyftet.
+Alla scener använder befintliga ikoner. Platshållarna (`projektmote`, `inkorg`, `motesbord`, `tom-stol`, `stangd-laptop`, `lyft`, `kokare` i `assets/props/`) ligger kvar om egna ikoner tas fram senare.
 
 ### Vinkande personer i spegeln
 
