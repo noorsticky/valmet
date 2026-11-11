@@ -97,7 +97,7 @@ De här filerna är platshållare. Byt ut filen med samma namn och storlek så s
 - Ikoner (420×420 px, transparent webp): `assets/props/projektmote.webp` (10:20), `inkorg.webp` (13:30),
   `motesbord.webp` (14:20), `tom-stol.webp` (15:00), `stangd-laptop.webp` (16:10).
 - Ikoner i Tomas dag: `assets/props/lyft.webp` (09:50), `kokare.webp` (11:10).
-- Tomas scener vid och inne i kokaren använder fabriksscenen (`fabrik`) och larmfilmen tills det finns riktiga bilder eller filmer från en kokare.
+- Tomas scen ovanför kokaren (09:50) lånar filmen från kokaren tills det finns en egen med lyftet.
 
 ### Vinkande personer i spegeln
 

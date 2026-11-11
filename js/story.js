@@ -9,7 +9,7 @@
            'green'  = sammanfattning
    lane:   'main' | 'side'
    track:  'A' = noden finns bara när det kritiska valet blev fel
-   env:    miljö – videofil (sovrum, kontor, fika, lunch, mote, korridor, larm) eller ritad (bil, fabrik, spegel)
+   env:    miljö – videofil (sovrum, kontor, fika, lunch, mote, korridor, larm, kokare, maskin …) eller ritad (fabrik)
    ===================================================================== */
 
 const BAD_A = ['lugnt', 'avvakta'];   // valen kl 07:30 som leder till olyckan
@@ -251,7 +251,7 @@ const STORY = {
     /* ------------------------------------------------------------ 11:15 (A) */
     {
       id: 'n1115', prop: 'assets/props/hjalm.webp', time: '11:15', title: 'Vid maskinen', kind: 'side', badge: 'A', lane: 'side', track: 'A',
-      env: 'fabrik', place: 'Pressen, linje 3', cinematic: true,
+      env: 'maskin', place: 'Pressen, linje 3', cinematic: true,
       async play(api) {
         api.clock('11:15');
         api.loop('factory');
@@ -1288,12 +1288,12 @@ const TOMAS_NODES = [
   /* ------------------------------------------------------------ 08:15 */
   {
     id: 't0815', prop: 'assets/props/hjalm.webp', time: '08:15', title: 'Innan inträdet', kind: 'blue', badge: 'B', lane: 'main',
-    env: 'fabrik', place: 'Vid kokaren',
+    env: 'kokare', place: 'Vid kokaren',
     async play(api) {
       api.clock('08:15');
       api.loop('factory');
       await api.title('08:15', 'Vid kokaren');
-      api.signal({ id: 's1', x: 70, y: 30, w: 14, h: 16, line: 'Avspärrningsbandet slutar vid trappan. Lyftvägen fortsätter förbi.' });
+      api.signal({ id: 's1', x: 82, y: 53, w: 11, h: 14, line: 'Avspärrningsbandet slutar vid trappan. Lyftvägen fortsätter förbi.' });
       await api.say('Genomgången innan inträdet börjar om fem minuter. Karin har bokat dig samtidigt.', { narrator: true });
       await api.say('Tomas, är du med på genomgången innan vi går in?', { who: 'Jens, arbetsledare' });
       const pick = await api.choose({
@@ -1321,7 +1321,7 @@ const TOMAS_NODES = [
   /* ------------------------------------------------------------ 09:20 */
   {
     id: 't0920', prop: 'assets/props/kalender.webp', time: '09:20', title: 'Tidplanen', kind: 'film', lane: 'main',
-    env: 'mote', envVariant: 'dark', place: 'Platskontoret', cinematic: true,
+    env: 'platskontor', place: 'Platskontoret', cinematic: true,
     async play(api) {
       api.clock('09:20');
       await api.title('09:20', 'Platskontoret');
@@ -1336,12 +1336,12 @@ const TOMAS_NODES = [
   /* ------------------------------------------------------------ 09:50 (A) */
   {
     id: 't0950', prop: 'assets/props/lyft.webp', time: '09:50', title: 'Lyftvägen ändras', kind: 'side', badge: 'A', lane: 'side', track: 'A',
-    env: 'fabrik', envVariant: 'dim', place: 'Ovanför kokaren', cinematic: true,
+    env: 'kokare', envVariant: 'dim', place: 'Ovanför kokaren', cinematic: true,
     async play(api) {
       api.clock('09:50');
       api.loop('factory');
       await api.title('09:50', 'Ovanför kokaren');
-      api.signal({ id: 's2', x: 30, y: 40, w: 16, h: 18, line: 'Pallarna står i lyftvägen. Lasten ska gå närmare kokaren nu.' });
+      api.signal({ id: 's2', x: 6, y: 30, w: 16, h: 20, line: 'Pallarna står i lyftvägen. Lasten ska gå närmare kokaren nu.' });
       await api.say('Pallarna står i vägen. Vi får ta den andra sidan, närmare kokaren.', { who: 'Mikael, lyftledare' });
       await api.say('Ska vi inte säga till Valmet?', { who: 'Lyftare' });
       await api.say(tSide(api.state,
@@ -1385,7 +1385,7 @@ const TOMAS_NODES = [
   /* ------------------------------------------------------------ 10:40 */
   {
     id: 't1040', prop: 'assets/props/mobil.webp', time: '10:40', title: 'Tre samtal', kind: 'blue', badge: 'C', lane: 'main',
-    env: 'kontor', place: 'Platskontoret',
+    env: 'platskontor', place: 'Platskontoret',
     async play(api) {
       api.clock('10:40');
       await api.title('10:40', 'Tre samtal');
@@ -1413,12 +1413,12 @@ const TOMAS_NODES = [
   /* ------------------------------------------------------------ 11:10 (A) */
   {
     id: 't1110', prop: 'assets/props/kokare.webp', time: '11:10', title: 'Inne i kokaren', kind: 'side', badge: 'A', lane: 'side', track: 'A',
-    env: 'fabrik', envVariant: 'dim', place: 'Inne i kokaren', cinematic: true,
+    env: 'kokare-inne', place: 'Inne i kokaren', cinematic: true,
     async play(api) {
       api.clock('11:10');
       api.loop('factory');
       await api.title('11:10', 'Inne i kokaren');
-      api.signal({ id: 's4', x: 48, y: 18, w: 14, h: 14, line: 'Skrap ovanför öppningen. Någon lyfter nära.' });
+      api.signal({ id: 's4', x: 56, y: 15, w: 16, h: 18, line: 'Skrap ovanför öppningen. Någon lyfter nära.' });
       await api.say('Hör ni? Det skrapar ovanför öppningen.', { who: 'Ali, montör' });
       await api.say(api.state.choices.B === 'genomgang'
         ? 'Det är lyftgänget. Tomas sa att det inte påverkar oss.'
@@ -1433,7 +1433,7 @@ const TOMAS_NODES = [
     id: 't1150', prop: (s) => (s.track === 'A' ? 'assets/props/larm.webp' : 'assets/props/vinka.webp'), time: '11:50', kind: 'blue', lane: 'main',
     badge: (s) => (s.track === 'A' ? 'A' : 'A2'),
     title: (s) => (s.track === 'A' ? 'Lasten faller' : 'Lyftet väntar'),
-    env: (s) => (s.track === 'A' ? 'larm' : 'fabrik'),
+    env: (s) => (s.track === 'A' ? 'larm' : 'kokare'),
     envVariant: (s) => (s.track === 'A' ? '' : 'warm'),
     place: (s) => (s.track === 'A' ? 'Kokaren' : 'Vid kokaren'),
     cinematic: (s) => s.track === 'A',
