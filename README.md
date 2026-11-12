@@ -167,3 +167,13 @@ Alla repliker, tankar och berättarrader kan få inspelad röst. Kursen fungerar
 Ändras en text i `js/story.js` får raden ett nytt filnamn, eftersom den gamla inspelningen inte stämmer längre. Skriptet listar inspelningar som inte längre hör till någon rad.
 
 När rösten spelas ligger repliken kvar tills rösten är klar. Ett klick hoppar vidare. Med ljudet avstängt visas bara texten.
+
+### SCORM-paket (Workday Learning m.fl.)
+
+`node tools/scorm.js --check` bygger kursen som ett SCORM 1.2-paket: `dist/vardag-scorm12.zip`. Det laddas upp som det är i lärplattformen. `--check` kontrollerar manifestet mot SCORM-schemafilerna (`tools/scorm/*.xsd`).
+
+- Kopplingen till plattformen finns i `js/scorm.js`. Kursen rapporterar *incomplete* vid start och *completed* (poäng 100) när en dag är spelad klart, inklusive reflektionen.
+- Tiden i kursen sparas när fönstret stängs, och vilka dagar som är spelade sparas i `cmi.suspend_data`.
+- Utan lärplattform gör `js/scorm.js` ingenting, så samma filer fungerar som vanlig webbsida.
+- Typsnitten ligger i `assets/fonts/` (OFL-licens), så kursen behöver inget internet utöver lärplattformen.
+- Bygg om paketet efter varje ändring. `dist/` checkas inte in.

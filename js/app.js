@@ -1412,10 +1412,12 @@
   /* ===================================================================
      DAGEN ÄR KLAR – hela tidslinjen i bild, en sammanfattning och de andra dagarna
      =================================================================== */
-  const completed = new Set();
+  // dagar som redan är spelade, även från ett tidigare besök i lärplattformen (SCORM)
+  const completed = new Set(window.SCORM ? SCORM.days() : []);
   async function finishDay(answers) {
     if (busy) return;
     completed.add(state.persona);
+    if (window.SCORM) SCORM.complete([...completed]);
     await exitScene(byId[DAY.end]);
     busy = true;
     banner('');
